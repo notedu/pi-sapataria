@@ -1,0 +1,11 @@
+# Ignore artifacts:
+build
+coverage
+
+# JSON:
+**/*.json
+
+# OTHERS:
+.gitignore
+.prettierrc
+.prettierignore
