@@ -132,9 +132,9 @@ Variáveis esperadas no `.env`:
 PORT=3333
 DB_HOST=localhost
 DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=sua_senha
-DB_NAME=sapataria_couro_e_seda
+DB_USER=usuario_db
+DB_PASSWORD=usuario_senha
+DB_NAME=nome_db
 ```
 
 ### 3. Configurar o front-end
