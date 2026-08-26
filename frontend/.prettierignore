@@ -2,10 +2,8 @@
 build
 coverage
 
-# JSON:
-**/*.json
-
-# OTHERS:
+# GIT
 .gitignore
-.prettierrc
-.prettierignore
+
+# JSON
+**/*.json
