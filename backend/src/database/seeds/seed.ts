@@ -1,0 +1,73 @@
+// seed.ts
+import pool from "../../config/db.js";
+
+async function seed() {
+  // A ordem de exclusão é o INVERSO da ordem de criação:
+  // apagamos primeiro quem "depende" de outras tabelas (ordens_servico),
+  // senão o banco recusa apagar uma tabela referenciada por outra (erro de FK).
+  await pool.query("DELETE FROM ordens_servico");
+  await pool.query("DELETE FROM clientes");
+  await pool.query("DELETE FROM funcionarios");
+  await pool.query("DELETE FROM servicos");
+
+  // ===== 1. Insere clientes =====
+  // RETURNING id nos devolve os IDs gerados, que vamos usar depois em ordens_servico
+  const clientes = await pool.query(`
+    INSERT INTO clientes (nome, cpf, telefone, genero, endereco) VALUES
+    ('Maria Silva', '111.111.111-11', '(19) 99999-0001', 'Feminino', 'Rua A, 100'),
+    ('João Souza', '222.222.222-22', '(19) 99999-0002', 'Masculino', 'Rua B, 200'),
+    ('Ana Costa', '333.333.333-33', '(19) 99999-0003', 'Feminino', 'Rua C, 300')
+    RETURNING id
+  `);
+
+  // ===== 2. Insere funcionários =====
+  const funcionarios = await pool.query(`
+    INSERT INTO funcionarios (nome, cpf, telefone, genero, cargo) VALUES
+    ('Carlos Pereira', '444.444.444-44', '(19) 98888-0001', 'Masculino', 'Sapateiro'),
+    ('Fernanda Lima', '555.555.555-55', '(19) 98888-0002', 'Feminino', 'Atendente')
+    RETURNING id
+  `);
+
+  // ===== 3. Insere tipos de serviço =====
+  const servicos = await pool.query(`
+    INSERT INTO servicos (nome, descricao) VALUES
+    ('Troca de sola', 'Substituição completa da sola do calçado'),
+    ('Costura', 'Reparo de costuras soltas ou rasgadas'),
+    ('Tingimento', 'Alteração da cor original do item')
+    RETURNING id
+  `);
+
+  // Extrai os arrays de IDs para facilitar a leitura ao montar ordens_servico
+  const idsClientes = clientes.rows.map((c) => c.id); // ex: [1, 2, 3]
+  const idsFuncionarios = funcionarios.rows.map((f) => f.id); // ex: [1, 2]
+  const idsServicos = servicos.rows.map((s) => s.id); // ex: [1, 2, 3]
+
+  // ===== 4. Insere ordens de serviço, usando os IDs reais gerados acima =====
+  await pool.query(
+    `INSERT INTO ordens_servico
+      (cliente_id, funcionario_id, servico_id, descricao_item, cor_item, observacoes, valor_servico, status)
+     VALUES
+      ($1, $2, $3, 'Sapato social', 'Preto', 'Cliente pediu urgência', 80.00, 'Pendente'),
+      ($4, $5, $6, 'Bota de couro', 'Marrom', NULL, 120.00, 'Em andamento'),
+      ($7, $8, $9, 'Tênis casual', 'Branco', 'Trocar também os cadarços', 60.00, 'Concluído')`,
+    [
+      idsClientes[0],
+      idsFuncionarios[0],
+      idsServicos[0], // ordem 1
+      idsClientes[1],
+      idsFuncionarios[1],
+      idsServicos[1], // ordem 2
+      idsClientes[2],
+      idsFuncionarios[0],
+      idsServicos[2], // ordem 3
+    ],
+  );
+
+  console.log("✅ Seed executado com sucesso!");
+  process.exit(); // encerra o script após terminar (senão o pool fica "pendurado")
+}
+
+seed().catch((error) => {
+  console.error("❌ Erro ao executar seed:", error);
+  process.exit(1); // código de saída 1 indica que houve falha
+});
