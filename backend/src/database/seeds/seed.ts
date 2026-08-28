@@ -63,6 +63,30 @@ async function seed() {
     ],
   );
 
+  // ===== Estoque: DELETE (parte a adicionar no início do seed, junto dos outros DELETEs) =====
+  await pool.query("DELETE FROM estoque_materia_prima");
+  await pool.query("DELETE FROM estoque_produtos_venda");
+
+  // ===== 5. Insere matéria-prima em estoque =====
+  await pool.query(`
+    INSERT INTO estoque_materia_prima
+      (nome, descricao, unidade_medida, quantidade, quantidade_minima, valor_unitario, fornecedor) VALUES
+      ('Couro sintético preto', 'Usado na fabricação de solados e reparos', 'metro', 25.5, 5, 18.90, 'Fornecedor Couros SP'),
+      ('Linha de costura reforçada', 'Linha resistente para costura de calçados', 'unidade', 40, 10, 3.50, 'Casa da Costura'),
+      ('Cola de contato', 'Usada na colagem de solas', 'litro', 8, 2, 45.00, 'Química Industrial LTDA'),
+      ('Sola de borracha', 'Sola pronta para substituição', 'unidade', 15, 5, 22.00, 'Fornecedor Couros SP')
+  `);
+
+  // ===== 6. Insere produtos de venda em estoque =====
+  await pool.query(`
+  INSERT INTO estoque_produtos_venda
+    (nome, descricao, quantidade, valor_custo, valor_venda, categoria) VALUES
+    ('Sapato social masculino nº 42', 'Sapato social de couro legítimo', 8, 90.00, 180.00, 'Calçados'),
+    ('Kit limpeza de calçados', 'Kit com escova, pano e produto de limpeza', 20, 12.00, 25.00, 'Acessórios'),
+    ('Tênis casual unissex nº 39', 'Tênis casual em tecido e couro sintético', 5, 60.00, 130.00, 'Calçados'),
+    ('Palmilha ortopédica', 'Palmilha de conforto e suporte', 30, 8.00, 22.00, 'Acessórios')
+  `);
+
   console.log("✅ Seed executado com sucesso!");
   process.exit(); // encerra o script após terminar (senão o pool fica "pendurado")
 }

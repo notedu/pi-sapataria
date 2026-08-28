@@ -43,8 +43,6 @@ export async function create(req: Request, res: Response) {
       status,
     } = req.body;
 
-    // validação básica: os campos NOT NULL do schema.sql (exceto funcionario_id e status,
-    // que têm tratamento próprio) precisam estar presentes
     if (!cliente_id || !servico_id || !descricao_item || !valor_servico) {
       return res.status(400).json({
         erro: "Os campos cliente_id, servico_id, descricao_item e valor_servico são obrigatórios",
@@ -63,10 +61,16 @@ export async function create(req: Request, res: Response) {
     });
 
     return res.status(201).json(novaOrdem);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    // erro comum aqui: cliente_id/funcionario_id/servico_id que não existem no banco
-    // (violação de FK) — por enquanto cai no 500 genérico
+
+    // código 23503 = violação de chave estrangeira no PostgreSQL
+    if (error.code === "23503") {
+      return res.status(400).json({
+        erro: "cliente_id, funcionario_id ou servico_id informado não existe",
+      });
+    }
+
     return res.status(500).json({ erro: "Erro ao criar ordem de serviço" });
   }
 }
@@ -102,8 +106,15 @@ export async function update(req: Request, res: Response) {
     }
 
     return res.status(200).json(ordemAtualizada);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
+
+    if (error.code === "23503") {
+      return res.status(400).json({
+        erro: "cliente_id, funcionario_id ou servico_id informado não existe",
+      });
+    }
+
     return res.status(500).json({ erro: "Erro ao atualizar ordem de serviço" });
   }
 }

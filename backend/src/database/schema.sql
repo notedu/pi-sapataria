@@ -61,3 +61,34 @@ CREATE TABLE ordens_servico (
     status VARCHAR(20) DEFAULT 'Pendente',  -- status da ordem (ex: Pendente, Em andamento, Concluído)
     criado_em TIMESTAMP DEFAULT NOW()       -- data/hora de abertura da ordem
 );
+
+-- ========================================
+-- TABELA: estoque_materia_prima
+-- ========================================
+-- Insumos usados na fabricação/manutenção dos produtos (ex: couro, linha, cola)
+CREATE TABLE estoque_materia_prima (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,                    -- ex: "Couro sintético preto"
+    descricao VARCHAR(200),                        -- detalhamento opcional
+    unidade_medida VARCHAR(20) NOT NULL,            -- ex: "metro", "litro", "kg", "unidade"
+    quantidade NUMERIC(10,2) NOT NULL DEFAULT 0,    -- quantidade disponível em estoque
+    quantidade_minima NUMERIC(10,2),                -- ponto de alerta de reposição (opcional)
+    valor_unitario NUMERIC(10,2),                   -- custo de compra por unidade
+    fornecedor VARCHAR(100),                        -- fornecedor do insumo (opcional)
+    atualizado_em TIMESTAMP DEFAULT NOW()           -- última movimentação de estoque
+);
+
+-- ========================================
+-- TABELA: estoque_produtos_venda
+-- ========================================
+-- Produtos prontos, vendidos diretamente na loja
+    CREATE TABLE estoque_produtos_venda (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,                     -- ex: "Sapato social masculino nº 42"
+    descricao VARCHAR(200),                         -- detalhamento opcional
+    quantidade INTEGER NOT NULL DEFAULT 0,          -- quantidade disponível em estoque
+    valor_custo NUMERIC(10,2),                      -- quanto custou produzir/adquirir
+    valor_venda NUMERIC(10,2) NOT NULL,             -- preço cobrado do cliente
+    categoria VARCHAR(50),                          -- ex: "Calçados", "Acessórios"
+    atualizado_em TIMESTAMP DEFAULT NOW()           -- última movimentação de estoque
+);
