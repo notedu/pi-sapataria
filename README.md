@@ -1,175 +1,208 @@
-# 👞 Sapataria Couro e Seda — Sistema de Gestão
+# Sapataria Couro e Seda — Sistema de Gestão
 
-Sistema interno de gestão desenvolvido como Projeto Integrado (PI) do módulo
-**Desenvolvimento de Aplicação Web**, com arquitetura preparada para, futuramente,
-integrar um site/portal voltado ao cliente final no mesmo ecossistema.
+> **Sobre este projeto:** este é um Projeto Integrador (PI) desenvolvido para fins **didáticos**, na
+> disciplina de Desenvolvimento de Aplicação Web — UNIFEOB, Ciência da Computação, 4º Módulo (2026/2).
+> A **Sapataria Couro e Seda** é uma empresa real, que gentilmente aceitou ser parceira do projeto como
+> estudo de caso, mas o sistema aqui desenvolvido é um **protótipo acadêmico** — não é o sistema oficial
+> de gestão da empresa, nem está em produção comercial. Dados de exemplo (clientes, funcionários, etc.)
+> usados para teste são fictícios.
 
-Projeto de caráter extensionista, beneficiando a **Sapataria Couro e Seda**.
+Sistema de gestão para uma sapataria, cobrindo cadastro de clientes e funcionários, catálogo de
+serviços, abertura e acompanhamento de ordens de serviço, e controle de estoque (matéria-prima e
+produtos de venda).
 
-## 📌 Sobre o projeto
+## Status do projeto
 
-O sistema permite:
+- [x] Modelagem do banco de dados (PostgreSQL)
+- [x] API RESTful do back-end — CRUD completo de todos os módulos
+- [ ] Front-end em React
+- [ ] Deploy em nuvem (AWS Academy)
+- [ ] Documentação de custos e plano de implantação em nuvem
 
-- Cadastro e gestão de **clientes**;
-- Cadastro e gestão de **funcionários**;
-- Abertura, acompanhamento e atualização de **ordens de serviço** (conserto de
-  calçados/artigos de couro);
-- Consulta do status de cada ordem de serviço (pendente, em andamento,
-  concluído, entregue).
+## Integrantes da equipe
 
-A aplicação consome dados de um banco **PostgreSQL** por meio de uma **API RESTful**
-própria, com uma interface **React** responsiva no front-end, hospedada em nuvem
-(AWS Academy).
+| Nome | Papel |
+|---|---|
+| João V. Franco | Colaborador Lider |
+| João V. Contin | Colaborador |
+| Eduardo Lima | Colaborador |
 
-## 🧱 Tecnologias utilizadas
+## Tecnologias utilizadas
 
-| Camada         | Tecnologia                              |
-|----------------|------------------------------------------|
-| Front-end      | React + Vite, React Router, Axios        |
-| Back-end       | Node.js + Express                        |
-| Banco de dados | PostgreSQL                               |
-| Nuvem          | AWS Academy (EC2 / RDS / S3)             |
-| Gestão de tarefas | GitHub Projects                       |
-| Versionamento  | Git / GitHub                             |
+**Back-end**
+- Node.js
+- TypeScript
+- Express 5
+- PostgreSQL (via biblioteca `pg`)
+- tsx (execução TypeScript em desenvolvimento)
 
-## 📁 Estrutura do repositório
+**Front-end** _(em desenvolvimento)_
+- React
+- Vite
+
+## Estrutura do repositório
 
 ```
-sapataria-couro-e-seda/
+pi-sapataria/
 ├── backend/
 │   ├── src/
-│   │   ├── config/          # conexão com o PostgreSQL
-│   │   ├── models/          # definição das tabelas
-│   │   ├── controllers/     # regras de negócio
-│   │   ├── routes/          # definição dos endpoints
-│   │   ├── middlewares/     # validação e tratamento de erros
-│   │   ├── services/        # regras auxiliares
-│   │   └── database/
-│   │       ├── migrations/
-│   │       └── seeds/
-│   ├── .env.example
-│   ├── package.json
-│   └── server.js
+│   │   ├── config/         # conexão com o PostgreSQL (pool)
+│   │   ├── controllers/    # regras de cada rota (validação, status HTTP)
+│   │   ├── models/         # queries SQL de cada entidade
+│   │   ├── routes/         # definição dos endpoints
+│   │   ├── middlewares/    # (reservado para autenticação/validação futuras)
+│   │   ├── services/       # (reservado para regras auxiliares reutilizáveis)
+│   │   ├── database/
+│   │   │   ├── migrations/ # versionamento da estrutura do banco
+│   │   │   ├── seeds/      # script de dados de teste (seed.ts)
+│   │   │   └── schema.sql  # script de criação das tabelas
+│   │   └── app.ts          # configuração do Express e registro das rotas
+│   ├── server.ts           # inicialização do servidor
+│   ├── .env.example        # modelo das variáveis de ambiente
+│   └── package.json
 │
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── assets/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── services/
-│   │   ├── routes/
-│   │   ├── hooks/
-│   │   ├── context/
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   ├── package.json
-│   └── vite.config.js
-│
-├── docs/
-│   ├── sprint-reports/
-│   ├── atas/
-│   ├── diagrama-er.png
-│   ├── plano-implantacao-nuvem.md
-│   └── comparativo-custos-nuvem.md
-│
-├── .gitignore
-└── README.md
+└── frontend/                # ainda em fase de design
 ```
 
-## 🗄️ Modelo de dados (resumo)
+## Modelagem do banco de dados
 
-- **cliente** `(id_cliente, nome, cpf, telefone, genero, endereco)`
-- **funcionario** `(id_funcionario, nome, cpf, telefone, genero, cargo)`
-- **servico** `(id_servico, nome_servico, valor_base, ativo)` — catálogo
-- **ordem_servico** `(id_os, id_cliente, id_funcionario, id_servico, descricao_item,
-  cor_item, observacoes, valor_servico, status, data_entrada, data_previsao,
-  data_conclusao)`
+Foram criadas 6 tabelas no PostgreSQL:
 
-Detalhamento completo, com tipos de dados e relacionamentos, no
-**Guia do Projeto (PDF)** entregue junto a este arquivo.
+| Tabela | Descrição |
+|---|---|
+| `clientes` | Cadastro de clientes da sapataria |
+| `funcionarios` | Cadastro de funcionários |
+| `servicos` | Catálogo dos tipos de serviço oferecidos (ex: "Troca de sola") |
+| `ordens_servico` | Ordens de serviço abertas, ligadas a cliente, funcionário e serviço via FK |
+| `estoque_materia_prima` | Insumos usados na fabricação/manutenção (ex: couro, cola, linha) |
+| `estoque_produtos_venda` | Produtos prontos vendidos na loja |
 
-## 🔌 Principais endpoints da API
+A tabela `ordens_servico` referencia `clientes`, `funcionarios` e `servicos` por ID (chave estrangeira),
+em vez de repetir dados — princípio de normalização.
 
-| Método | Rota                                | Descrição                        |
-|--------|--------------------------------------|-----------------------------------|
-| GET    | `/api/v1/clientes`                  | Lista clientes                    |
-| POST   | `/api/v1/clientes`                  | Cadastra cliente                  |
-| GET    | `/api/v1/funcionarios`              | Lista funcionários                |
-| POST   | `/api/v1/funcionarios`              | Cadastra funcionário              |
-| GET    | `/api/v1/ordens-servico`            | Lista ordens de serviço           |
-| POST   | `/api/v1/ordens-servico`            | Abre uma ordem de serviço         |
-| PATCH  | `/api/v1/ordens-servico/:id/status` | Atualiza o status da ordem        |
+O script completo de criação das tabelas está em `backend/src/database/schema.sql`.
 
-## ⚙️ Como rodar o projeto localmente
+## Como rodar o projeto localmente
 
 ### Pré-requisitos
-
-- Node.js (versão 18+)
-- PostgreSQL instalado localmente (ou via Docker)
-- npm ou yarn
+- Node.js instalado
+- PostgreSQL instalado e em execução
 
 ### 1. Clonar o repositório
-
 ```bash
-git clone https://github.com/<usuario-ou-organizacao>/sapataria-couro-e-seda.git
-cd sapataria-couro-e-seda
+git clone <url-do-repositorio>
+cd pi-sapataria/backend
 ```
 
-### 2. Configurar o back-end
-
+### 2. Instalar as dependências
 ```bash
-cd backend
 npm install
-cp .env.example .env
-# edite o .env com as credenciais do seu PostgreSQL local
-npm run dev
 ```
 
-Variáveis esperadas no `.env`:
+### 3. Configurar as variáveis de ambiente
+Copie o arquivo de exemplo e preencha com os dados do seu PostgreSQL local:
+```bash
+cp .env.example .env
+```
 
-```env
+Variáveis necessárias no `.env`:
+```
 PORT=3333
 DB_HOST=localhost
 DB_PORT=5432
-DB_USER=usuario_db
-DB_PASSWORD=usuario_senha
-DB_NAME=nome_db
+DB_USER=postgres
+DB_PASSWORD=sua_senha
+DB_NAME=pi-sapataria
 ```
 
-### 3. Configurar o front-end
-
+### 4. Criar o banco e as tabelas
+Crie um banco chamado `pi-sapataria` no PostgreSQL e execute o script:
 ```bash
-cd frontend
-npm install
+psql -U postgres -d pi-sapataria -f src/database/schema.sql
+```
+
+### 5. Popular o banco com dados de teste (opcional)
+```bash
+npm run seed
+```
+
+### 6. Iniciar o servidor em modo desenvolvimento
+```bash
 npm run dev
 ```
 
-Por padrão, o front-end roda em `http://localhost:5173` e consome a API em
-`http://localhost:3333`.
+O servidor sobe em `http://localhost:3333`. Para confirmar que está no ar:
+```
+GET http://localhost:3333/api/v1/health
+```
 
-## ☁️ Deploy (nuvem)
+## Endpoints da API
 
-Ambiente de produção hospedado na **AWS Academy**:
+Todas as rotas são prefixadas com `/api/v1`.
 
-- API (Node.js): instância EC2, mantida em execução com PM2.
-- Banco de dados: RDS PostgreSQL (ou EC2 com PostgreSQL instalado).
-- Front-end: build estático publicado em bucket S3.
+### Clientes
+| Método | Endpoint | Descrição |
+|---|---|---|
+| GET | `/clientes` | Lista todos os clientes |
+| GET | `/clientes/:id` | Detalha um cliente |
+| POST | `/clientes` | Cadastra um cliente |
+| PUT | `/clientes/:id` | Atualiza um cliente |
+| DELETE | `/clientes/:id` | Remove um cliente |
 
-Detalhes completos no plano de implantação: `docs/plano-implantacao-nuvem.md`.
+### Funcionários
+| Método | Endpoint | Descrição |
+|---|---|---|
+| GET | `/funcionarios` | Lista todos os funcionários |
+| GET | `/funcionarios/:id` | Detalha um funcionário |
+| POST | `/funcionarios` | Cadastra um funcionário |
+| PUT | `/funcionarios/:id` | Atualiza um funcionário |
+| DELETE | `/funcionarios/:id` | Remove um funcionário |
 
-## 👥 Equipe
+### Serviços (catálogo)
+| Método | Endpoint | Descrição |
+|---|---|---|
+| GET | `/servicos` | Lista o catálogo de serviços |
+| GET | `/servicos/:id` | Detalha um serviço |
+| POST | `/servicos` | Cadastra um serviço no catálogo |
+| PUT | `/servicos/:id` | Atualiza um serviço |
+| DELETE | `/servicos/:id` | Remove um serviço |
 
-| Nome | Papel |
-|------|-------|
-| João V. Franco | Líder / Facilitador |
-| Eduardo Lima | Integrante |
-| João V. Contin | Integrante |
+### Ordens de serviço
+| Método | Endpoint | Descrição |
+|---|---|---|
+| GET | `/ordens-servico` | Lista as ordens de serviço |
+| GET | `/ordens-servico/:id` | Detalha uma ordem de serviço |
+| POST | `/ordens-servico` | Abre uma nova ordem de serviço |
+| PUT | `/ordens-servico/:id` | Atualiza uma ordem de serviço |
+| DELETE | `/ordens-servico/:id` | Remove uma ordem de serviço |
 
-## 📄 Status do projeto
+### Estoque — Matéria-prima
+| Método | Endpoint | Descrição |
+|---|---|---|
+| GET | `/estoque-materia-prima` | Lista os itens de matéria-prima |
+| GET | `/estoque-materia-prima/:id` | Detalha um item |
+| POST | `/estoque-materia-prima` | Cadastra um item |
+| PUT | `/estoque-materia-prima/:id` | Atualiza um item |
+| DELETE | `/estoque-materia-prima/:id` | Remove um item |
 
-🚧 Em desenvolvimento — Projeto Integrado, 2º semestre de 2026.
+### Estoque — Produtos de venda
+| Método | Endpoint | Descrição |
+|---|---|---|
+| GET | `/estoque-produtos-venda` | Lista os produtos de venda |
+| GET | `/estoque-produtos-venda/:id` | Detalha um produto |
+| POST | `/estoque-produtos-venda` | Cadastra um produto |
+| PUT | `/estoque-produtos-venda/:id` | Atualiza um produto |
+| DELETE | `/estoque-produtos-venda/:id` | Remove um produto |
 
-## 🎯 ODS relacionado
+## Segurança
 
-ODS 8 — Trabalho Decente e Crescimento Econômico _(a confirmar com o orientador)_.
+- O arquivo `.env` (com as credenciais reais do banco) nunca é versionado — está listado no
+  `.gitignore` e um `.env.example` (sem valores sensíveis) é fornecido como modelo.
+- Todas as queries ao banco são feitas de forma parametrizada (`$1, $2...`), prevenindo SQL Injection.
+
+## Próximos passos
+
+- Desenvolvimento do front-end em React, consumindo esta API.
+- Deploy da aplicação na AWS Academy (API + banco + front-end).
+- Levantamento comparativo de custos entre AWS, Azure e GCP.
+- Documentação do plano de implantação em nuvem.
