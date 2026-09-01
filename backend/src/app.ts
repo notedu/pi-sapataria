@@ -6,6 +6,7 @@ import servicoRoutes from "./routes/servicoRoutes.js";
 import ordemServicoRoutes from "./routes/ordemServicoRoutes.js";
 import estoqueMateriaPrimaRoutes from "./routes/estoqueMateriaPrimaRoutes.js";
 import estoqueProdutosVendaRoutes from "./routes/estoqueProdutosVendaRoutes.js";
+import cepRoutes from "./routes/cepRoutes.js";
 
 const app: Application = express();
 
@@ -18,6 +19,7 @@ app.use("/api/v1", servicoRoutes);
 app.use("/api/v1", ordemServicoRoutes);
 app.use("/api/v1", estoqueMateriaPrimaRoutes);
 app.use("/api/v1", estoqueProdutosVendaRoutes);
+app.use("/api/v1", cepRoutes);
 
 app.get("/api/v1/health", (req, res) => {
   res.json({ status: "API rodando" });
