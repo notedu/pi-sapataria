@@ -22,9 +22,10 @@ async function seed() {
 
   // ===== 2. Insere funcionários =====
   const funcionarios = await pool.query(`
-    INSERT INTO funcionarios (nome, cpf, telefone, genero, cargo) VALUES
-    ('Carlos Pereira', '444.444.444-44', '(19) 98888-0001', 'Masculino', 'Sapateiro'),
-    ('Fernanda Lima', '555.555.555-55', '(19) 98888-0002', 'Feminino', 'Atendente')
+    INSERT INTO funcionarios (nome, cpf, telefone, genero, cargo, status, data_admissao) VALUES
+    ('Carlos Pereira', '444.444.444-44', '(19) 98888-0001', 'Masculino', 'Sapateiro', 'Ativo', '2023-03-15'),
+    ('Fernanda Lima', '555.555.555-55', '(19) 98888-0002', 'Feminino', 'Atendente', 'Ativo', '2024-06-01'),
+    ('Roberto Alves', '666.666.666-66', '(19) 98888-0003', 'Masculino', 'Sapateiro', 'Inativo', '2021-01-10')
     RETURNING id
   `);
 
