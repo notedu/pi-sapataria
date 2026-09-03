@@ -6,12 +6,13 @@ import Clientes from './pages/Clientes';
 import OrdensServico from './pages/OrdensServico';
 import Financeiro from './pages/Financeiro';
 import Funcionarios from './pages/Funcionarios';
-import Estoque from './pages/Estoque';
-import Configuracoes from './pages/Configuracoes';
+import Login from './pages/Login';
 
 function App() {
   return (
     <Routes>
+      <Route path="/" element={<Login />} />
+      <Route path="/login" element={<Login />} />
       <Route element={<Layout />}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<Dashboard />} />
