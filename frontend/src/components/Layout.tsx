@@ -15,22 +15,22 @@ import {
 } from 'lucide-react';
 import Sidebar, { type ItemMenu } from './Sidebar';
 
-// Mesma ordem do mockup. rota: null = ainda não existe (de outro integrante,
-// ou sua mas não construída ainda). Cada um troca o "null" da própria linha
-// pela rota real conforme for terminando a página.
+// Todas as rotas já existem (mesmo que como placeholder "Em construção").
+// Quem for dono do módulo substitui o conteúdo do arquivo correspondente
+// em src/pages/ — não precisa mexer aqui de novo.
 const ITENS_MENU: ItemMenu[] = [
-  { rota: null, label: 'Dashboard', icone: LayoutGrid }, // Integrante 2
-  { rota: null, label: 'Busca', icone: Search }, // Integrante 2
-  { rota: null, label: 'Clientes', icone: Users }, // Integrante 1
-  { rota: null, label: 'Ordens de Serviço', icone: Wrench }, // Integrante 2
-  { rota: null, label: 'Financeiro', icone: Wallet }, // seu, ainda não construído
-  { rota: '/funcionarios', label: 'Funcionários', icone: Briefcase }, // seu
-  { rota: null, label: 'Estoque', icone: Package }, // seu, ainda não construído
+  { rota: '/dashboard', label: 'Dashboard', icone: LayoutGrid }, // Integrante 2
+  { rota: '/busca', label: 'Busca', icone: Search }, // Integrante 2
+  { rota: '/clientes', label: 'Clientes', icone: Users }, // Integrante 1
+  { rota: '/ordens-servico', label: 'Ordens de Serviço', icone: Wrench }, // Integrante 2
+  { rota: '/financeiro', label: 'Financeiro', icone: Wallet }, // seu
+  { rota: '/funcionarios', label: 'Funcionários', icone: Briefcase }, // colega
+  { rota: '/estoque', label: 'Estoque', icone: Package }, // seu
 ];
 
 const ITENS_RODAPE: ItemMenu[] = [
-  { rota: null, label: 'Configurações', icone: Settings }, // seu, ainda não construído
-  { rota: null, label: 'Sair', icone: LogOut }, // depende da autenticação (Integrante 1)
+  { rota: '/configuracoes', label: 'Configurações', icone: Settings }, // seu
+  { rota: null, label: 'Sair', icone: LogOut }, // depende da autenticação (Integrante 1) — continua desabilitado de propósito
 ];
 
 export default function Layout() {
