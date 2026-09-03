@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Busca from './pages/Busca';
@@ -11,18 +11,15 @@ import Login from './pages/Login';
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/login" element={<Login />} />
       <Route element={<Layout />}>
-        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/busca" element={<Busca />} />
         <Route path="/clientes" element={<Clientes />} />
         <Route path="/ordens-servico" element={<OrdensServico />} />
         <Route path="/financeiro" element={<Financeiro />} />
         <Route path="/funcionarios" element={<Funcionarios />} />
-        <Route path="/estoque" element={<Estoque />} />
-        <Route path="/configuracoes" element={<Configuracoes />} />
       </Route>
     </Routes>
   );
