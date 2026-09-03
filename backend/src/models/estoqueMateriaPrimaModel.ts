@@ -4,6 +4,7 @@ export interface EstoqueMateriaPrima {
   id?: number;
   nome: string;
   descricao?: string;
+  categoria?: string;
   unidade_medida: string;
   quantidade?: number;
   quantidade_minima?: number;
@@ -33,6 +34,7 @@ export async function criarMateriaPrima(item: EstoqueMateriaPrima) {
   const {
     nome,
     descricao,
+    categoria,
     unidade_medida,
     quantidade,
     quantidade_minima,
@@ -41,12 +43,13 @@ export async function criarMateriaPrima(item: EstoqueMateriaPrima) {
   } = item;
   const result = await pool.query(
     `INSERT INTO estoque_materia_prima
-      (nome, descricao, unidade_medida, quantidade, quantidade_minima, valor_unitario, fornecedor)
-     VALUES ($1, $2, $3, COALESCE($4, 0::numeric), $5, $6, $7)
+      (nome, descricao, categoria, unidade_medida, quantidade, quantidade_minima, valor_unitario, fornecedor)
+     VALUES ($1, $2, $3, $4, COALESCE($5, 0::numeric), $6, $7, $8)
      RETURNING *`,
     [
       nome,
       descricao,
+      categoria,
       unidade_medida,
       quantidade,
       quantidade_minima,
@@ -65,6 +68,7 @@ export async function atualizarMateriaPrima(
   const {
     nome,
     descricao,
+    categoria,
     unidade_medida,
     quantidade,
     quantidade_minima,
@@ -73,13 +77,14 @@ export async function atualizarMateriaPrima(
   } = item;
   const result = await pool.query(
     `UPDATE estoque_materia_prima
-     SET nome = $1, descricao = $2, unidade_medida = $3, quantidade = $4,
-         quantidade_minima = $5, valor_unitario = $6, fornecedor = $7,
+     SET nome = $1, descricao = $2, categoria = $3, unidade_medida = $4, quantidade = $5,
+         quantidade_minima = $6, valor_unitario = $7, fornecedor = $8,
          atualizado_em = NOW()
-     WHERE id = $8 RETURNING *`,
+     WHERE id = $9 RETURNING *`,
     [
       nome,
       descricao,
+      categoria,
       unidade_medida,
       quantidade,
       quantidade_minima,

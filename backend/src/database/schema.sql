@@ -71,7 +71,8 @@ CREATE TABLE ordens_servico (
 CREATE TABLE estoque_materia_prima (
     id SERIAL PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,                    -- ex: "Couro sintético preto"
-    descricao VARCHAR(200),                        -- detalhamento opcional
+    descricao VARCHAR(200),                        -- Categoria do Produto
+    categoria VARCHAR(50),                        -- detalhamento opcional
     unidade_medida VARCHAR(20) NOT NULL,            -- ex: "metro", "litro", "kg", "unidade"
     quantidade NUMERIC(10,2) NOT NULL DEFAULT 0,    -- quantidade disponível em estoque
     quantidade_minima NUMERIC(10,2),                -- ponto de alerta de reposição (opcional)

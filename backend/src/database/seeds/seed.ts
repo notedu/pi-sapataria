@@ -70,12 +70,11 @@ async function seed() {
 
   // ===== 5. Insere matéria-prima em estoque =====
   await pool.query(`
-    INSERT INTO estoque_materia_prima
-      (nome, descricao, unidade_medida, quantidade, quantidade_minima, valor_unitario, fornecedor) VALUES
-      ('Couro sintético preto', 'Usado na fabricação de solados e reparos', 'metro', 25.5, 5, 18.90, 'Fornecedor Couros SP'),
-      ('Linha de costura reforçada', 'Linha resistente para costura de calçados', 'unidade', 40, 10, 3.50, 'Casa da Costura'),
-      ('Cola de contato', 'Usada na colagem de solas', 'litro', 8, 2, 45.00, 'Química Industrial LTDA'),
-      ('Sola de borracha', 'Sola pronta para substituição', 'unidade', 15, 5, 22.00, 'Fornecedor Couros SP')
+    INSERT INTO estoque_materia_prima 
+    (nome, descricao, categoria, unidade_medida, quantidade, quantidade_minima, valor_unitario, fornecedor) VALUES
+    ('Couro Fóssil Caramelo', 'Couro legítimo tingido', 'Couros', 'm2', 45, 20, 85.00, 'Curtume Vale Real'),
+    ('Fivela Latão Envelhecido 20mm', 'Fivela metálica pequena', 'Ferragens', 'unidade', 15, 50, 3.50, 'Metalúrgica Sul'),
+    ('Tinta Borda Marrom Café', 'Tinta para acabamento de borda', 'Tintas', 'litro', 2.5, 1, 42.00, 'Química do Couro')
   `);
 
   // ===== 6. Insere produtos de venda em estoque =====

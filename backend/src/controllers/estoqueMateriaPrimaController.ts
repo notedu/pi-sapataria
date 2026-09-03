@@ -34,6 +34,7 @@ export async function create(req: Request, res: Response) {
     const {
       nome,
       descricao,
+      categoria,
       unidade_medida,
       quantidade,
       quantidade_minima,
@@ -50,6 +51,7 @@ export async function create(req: Request, res: Response) {
     const novoItem = await estoqueMateriaPrimaModel.criarMateriaPrima({
       nome,
       descricao,
+      categoria,
       unidade_medida,
       quantidade,
       quantidade_minima,
@@ -72,6 +74,7 @@ export async function update(req: Request, res: Response) {
     const {
       nome,
       descricao,
+      categoria,
       unidade_medida,
       quantidade,
       quantidade_minima,
@@ -84,6 +87,7 @@ export async function update(req: Request, res: Response) {
       {
         nome,
         descricao,
+        categoria,
         unidade_medida,
         quantidade,
         quantidade_minima,
