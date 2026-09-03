@@ -20,7 +20,9 @@ CREATE TABLE funcionarios (
     cpf VARCHAR(14) UNIQUE NOT NULL,
     telefone VARCHAR(20) NOT NULL,
     genero VARCHAR(20),
-    cargo VARCHAR(50) NOT NULL,         -- função do funcionário (ex: "Sapateiro", "Atendente")
+    cargo VARCHAR(50) NOT NULL,          -- função do funcionário (ex: "Sapateiro", "Atendente")
+    status VARCHAR(20) NOT NULL DEFAULT 'Ativo',  -- segue o mesmo padrão do status em ordens_servico
+    data_admissao DATE DEFAULT CURRENT_DATE,      -- data de entrada na equipe
     criado_em TIMESTAMP DEFAULT NOW()
 );
 
