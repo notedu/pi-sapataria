@@ -3,7 +3,7 @@
 // Ideia: em vez de repetir "fetch(url, {headers...})" e tratar erro
 // em cada arquivo de service, centralizamos essa lógica aqui uma vez só.
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3333/api/v1';
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 // Erro customizado: guarda o status HTTP junto, pra quem chamar
 // poder decidir o que fazer (ex: 404 vs 500 podem exigir tratamento diferente).
