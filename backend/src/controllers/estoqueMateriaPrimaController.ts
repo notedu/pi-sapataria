@@ -1,6 +1,30 @@
 import { type Request, type Response } from "express";
 import * as estoqueMateriaPrimaModel from "../models/estoqueMateriaPrimaModel.js";
 
+const UNIDADES_INTEIRAS = new Set(["unidade", "par", "rolo", "caixa", "pacote"]);
+
+function validarMateriaPrima(dados: {
+  nome: unknown;
+  categoria: unknown;
+  unidade_medida: unknown;
+  quantidade: unknown;
+  quantidade_minima: unknown;
+  valor_unitario: unknown;
+  fornecedor: unknown;
+}) {
+  const { nome, categoria, unidade_medida, quantidade, quantidade_minima, valor_unitario, fornecedor } = dados;
+  if (!nome || !categoria || !unidade_medida || !fornecedor || quantidade === "" || quantidade === undefined || quantidade_minima === "" || quantidade_minima === undefined || !Number.isFinite(Number(valor_unitario)) || Number(valor_unitario) <= 0) {
+    return "Nome, categoria, fornecedor, unidade, quantidades e preço de custo são obrigatórios";
+  }
+  if (!Number.isFinite(Number(quantidade)) || !Number.isFinite(Number(quantidade_minima))) {
+    return "Quantidade e estoque mínimo devem ser números válidos";
+  }
+  if (UNIDADES_INTEIRAS.has(String(unidade_medida)) && (!Number.isInteger(Number(quantidade)) || !Number.isInteger(Number(quantidade_minima)))) {
+    return "Esta unidade de medida aceita somente quantidades inteiras";
+  }
+  return null;
+}
+
 export async function index(req: Request, res: Response) {
   try {
     const itens = await estoqueMateriaPrimaModel.listarMateriaPrima();
@@ -42,9 +66,12 @@ export async function create(req: Request, res: Response) {
       fornecedor,
     } = req.body;
 
-    if (!nome || !unidade_medida) {
+    const erroValidacao = validarMateriaPrima({ nome, categoria, unidade_medida, quantidade, quantidade_minima, valor_unitario, fornecedor });
+    if (erroValidacao) return res.status(400).json({ erro: erroValidacao });
+
+    if (descricao && descricao.length > 200) {
       return res.status(400).json({
-        erro: "Os campos nome e unidade_medida são obrigatórios",
+        erro: "A descrição pode ter no máximo 200 caracteres",
       });
     }
 
@@ -81,6 +108,15 @@ export async function update(req: Request, res: Response) {
       valor_unitario,
       fornecedor,
     } = req.body;
+
+    const erroValidacao = validarMateriaPrima({ nome, categoria, unidade_medida, quantidade, quantidade_minima, valor_unitario, fornecedor });
+    if (erroValidacao) return res.status(400).json({ erro: erroValidacao });
+
+    if (descricao && descricao.length > 200) {
+      return res.status(400).json({
+        erro: "A descrição pode ter no máximo 200 caracteres",
+      });
+    }
 
     const itemAtualizado = await estoqueMateriaPrimaModel.atualizarMateriaPrima(
       id,

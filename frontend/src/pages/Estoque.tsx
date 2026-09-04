@@ -4,6 +4,8 @@ import {
   ArrowLeft,
   Boxes,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   LoaderCircle,
   PackagePlus,
   Pencil,
@@ -54,15 +56,16 @@ const novoForm = (): Formulario => ({
   quantidade: '0',
   unidade: 'unidade',
   minimo: '',
-  custo: '',
+  custo: '0,00',
   fornecedor: '',
-  venda: '',
+  venda: '0,00',
 });
 const UNIDADES_MEDIDA = [
   { valor: 'unidade', texto: 'Unidade' },
   { valor: 'par', texto: 'Par' },
   { valor: 'metro', texto: 'Metro (m)' },
   { valor: 'm2', texto: 'Metro quadrado (m²)' },
+  { valor: 'cm2', texto: 'Centímetro quadrado (cm²)' },
   { valor: 'litro', texto: 'Litro (L)' },
   { valor: 'mililitro', texto: 'Mililitro (mL)' },
   { valor: 'quilograma', texto: 'Quilograma (kg)' },
@@ -71,12 +74,26 @@ const UNIDADES_MEDIDA = [
   { valor: 'caixa', texto: 'Caixa' },
   { valor: 'pacote', texto: 'Pacote' },
 ];
+const UNIDADES_POR_CATEGORIA: Record<string, string[]> = {
+  Couros: ['m2', 'cm2'],
+  Solados: ['par', 'unidade'],
+  Ferragens: ['unidade', 'pacote', 'caixa'],
+  'Colas e adesivos': ['litro', 'mililitro', 'quilograma'],
+  'Linhas e costura': ['rolo', 'metro', 'unidade'],
+  Tintas: ['litro', 'mililitro'],
+  'Tintas e acabamentos': ['litro', 'mililitro'],
+  'Palmilhas e espumas': ['par', 'unidade', 'm2', 'cm2'],
+  'Materiais de limpeza': ['litro', 'mililitro', 'unidade'],
+  Embalagens: ['unidade', 'pacote', 'caixa', 'rolo'],
+  Outros: UNIDADES_MEDIDA.map(unidade => unidade.valor),
+};
 const CATEGORIAS_MATERIA_PRIMA = [
   'Couros',
   'Solados',
   'Ferragens',
   'Colas e adesivos',
   'Linhas e costura',
+  'Tintas',
   'Tintas e acabamentos',
   'Palmilhas e espumas',
   'Materiais de limpeza',
@@ -92,6 +109,18 @@ const CATEGORIAS_PRODUTOS = [
   'Outros',
 ];
 const numero = (valor: string) => (valor === '' ? undefined : Number(valor));
+const moedaFormatada = (valor: number | string | null | undefined) =>
+  Number(valor ?? 0).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+const moedaDigitada = (valor: string) =>
+  (Number(valor.replace(/\D/g, '') || '0') / 100).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+const valorMonetario = (valor: string) =>
+  Number(valor.replace(/\./g, '').replace(',', '.'));
 const dinheiro = (valor: number | string | null | undefined) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
     Number(valor ?? 0)
@@ -123,7 +152,6 @@ export default function Estoque() {
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
-  const [aviso, setAviso] = useState('');
   const [notificacaoTemporaria, setNotificacaoTemporaria] = useState('');
   const [formAberto, setFormAberto] = useState(false);
   const [editando, setEditando] = useState<Materia | Produto | null>(null);
@@ -213,7 +241,7 @@ export default function Estoque() {
     setEditando(item);
     setForm({
       nome: item.nome,
-      descricao: item.descricao ?? '',
+      descricao: (item.descricao ?? '').slice(0, 200),
       categoria: item.categoria ?? '',
       quantidade: String(item.quantidade),
       unidade: 'unidade_medida' in item ? item.unidade_medida : 'unidade',
@@ -221,10 +249,10 @@ export default function Estoque() {
         'quantidade_minima' in item ? String(item.quantidade_minima ?? '') : '',
       custo:
         'valor_unitario' in item
-          ? String(item.valor_unitario ?? '')
-          : String((item as Produto).valor_custo ?? ''),
+          ? moedaFormatada(item.valor_unitario)
+          : moedaFormatada((item as Produto).valor_custo),
       fornecedor: 'fornecedor' in item ? (item.fornecedor ?? '') : '',
-      venda: 'valor_venda' in item ? String(item.valor_venda) : '',
+      venda: 'valor_venda' in item ? moedaFormatada(item.valor_venda) : '0,00',
     });
     setErro('');
     setFormAberto(true);
@@ -233,13 +261,20 @@ export default function Estoque() {
     evento.preventDefault();
     if (
       !form.nome.trim() ||
+      !form.categoria ||
       (tipo === 'materia-prima' && !form.unidade) ||
-      (tipo === 'produtos' && !form.venda)
+      (tipo === 'materia-prima' &&
+        (!form.fornecedor.trim() ||
+          form.minimo === '' ||
+          valorMonetario(form.custo) <= 0)) ||
+      (tipo === 'produtos' &&
+        (valorMonetario(form.custo) <= 0 ||
+          valorMonetario(form.venda) <= 0))
     ) {
       setErro(
         tipo === 'materia-prima'
-          ? 'Informe nome e unidade de medida.'
-          : 'Informe nome e valor de venda.'
+          ? 'Preencha nome, categoria, fornecedor, unidade, estoque mínimo e preço de custo.'
+          : 'Preencha nome, categoria, quantidade, valor de custo e valor de venda.'
       );
       return;
     }
@@ -258,7 +293,7 @@ export default function Estoque() {
               unidade_medida: form.unidade,
               quantidade: numero(form.quantidade),
               quantidade_minima: numero(form.minimo),
-              valor_unitario: numero(form.custo),
+              valor_unitario: valorMonetario(form.custo),
               fornecedor: form.fornecedor || undefined,
             }
           : {
@@ -266,13 +301,14 @@ export default function Estoque() {
               descricao: form.descricao || undefined,
               categoria: form.categoria || undefined,
               quantidade: numero(form.quantidade),
-              valor_custo: numero(form.custo),
-              valor_venda: numero(form.venda),
+              valor_custo: valorMonetario(form.custo),
+              valor_venda: valorMonetario(form.venda),
             };
       if (editando) await api.put(`${rota}/${editando.id}`, dados);
       else await api.post(rota, dados);
-      if (editando) setAviso('Item atualizado com sucesso.');
-      else setNotificacaoTemporaria('Item cadastrado com sucesso.');
+      setNotificacaoTemporaria(
+        editando ? 'Item atualizado com sucesso.' : 'Item cadastrado com sucesso.'
+      );
       setFormAberto(false);
       await carregar();
     } catch (e) {
@@ -356,7 +392,6 @@ export default function Estoque() {
           Produtos para venda
         </button>
       </div>
-      {aviso && <Aviso tipo="sucesso">{aviso}</Aviso>}
       {notificacaoTemporaria && (
         <NotificacaoTemporaria
           aoFechar={() => setNotificacaoTemporaria('')}
@@ -432,6 +467,7 @@ export default function Estoque() {
                   {tipo === 'materia-prima' ? (
                     <>
                       <th className="px-6 py-4">Mínimo</th>
+                      <th className="px-6 py-4">Custo</th>
                       <th className="px-6 py-4">Status</th>
                     </>
                   ) : (
@@ -494,6 +530,7 @@ function Linha({
   aoEditar: () => void;
   aoExcluir: () => void;
 }) {
+  const [descricaoExpandida, setDescricaoExpandida] = useState(false);
   const materia = item as Materia;
   const baixo =
     tipo === 'materia-prima' &&
@@ -503,9 +540,7 @@ function Linha({
     <tr className="border-t border-[#c4c6d4]/55 hover:bg-[#f1f3fe]/45">
       <td className="px-6 py-4">
         <strong>{item.nome}</strong>
-        {item.descricao && (
-          <p className="mt-1 text-xs text-[#747683]">{item.descricao}</p>
-        )}
+        {item.descricao && <div className="mt-1 text-xs text-[#747683]"><p className="break-words">{descricaoExpandida || item.descricao.length <= 140 ? item.descricao : `${item.descricao.slice(0, 140)}…`}</p>{item.descricao.length > 140 && <button aria-expanded={descricaoExpandida} className="mt-1 inline-flex items-center gap-1 font-semibold text-[#002c7c] hover:underline" onClick={() => setDescricaoExpandida(atual => !atual)} type="button">{descricaoExpandida ? <>Mostrar menos <ChevronUp className="size-3.5" /></> : <>Ver descrição completa <ChevronDown className="size-3.5" /></>}</button>}</div>}
       </td>
       <td className="px-6 py-4 text-[#444652]">
         {item.categoria || 'Sem categoria'}
@@ -533,6 +568,7 @@ function Linha({
                   materia.unidade_medida
                 )}
           </td>
+          <td className="px-6 py-4">{dinheiro(materia.valor_unitario)}</td>
           <td className="px-6 py-4">
             <span
               className={`rounded-full px-2.5 py-1 text-xs font-semibold ${baixo ? 'bg-[#ffdad6] text-[#93000a]' : 'bg-[#d9f7e7] text-[#256b43]'}`}
@@ -622,6 +658,18 @@ function TelaFormulario({
   aoCancelar: () => void;
   aoSalvar: (e: FormEvent<HTMLFormElement>) => void;
 }) {
+  const unidadesCompativeis =
+    tipo === 'materia-prima'
+      ? UNIDADES_MEDIDA.filter(unidade =>
+          (
+            UNIDADES_POR_CATEGORIA[form.categoria] ??
+            UNIDADES_MEDIDA.map(item => item.valor)
+          ).includes(unidade.valor)
+        )
+      : [];
+  const aceitaDecimal =
+    tipo === 'materia-prima' &&
+    !['unidade', 'par', 'rolo', 'caixa', 'pacote'].includes(form.unidade);
   const campo = (
     rotulo: string,
     nome: keyof Formulario,
@@ -657,7 +705,27 @@ function TelaFormulario({
       </span>
       <select
         className="mt-2 w-full rounded-lg border border-[#c4c6d4] bg-white px-4 py-3 text-sm outline-none focus:border-[#002c7c]"
-        onChange={e => aoAlterar(nome, e.target.value)}
+        onChange={e => {
+          const valor = e.target.value;
+          aoAlterar(nome, valor);
+          let unidadeSelecionada = valor;
+          if (nome === 'categoria' && tipo === 'materia-prima') {
+            const primeiraUnidade =
+              UNIDADES_POR_CATEGORIA[valor]?.[0] ?? UNIDADES_MEDIDA[0].valor;
+            aoAlterar('unidade', primeiraUnidade);
+            unidadeSelecionada = primeiraUnidade;
+          }
+          if (
+            tipo === 'materia-prima' &&
+            (nome === 'categoria' || nome === 'unidade') &&
+            ['unidade', 'par', 'rolo', 'caixa', 'pacote'].includes(
+              unidadeSelecionada
+            )
+          ) {
+            aoAlterar('quantidade', String(Math.trunc(Number(form.quantidade)) || 0));
+            aoAlterar('minimo', String(Math.trunc(Number(form.minimo)) || 0));
+          }
+        }}
         required={req}
         value={form[nome]}
       >
@@ -668,6 +736,52 @@ function TelaFormulario({
           </option>
         ))}
       </select>
+    </label>
+  );
+  const campoMoeda = (rotulo: string, nome: 'custo' | 'venda', req = false) => (
+    <label>
+      <span className="text-xs font-semibold uppercase tracking-wide text-[#444652]">
+        {rotulo}
+        {req ? ' *' : ''}
+      </span>
+      <div className="relative mt-2">
+        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[#747683]">R$</span>
+        <input
+          className="w-full rounded-lg border border-[#c4c6d4] py-3 pl-11 pr-4 text-sm outline-none focus:border-[#002c7c]"
+          inputMode="numeric"
+          onChange={e => aoAlterar(nome, moedaDigitada(e.target.value))}
+          required={req}
+          type="text"
+          value={form[nome]}
+        />
+      </div>
+    </label>
+  );
+  const campoQuantidade = (
+    rotulo: string,
+    nome: 'quantidade' | 'minimo',
+    req = false
+  ) => (
+    <label>
+      <span className="text-xs font-semibold uppercase tracking-wide text-[#444652]">
+        {rotulo}
+        {req ? ' *' : ''}
+      </span>
+      <input
+        className="mt-2 w-full rounded-lg border border-[#c4c6d4] px-4 py-3 text-sm outline-none focus:border-[#002c7c]"
+        inputMode={aceitaDecimal ? 'decimal' : 'numeric'}
+        min="0"
+        onChange={e =>
+          aoAlterar(
+            nome,
+            aceitaDecimal ? e.target.value : e.target.value.replace(/\D/g, '')
+          )
+        }
+        required={req}
+        step={aceitaDecimal ? '0.01' : '1'}
+        type={aceitaDecimal ? 'number' : 'text'}
+        value={form[nome]}
+      />
     </label>
   );
   return (
@@ -709,21 +823,27 @@ function TelaFormulario({
             (tipo === 'materia-prima'
               ? CATEGORIAS_MATERIA_PRIMA
               : CATEGORIAS_PRODUTOS
-            ).map(valor => ({ valor, texto: valor }))
+            ).map(valor => ({ valor, texto: valor })),
+            true
           )}
           {tipo === 'materia-prima' ? (
             <>
-              {campo('Fornecedor', 'fornecedor')}
-              {lista('Unidade de medida', 'unidade', UNIDADES_MEDIDA, true)}
-              {campo('Quantidade atual', 'quantidade', 'number', true)}
-              {campo('Estoque mínimo', 'minimo', 'number')}
-              {campo('Preço de custo (R$)', 'custo', 'number')}
+              {campo('Fornecedor', 'fornecedor', 'text', true)}
+              {lista(
+                'Unidade de medida',
+                'unidade',
+                unidadesCompativeis,
+                true
+              )}
+              {campoQuantidade('Quantidade atual', 'quantidade', true)}
+              {campoQuantidade('Estoque mínimo', 'minimo', true)}
+              {campoMoeda('Preço de custo', 'custo', true)}
             </>
           ) : (
             <>
-              {campo('Quantidade', 'quantidade', 'number', true)}
-              {campo('Valor de custo (R$)', 'custo', 'number')}
-              {campo('Valor de venda (R$)', 'venda', 'number', true)}
+              {campoQuantidade('Quantidade', 'quantidade', true)}
+              {campoMoeda('Valor de custo', 'custo', true)}
+              {campoMoeda('Valor de venda', 'venda', true)}
             </>
           )}
           <label className="sm:col-span-2">
@@ -732,9 +852,13 @@ function TelaFormulario({
             </span>
             <textarea
               className="mt-2 min-h-28 w-full rounded-lg border border-[#c4c6d4] px-4 py-3 text-sm outline-none focus:border-[#002c7c]"
+              maxLength={200}
               onChange={e => aoAlterar('descricao', e.target.value)}
               value={form.descricao}
             />
+            <p className="mt-1 text-right text-xs text-[#747683]">
+              {form.descricao.length}/200 caracteres
+            </p>
           </label>
         </div>
         <div className="mt-8 flex justify-end gap-3 border-t border-[#c4c6d4]/60 pt-6">

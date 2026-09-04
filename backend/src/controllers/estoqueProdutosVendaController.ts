@@ -1,6 +1,17 @@
 import { type Request, type Response } from "express";
 import * as estoqueProdutosVendaModel from "../models/estoqueProdutosVendaModel.js";
 
+function validarProduto(dados: { nome: unknown; categoria: unknown; quantidade: unknown; valor_custo: unknown; valor_venda: unknown }) {
+  const { nome, categoria, quantidade, valor_custo, valor_venda } = dados;
+  if (!nome || !categoria || quantidade === "" || quantidade === undefined || !Number.isFinite(Number(valor_custo)) || !Number.isFinite(Number(valor_venda)) || Number(valor_custo) <= 0 || Number(valor_venda) <= 0) {
+    return "Nome, categoria, quantidade, valor de custo e valor de venda são obrigatórios";
+  }
+  if (!Number.isInteger(Number(quantidade)) || Number(quantidade) < 0) {
+    return "A quantidade de produtos para venda deve ser um número inteiro";
+  }
+  return null;
+}
+
 export async function index(req: Request, res: Response) {
   try {
     const produtos = await estoqueProdutosVendaModel.listarProdutosVenda();
@@ -32,9 +43,12 @@ export async function create(req: Request, res: Response) {
     const { nome, descricao, quantidade, valor_custo, valor_venda, categoria } =
       req.body;
 
-    if (!nome || !valor_venda) {
+    const erroValidacao = validarProduto({ nome, categoria, quantidade, valor_custo, valor_venda });
+    if (erroValidacao) return res.status(400).json({ erro: erroValidacao });
+
+    if (descricao && descricao.length > 200) {
       return res.status(400).json({
-        erro: "Os campos nome e valor_venda são obrigatórios",
+        erro: "A descrição pode ter no máximo 200 caracteres",
       });
     }
 
@@ -59,6 +73,15 @@ export async function update(req: Request, res: Response) {
     const id = Number(req.params.id);
     const { nome, descricao, quantidade, valor_custo, valor_venda, categoria } =
       req.body;
+
+    const erroValidacao = validarProduto({ nome, categoria, quantidade, valor_custo, valor_venda });
+    if (erroValidacao) return res.status(400).json({ erro: erroValidacao });
+
+    if (descricao && descricao.length > 200) {
+      return res.status(400).json({
+        erro: "A descrição pode ter no máximo 200 caracteres",
+      });
+    }
 
     const produtoAtualizado =
       await estoqueProdutosVendaModel.atualizarProdutoVenda(id, {
