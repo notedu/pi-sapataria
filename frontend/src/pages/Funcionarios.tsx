@@ -35,9 +35,18 @@ type Funcionario = {
 };
 type OrdemServico = {
   id: number;
+  cliente_id?: number | null;
   funcionario_id?: number | null;
   descricao_item: string;
   status: string;
+  criado_em?: string | null;
+};
+type Cliente = {
+  id: number;
+  nome: string;
+};
+type OrdemDoFuncionario = OrdemServico & {
+  clienteNome: string;
 };
 type DadosFormulario = Omit<Funcionario, 'id'>;
 type Tela = 'lista' | 'formulario' | 'perfil';
@@ -92,6 +101,19 @@ function classeStatus(status: string) {
     ? 'bg-[#d9f7e7] text-[#256b43]'
     : 'bg-[#ffe0df] text-[#a22929]';
 }
+function classeStatusOrdem(status: string) {
+  const statusNormalizado = status.toLowerCase();
+  if (statusNormalizado.includes('conclu')) {
+    return 'bg-[#d9f7e7] text-[#256b43]';
+  }
+  if (statusNormalizado.includes('cancel')) {
+    return 'bg-[#ffe0df] text-[#a22929]';
+  }
+  if (statusNormalizado.includes('andamento')) {
+    return 'bg-[#d7e2ff] text-[#18325c]';
+  }
+  return 'bg-[#fff0c9] text-[#7a5200]';
+}
 function mensagemErro(erro: unknown) {
   return erro instanceof ApiError
     ? erro.message
@@ -125,7 +147,7 @@ export default function Funcionarios() {
   const [tela, setTela] = useState<Tela>('lista');
   const [selecionado, setSelecionado] = useState<Funcionario | null>(null);
   const [dados, setDados] = useState<DadosFormulario>(dadosIniciais);
-  const [ordens, setOrdens] = useState<OrdemServico[]>([]);
+  const [ordens, setOrdens] = useState<OrdemDoFuncionario[]>([]);
   const [carregandoOrdens, setCarregandoOrdens] = useState(false);
   const [funcionarioParaExcluir, setFuncionarioParaExcluir] =
     useState<Funcionario | null>(null);
@@ -190,9 +212,21 @@ export default function Funcionarios() {
     setOrdens([]);
     setCarregandoOrdens(true);
     try {
-      const resposta = await api.get<OrdemServico[]>('/ordens-servico');
+      const [respostaOrdens, respostaClientes] = await Promise.all([
+        api.get<OrdemServico[]>('/ordens-servico'),
+        api.get<Cliente[]>('/clientes'),
+      ]);
+      const clientesPorId = new Map(
+        respostaClientes.map(cliente => [cliente.id, cliente.nome])
+      );
       setOrdens(
-        resposta.filter(ordem => ordem.funcionario_id === funcionario.id)
+        respostaOrdens
+          .filter(ordem => ordem.funcionario_id === funcionario.id)
+          .map(ordem => ({
+            ...ordem,
+            clienteNome:
+              clientesPorId.get(ordem.cliente_id ?? -1) ?? 'Cliente não encontrado',
+          }))
       );
     } catch {
       setAviso(
@@ -676,7 +710,7 @@ function PerfilFuncionario({
   aoVoltar,
 }: {
   funcionario: Funcionario;
-  ordens: OrdemServico[];
+  ordens: OrdemDoFuncionario[];
   carregandoOrdens: boolean;
   aviso: string;
   aoEditar: () => void;
@@ -804,11 +838,13 @@ function PerfilFuncionario({
           <Carregando texto="Carregando ordens de serviço..." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[620px] text-left text-sm">
+            <table className="w-full min-w-[820px] text-left text-sm">
               <thead className="bg-[#f1f3fe] text-xs uppercase tracking-wide text-[#444652]">
                 <tr>
                   <th className="px-6 py-4">OS #</th>
+                  <th className="px-6 py-4">Cliente</th>
                   <th className="px-6 py-4">Item</th>
+                  <th className="px-6 py-4">Criada em</th>
                   <th className="px-6 py-4">Status</th>
                 </tr>
               </thead>
@@ -819,16 +855,28 @@ function PerfilFuncionario({
                       #{ordem.id}
                     </td>
                     <td className="px-6 py-4 text-[#181c23]">
+                      {ordem.clienteNome}
+                    </td>
+                    <td className="px-6 py-4 text-[#181c23]">
                       {ordem.descricao_item}
                     </td>
-                    <td className="px-6 py-4 text-[#444652]">{ordem.status}</td>
+                    <td className="px-6 py-4 text-[#444652]">
+                      {formatarData(ordem.criado_em ?? undefined)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${classeStatusOrdem(ordem.status)}`}
+                      >
+                        {ordem.status}
+                      </span>
+                    </td>
                   </tr>
                 ))}
                 {ordens.length === 0 && (
                   <tr>
                     <td
                       className="px-6 py-10 text-center text-[#444652]"
-                      colSpan={3}
+                      colSpan={5}
                     >
                       Nenhuma ordem de serviço atribuída a este funcionário.
                     </td>
