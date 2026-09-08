@@ -1,15 +1,29 @@
 import { useState, type FormEvent } from 'react';
 import { Info, LockKeyhole, UserRound } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../context/auth';
+import { ApiError } from '../services/api';
 
 const logoUrl =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuBHCdUm7ijCSG-y2UVWTBFDc-v1TGLA6xH5v943tL4WUIP41xNj_3kZWLuOTa1dbR99cJ0oF45_SIhxwBURzAyMf9AMySObrcmHIcLkhRSJV-xh8bFodMF-VTF2hEDe_ikQkn5APFFNk9SwnN86gK-TYtQ-mvd21NzwiIWqDUStwCIR8rUiMDFWARxuAvytalPtYbpU1Yw0VKw4AY4JEgm6DnIm2Bd7QP50VNGIwwRftwMoL5a9P7udwxvguoCAynbK7Hg';
 export default function Login() {
   const [mensagem, setMensagem] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const { entrar, usuario, carregando } = useAuth();
 
-  function enviarFormulario(event: FormEvent<HTMLFormElement>) {
+  async function enviarFormulario(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setMensagem('A autenticação será conectada à API na próxima etapa.');
+    if (enviando) return;
+    const dados = new FormData(event.currentTarget);
+    setEnviando(true);
+    setMensagem('');
+    try { await entrar(String(dados.get('usuario')), String(dados.get('senha'))); }
+    catch (error) { setMensagem(error instanceof ApiError ? error.message : 'Não foi possível conectar ao servidor. Tente novamente.'); }
+    finally { setEnviando(false); }
   }
+
+  if (carregando) return <p role="status" className="p-8">Verificando sessão...</p>;
+  if (usuario) return <Navigate to="/dashboard" replace />;
 
   return (
     <div className="grid min-h-[100dvh] bg-[#f9f9ff] md:grid-cols-2">
@@ -42,7 +56,7 @@ export default function Login() {
             </p>
           </div>
 
-          <form className="space-y-6" onSubmit={enviarFormulario}>
+          <form className="space-y-6 [&>div:first-child]:mb-4" onSubmit={enviarFormulario}>
             <div>
               <label
                 className="mb-2 block text-sm font-semibold text-[#181c23]"
@@ -75,15 +89,6 @@ export default function Login() {
                 >
                   Senha
                 </label>
-                <button
-                  className="text-xs font-semibold text-[#002c7c] transition hover:text-[#1d439c] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#002c7c]"
-                  onClick={() =>
-                    setMensagem('A recuperação de senha ainda será implementada.')
-                  }
-                  type="button"
-                >
-                  Esqueci minha senha
-                </button>
               </div>
               <div className="relative">
                 <LockKeyhole
@@ -100,13 +105,23 @@ export default function Login() {
                   type="password"
                 />
               </div>
+                <button
+                  className="text-xs font-semibold text-[#002c7c] transition hover:text-[#1d439c] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#002c7c] mt-2 block ml-auto text-xs font-semibold text-[#002c7c] hover:text-[#1d439c]"
+                  onClick={() =>
+                    setMensagem('Entre em contato com o administrador para recuperar seu acesso.')
+                  }
+                  type="button"
+                >
+                  Esqueci minha senha
+                </button>
             </div>
 
             <button
+              disabled={enviando}
               className="mt-2 w-full rounded bg-[#002c7c] px-4 py-4 text-sm font-semibold text-white transition hover:bg-[#1d439c] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#002c7c] focus-visible:ring-offset-2 active:scale-[0.99]"
               type="submit"
             >
-              Acessar
+              {enviando ? 'Entrando...' : 'Acessar'}
             </button>
 
             {mensagem && (

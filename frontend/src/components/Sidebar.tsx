@@ -1,6 +1,8 @@
 import { NavLink } from 'react-router-dom';
 import { X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { useState } from 'react';
+import { useAuth } from '../context/auth';
 
 const logoUrl =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuC7Wy3sV0UQh665T1_ljr905SsCYQO4fs5iWzRlZZS72FOzWSx5Wi83v1e-FKRhfldAG1GX7D8tWeyg1VQ5IP2GehRAtO8hGpQMnztujkvUIrPVji4G3EZwZa3WSBgo_8pzT88nScsw2jiShewcdDobH7RgyQmcm3J0MHjN4x1ksmO1f1rJHHrWYRGxhdyoA_Q0eUHKwSq0zxFTbDBcGpqtRD5HBVQ7OVZSu6asaM0O5gXIDjJYlbNpGcpwpu1Jwll7s-M';
@@ -20,6 +22,18 @@ interface SidebarProps {
 
 function ItemNav({ item, aoNavegar }: { item: ItemMenu; aoNavegar: () => void }) {
   const Icone = item.icone;
+  const { sair } = useAuth();
+  const [saindo, setSaindo] = useState(false);
+  const [erro, setErro] = useState('');
+  if (item.label === 'Sair') return <div>
+    <button disabled={saindo} type="button" className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-[#444652] hover:bg-[#d7dae4]/70" onClick={async () => {
+      setSaindo(true); setErro('');
+      try { await sair(); aoNavegar(); }
+      catch { setErro('Não foi possível sair. Tente novamente.'); }
+      finally { setSaindo(false); }
+    }}><Icone aria-hidden="true" className="size-5" />{saindo ? 'Saindo...' : 'Sair'}</button>
+    {erro && <p role="alert" className="px-3 text-xs text-red-700">{erro}</p>}
+  </div>;
 
   if (!item.rota) {
     return (
@@ -49,6 +63,7 @@ function ItemNav({ item, aoNavegar }: { item: ItemMenu; aoNavegar: () => void })
 }
 
 export default function Sidebar({ itens, itensRodape, aberto, aoFechar }: SidebarProps) {
+  const { usuario } = useAuth();
   return (
     <>
       {aberto && (
@@ -68,8 +83,8 @@ export default function Sidebar({ itens, itensRodape, aberto, aoFechar }: Sideba
         </nav>
         <div className="mt-auto">
           <div className="mb-3 flex items-center gap-3 border-b border-[#c4c6d4]/45 px-2 pb-3">
-            <div className="flex size-8 items-center justify-center rounded-full bg-[#1d439c] text-xs font-bold text-white">RS</div>
-            <div><p className="text-sm font-semibold text-[#181c23]">Ricardo Silva</p><p className="text-xs text-[#444652]">Gerente</p></div>
+            <div className="flex size-8 items-center justify-center rounded-full bg-[#1d439c] text-xs font-bold text-white">{usuario?.nome.slice(0, 2).toUpperCase()}</div>
+            <div><p className="text-sm font-semibold text-[#181c23]">{usuario?.nome}</p><p className="text-xs text-[#444652]">{usuario?.perfil === 'admin' ? 'Administrador' : 'Funcionário'}</p></div>
           </div>
           <nav aria-label="Opções da conta" className="space-y-1">
             {itensRodape.map(item => <ItemNav aoNavegar={aoFechar} item={item} key={item.label} />)}

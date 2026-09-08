@@ -7,11 +7,16 @@ import ordemServicoRoutes from "./routes/ordemServicoRoutes.js";
 import estoqueMateriaPrimaRoutes from "./routes/estoqueMateriaPrimaRoutes.js";
 import estoqueProdutosVendaRoutes from "./routes/estoqueProdutosVendaRoutes.js";
 import cepRoutes from "./routes/cepRoutes.js";
+import authRoutes, { allowedOrigins, checkOrigin, requireAuth } from './routes/authRoutes.js';
 
 const app: Application = express();
 
-app.use(cors());
-app.use(express.json());
+app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(express.json({ limit: '16kb' }));
+app.get('/api/v1/health', (_req, res) => { res.json({ status: 'API rodando' }); });
+app.use('/api/v1', checkOrigin);
+app.use('/api/v1/auth', (_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); }, authRoutes);
+app.use('/api/v1', requireAuth);
 
 app.use("/api/v1", clienteRoutes);
 app.use("/api/v1", funcionarioRoutes);
@@ -20,9 +25,5 @@ app.use("/api/v1", ordemServicoRoutes);
 app.use("/api/v1", estoqueMateriaPrimaRoutes);
 app.use("/api/v1", estoqueProdutosVendaRoutes);
 app.use("/api/v1", cepRoutes);
-
-app.get("/api/v1/health", (req, res) => {
-  res.json({ status: "API rodando" });
-});
 
 export default app;
