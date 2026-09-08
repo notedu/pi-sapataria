@@ -3,7 +3,7 @@
 // Ideia: em vez de repetir "fetch(url, {headers...})" e tratar erro
 // em cada arquivo de service, centralizamos essa lógica aqui uma vez só.
 
-const BASE_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:3333/api/v1`;
 
 // Erro customizado: guarda o status HTTP junto, pra quem chamar
 // poder decidir o que fazer (ex: 404 vs 500 podem exigir tratamento diferente).
@@ -21,6 +21,7 @@ export class ApiError extends Error {
 // tipado (usamos Generics <T> pra cada service dizer qual formato espera).
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`, {
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     ...options,
   });
@@ -30,6 +31,9 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const data = await response.json();
 
   if (!response.ok) {
+    if (response.status === 401 && !path.startsWith('/auth/')) {
+      window.dispatchEvent(new Event('auth:expired'));
+    }
     // Reaproveita a mensagem de erro que o controller do backend já manda
     throw new ApiError(data.erro || 'Erro na requisição', response.status);
   }

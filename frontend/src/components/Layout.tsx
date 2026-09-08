@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Bell, Briefcase, CircleUserRound, LayoutGrid, LogOut, Menu, Package, Search, Settings, Users, Wallet, Wrench } from 'lucide-react';
 import Sidebar, { type ItemMenu } from './Sidebar';
+import { useAuth } from '../context/auth';
 
 const ITENS_MENU: ItemMenu[] = [
   { rota: '/dashboard', label: 'Dashboard', icone: LayoutGrid },
@@ -20,6 +21,7 @@ const ITENS_RODAPE: ItemMenu[] = [
 
 export default function Layout() {
   const [menuAberto, setMenuAberto] = useState(false);
+  const { usuario } = useAuth();
 
   return (
     <div className="min-h-screen bg-[#f9f9ff]">
@@ -38,7 +40,7 @@ export default function Layout() {
             </label>
             <button aria-label="Notificações" className="rounded-full p-2 text-[#444652] hover:bg-[#e5e8f3]" type="button"><Bell aria-hidden="true" className="size-5" /></button>
             <button aria-label="Conta" className="rounded-full p-2 text-[#444652] hover:bg-[#e5e8f3]" type="button"><CircleUserRound aria-hidden="true" className="size-6" /></button>
-            <div aria-hidden="true" className="hidden size-8 items-center justify-center rounded-full bg-[#d7e2ff] text-xs font-bold text-[#002c7c] sm:flex">RS</div>
+            <div aria-hidden="true" className="hidden size-8 items-center justify-center rounded-full bg-[#d7e2ff] text-xs font-bold text-[#002c7c] sm:flex">{usuario?.nome.slice(0, 2).toUpperCase()}</div>
           </div>
         </header>
         <main className="min-w-0"><Outlet /></main>

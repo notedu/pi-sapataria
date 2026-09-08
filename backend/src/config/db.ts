@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const pool = new Pool({
+  connectionTimeoutMillis: 10000,
   connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false,

@@ -9,13 +9,15 @@ import Funcionarios from './pages/Funcionarios';
 import Estoque from './pages/Estoque';
 import Configuracoes from './pages/Configuracoes';
 import Login from './pages/Login';
+import AuthProvider from './context/AuthProvider';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
-    <Routes>
+    <AuthProvider><Routes>
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
-      <Route element={<Layout />}>
+      <Route element={<ProtectedRoute />}><Route element={<Layout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/busca" element={<Busca />} />
         <Route path="/clientes" element={<Clientes />} />
@@ -24,8 +26,8 @@ function App() {
         <Route path="/funcionarios" element={<Funcionarios />} />
         <Route path="/estoque" element={<Estoque />} />
         <Route path="/configuracoes" element={<Configuracoes />} />
-      </Route>
-    </Routes>
+      </Route></Route>
+    </Routes></AuthProvider>
   );
 }
 
