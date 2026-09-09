@@ -29,6 +29,8 @@ function App() {
         <Route path="/financeiro" element={<Financeiro />} />
         <Route path="/funcionarios" element={<Funcionarios />} />
         <Route path="/estoque" element={<Estoque />} />
+        <Route path="/estoque/novo/:tipo" element={<Estoque />} />
+        <Route path="/estoque/:tipo/:id/editar" element={<Estoque />} />
         <Route path="/configuracoes" element={<Configuracoes />} />
       </Route></Route>
     </Routes></AuthProvider>

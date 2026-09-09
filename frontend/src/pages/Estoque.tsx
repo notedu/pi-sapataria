@@ -16,6 +16,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { ApiError, api } from '../services/api';
+import { useNavigate, useParams } from 'react-router-dom';
 
 type Tipo = 'materia-prima' | 'produtos';
 type Materia = {
@@ -143,8 +144,36 @@ const erroApi = (erro: unknown) =>
     ? erro.message
     : 'Não foi possível comunicar com a API. Verifique se o back-end está em execução.';
 
+function dadosDoItem(item: Materia | Produto): Formulario {
+  return {
+    nome: item.nome,
+    descricao: (item.descricao ?? '').slice(0, 200),
+    categoria: item.categoria ?? '',
+    quantidade: String(item.quantidade),
+    unidade: 'unidade_medida' in item ? item.unidade_medida : 'unidade',
+    minimo:
+      'quantidade_minima' in item ? String(item.quantidade_minima ?? '') : '',
+    custo:
+      'valor_unitario' in item
+        ? moedaFormatada(item.valor_unitario)
+        : moedaFormatada((item as Produto).valor_custo),
+    fornecedor: 'fornecedor' in item ? (item.fornecedor ?? '') : '',
+    venda: 'valor_venda' in item ? moedaFormatada(item.valor_venda) : '0,00',
+  };
+}
+
 export default function Estoque() {
-  const [tipo, setTipo] = useState<Tipo>('materia-prima');
+  const navegar = useNavigate();
+  const { tipo: tipoDaRota, id: idDaRota } = useParams<{
+    tipo?: string;
+    id?: string;
+  }>();
+  const tipoRotaValido: Tipo | null =
+    tipoDaRota === 'materia-prima' || tipoDaRota === 'produtos'
+      ? tipoDaRota
+      : null;
+  const [tipoSelecionado, setTipoSelecionado] = useState<Tipo>('materia-prima');
+  const tipo = tipoRotaValido ?? tipoSelecionado;
   const [materias, setMaterias] = useState<Materia[]>([]);
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [busca, setBusca] = useState('');
@@ -153,7 +182,6 @@ export default function Estoque() {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
   const [notificacaoTemporaria, setNotificacaoTemporaria] = useState('');
-  const [formAberto, setFormAberto] = useState(false);
   const [editando, setEditando] = useState<Materia | Produto | null>(null);
   const [form, setForm] = useState<Formulario>(novoForm);
   const [excluir, setExcluir] = useState<Materia | Produto | null>(null);
@@ -224,38 +252,42 @@ export default function Estoque() {
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
+  useEffect(() => {
+    if (!tipoRotaValido) return;
+    const sincronizarRota = window.setTimeout(() => {
+      if (!idDaRota) {
+        setForm(novoForm());
+        setEditando(null);
+        setErro('');
+        return;
+      }
+
+      const id = Number(idDaRota);
+      const item = (tipo === 'materia-prima' ? materias : produtos).find(
+        atual => atual.id === id
+      );
+      if (item) {
+        setEditando(item);
+        setForm(dadosDoItem(item));
+        setErro('');
+      } else if (!carregando) {
+        setEditando(null);
+        setErro('Item de estoque não encontrado.');
+      }
+    }, 0);
+    return () => window.clearTimeout(sincronizarRota);
+  }, [carregando, idDaRota, materias, produtos, tipo, tipoRotaValido]);
   function trocar(novo: Tipo) {
-    setTipo(novo);
+    setTipoSelecionado(novo);
     setBusca('');
     setFiltro('Todos');
-    setFormAberto(false);
     setErro('');
   }
   function cadastrar() {
-    setForm(novoForm());
-    setEditando(null);
-    setErro('');
-    setFormAberto(true);
+    navegar(`/estoque/novo/${tipo}`);
   }
   function editar(item: Materia | Produto) {
-    setEditando(item);
-    setForm({
-      nome: item.nome,
-      descricao: (item.descricao ?? '').slice(0, 200),
-      categoria: item.categoria ?? '',
-      quantidade: String(item.quantidade),
-      unidade: 'unidade_medida' in item ? item.unidade_medida : 'unidade',
-      minimo:
-        'quantidade_minima' in item ? String(item.quantidade_minima ?? '') : '',
-      custo:
-        'valor_unitario' in item
-          ? moedaFormatada(item.valor_unitario)
-          : moedaFormatada((item as Produto).valor_custo),
-      fornecedor: 'fornecedor' in item ? (item.fornecedor ?? '') : '',
-      venda: 'valor_venda' in item ? moedaFormatada(item.valor_venda) : '0,00',
-    });
-    setErro('');
-    setFormAberto(true);
+    navegar(`/estoque/${tipo}/${item.id}/editar`);
   }
   async function salvar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -309,7 +341,7 @@ export default function Estoque() {
       setNotificacaoTemporaria(
         editando ? 'Item atualizado com sucesso.' : 'Item cadastrado com sucesso.'
       );
-      setFormAberto(false);
+      navegar('/estoque');
       await carregar();
     } catch (e) {
       setErro(erroApi(e));
@@ -336,7 +368,7 @@ export default function Estoque() {
       setExcluindo(false);
     }
   }
-  if (formAberto)
+  if (tipoRotaValido)
     return (
       <TelaFormulario
         tipo={tipo}
@@ -348,7 +380,7 @@ export default function Estoque() {
           setForm(atual => ({ ...atual, [campo]: valor }))
         }
         aoCancelar={() => {
-          setFormAberto(false);
+          navegar('/estoque');
           setErro('');
         }}
         aoSalvar={salvar}
