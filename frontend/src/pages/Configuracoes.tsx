@@ -8,11 +8,8 @@ import {
   XCircle,
   X,
 } from 'lucide-react';
+import { useAuth } from '../context/auth';
 
-type DadosConta = {
-  nome: string;
-  email: string;
-};
 type DadosSapataria = {
   nome: string;
   endereco: string;
@@ -29,10 +26,6 @@ type Notificacao = {
 };
 
 const CHAVE_CONFIGURACOES = 'seda-e-couro-configuracoes';
-const contaInicial: DadosConta = {
-  nome: 'Ricardo Silva',
-  email: 'ricardo@sedaecouro.com.br',
-};
 const sapatariaInicial: DadosSapataria = {
   nome: 'Seda e Couro',
   endereco: 'Rua dos Artesãos, 123\nBairro das Oficinas\nSão Paulo - SP, 01000-000',
@@ -49,24 +42,20 @@ function carregarConfiguracoes() {
     const salvas = window.localStorage.getItem(CHAVE_CONFIGURACOES);
     if (!salvas) {
       return {
-        conta: contaInicial,
         sapataria: sapatariaInicial,
         preferencias: preferenciasIniciais,
       };
     }
     const dados = JSON.parse(salvas) as Partial<{
-      conta: DadosConta;
       sapataria: DadosSapataria;
       preferencias: Preferencias;
     }>;
     return {
-      conta: { ...contaInicial, ...dados.conta },
       sapataria: { ...sapatariaInicial, ...dados.sapataria },
       preferencias: { ...preferenciasIniciais, ...dados.preferencias },
     };
   } catch {
     return {
-      conta: contaInicial,
       sapataria: sapatariaInicial,
       preferencias: preferenciasIniciais,
     };
@@ -74,19 +63,21 @@ function carregarConfiguracoes() {
 }
 
 export default function Configuracoes() {
-  const [conta, setConta] = useState<DadosConta>(contaInicial);
+  const { usuario } = useAuth();
   const [sapataria, setSapataria] = useState<DadosSapataria>(sapatariaInicial);
   const [preferencias, setPreferencias] = useState<Preferencias>(
     preferenciasIniciais
   );
-  const [senha, setSenha] = useState('');
   const [modalAberto, setModalAberto] = useState(false);
+  const [modalSenhaAberto, setModalSenhaAberto] = useState(false);
+  const [senhaAtual, setSenhaAtual] = useState('');
+  const [novaSenha, setNovaSenha] = useState('');
+  const [confirmacaoSenha, setConfirmacaoSenha] = useState('');
   const [notificacao, setNotificacao] = useState<Notificacao | null>(null);
 
   useEffect(() => {
     const configuracoes = carregarConfiguracoes();
     const carregamentoInicial = window.setTimeout(() => {
-      setConta(configuracoes.conta);
       setSapataria(configuracoes.sapataria);
       setPreferencias(configuracoes.preferencias);
     }, 0);
@@ -94,37 +85,26 @@ export default function Configuracoes() {
   }, []);
 
   function salvarDados(
-    proximaConta = conta,
     proximaSapataria = sapataria,
     proximasPreferencias = preferencias
   ) {
     window.localStorage.setItem(
       CHAVE_CONFIGURACOES,
       JSON.stringify({
-        conta: proximaConta,
         sapataria: proximaSapataria,
         preferencias: proximasPreferencias,
       })
     );
   }
 
-  function salvarConta(evento: FormEvent<HTMLFormElement>) {
-    evento.preventDefault();
-    salvarDados();
-    setNotificacao({
-      mensagem: 'Dados da conta salvos neste navegador.',
-      tipo: 'sucesso',
-    });
-  }
-
   function atualizarPreferencias(proximas: Preferencias) {
     setPreferencias(proximas);
-    salvarDados(conta, sapataria, proximas);
+    salvarDados(sapataria, proximas);
   }
 
   function atualizarDadosComerciais(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
-    salvarDados(conta, sapataria, preferencias);
+    salvarDados(sapataria, preferencias);
     setModalAberto(false);
     setNotificacao({
       mensagem: 'Dados comerciais salvos neste navegador.',
@@ -132,20 +112,31 @@ export default function Configuracoes() {
     });
   }
 
-  function atualizarSenha() {
-    if (!senha.trim()) {
+  function solicitarAlteracaoSenha(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    if (!senhaAtual || !novaSenha || !confirmacaoSenha) {
       setNotificacao({
-        mensagem: 'Digite uma nova senha para continuar.',
+        mensagem: 'Informe a senha atual, a nova senha e a confirmação.',
         tipo: 'erro',
       });
       return;
     }
-    setSenha('');
+    if (novaSenha !== confirmacaoSenha) {
+      setNotificacao({
+        mensagem: 'A confirmação da nova senha não confere.',
+        tipo: 'erro',
+      });
+      return;
+    }
     setNotificacao({
       mensagem:
-        'A autenticação ainda será integrada ao sistema; a senha não foi alterada.',
-      tipo: 'sucesso',
+        'A API atual ainda não disponibiliza a alteração de senha. Nenhuma senha foi modificada.',
+      tipo: 'erro',
     });
+    setSenhaAtual('');
+    setNovaSenha('');
+    setConfirmacaoSenha('');
+    setModalSenhaAberto(false);
   }
 
   return (
@@ -173,50 +164,39 @@ export default function Configuracoes() {
         <div className="space-y-7">
           <section className="rounded-xl border border-[#c4c6d4] bg-[#f7f8ff] p-6">
             <CabecalhoSecao icone={UserRound} titulo="Conta do Usuário" />
-            <form className="mt-6 space-y-5" onSubmit={salvarConta}>
+            <div className="mt-6 space-y-5">
               <div className="grid gap-5 sm:grid-cols-2">
-                <Campo
+                <CampoSomenteLeitura
                   label="Nome completo"
-                  onChange={nome => setConta(atual => ({ ...atual, nome }))}
-                  value={conta.nome}
+                  valor={usuario?.nome ?? 'Usuário não identificado'}
                 />
-                <Campo
-                  label="E-mail profissional"
-                  onChange={email => setConta(atual => ({ ...atual, email }))}
-                  tipo="email"
-                  value={conta.email}
+                <CampoSomenteLeitura
+                  ajuda={
+                    usuario?.usuario.includes('@')
+                      ? undefined
+                      : 'A autenticação atual ainda não possui um campo de e-mail.'
+                  }
+                  label={
+                    usuario?.usuario.includes('@')
+                      ? 'E-mail profissional'
+                      : 'Usuário de acesso'
+                  }
+                  valor={usuario?.usuario ?? 'Não informado'}
                 />
               </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-semibold text-[#444652]">
-                  Alterar senha
-                </label>
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <input
-                    className="min-w-0 flex-1 rounded-lg border border-[#c4c6d4] bg-white px-4 py-2.5 text-[#181c23] outline-none transition focus:border-[#002c7c] focus:ring-2 focus:ring-[#002c7c]/20"
-                    onChange={evento => setSenha(evento.target.value)}
-                    placeholder="Nova senha"
-                    type="password"
-                    value={senha}
-                  />
-                  <button
-                    className="rounded-lg bg-[#002c7c] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#194099]"
-                    onClick={atualizarSenha}
-                    type="button"
-                  >
-                    Atualizar
-                  </button>
-                </div>
-              </div>
-              <div className="flex justify-end border-t border-[#c4c6d4]/60 pt-5">
+              <div className="flex flex-col gap-3 border-t border-[#c4c6d4]/60 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-[#444652]">
+                  Para alterar a senha, confirme primeiro a senha atual.
+                </p>
                 <button
-                  className="rounded-lg border border-[#002c7c] px-4 py-2.5 text-sm font-semibold text-[#002c7c] transition hover:bg-[#edf1ff]"
-                  type="submit"
+                  className="shrink-0 rounded-lg border border-[#002c7c] px-4 py-2.5 text-sm font-semibold text-[#002c7c] transition hover:bg-[#edf1ff]"
+                  onClick={() => setModalSenhaAberto(true)}
+                  type="button"
                 >
-                  Salvar dados
+                  Alterar senha
                 </button>
               </div>
-            </form>
+            </div>
           </section>
 
           <section className="rounded-xl border border-[#c4c6d4] bg-[#f7f8ff] p-6">
@@ -306,6 +286,73 @@ export default function Configuracoes() {
           </section>
         </aside>
       </div>
+
+      {modalSenhaAberto && (
+        <div
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#181c23]/45 p-4"
+          role="dialog"
+        >
+          <form
+            className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+            onSubmit={solicitarAlteracaoSenha}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold text-[#181c23]">
+                  Alterar senha
+                </h2>
+                <p className="mt-1 text-sm text-[#444652]">
+                  Confirme sua senha atual antes de definir uma nova.
+                </p>
+              </div>
+              <button
+                aria-label="Fechar"
+                className="rounded-md p-1 text-[#444652] hover:bg-[#e5e8f3]"
+                onClick={() => setModalSenhaAberto(false)}
+                type="button"
+              >
+                <X aria-hidden="true" className="size-5" />
+              </button>
+            </div>
+            <div className="mt-6 space-y-4">
+              <CampoSenha
+                autoComplete="current-password"
+                label="Senha atual"
+                onChange={setSenhaAtual}
+                value={senhaAtual}
+              />
+              <CampoSenha
+                autoComplete="new-password"
+                label="Nova senha"
+                onChange={setNovaSenha}
+                value={novaSenha}
+              />
+              <CampoSenha
+                autoComplete="new-password"
+                label="Confirmar nova senha"
+                onChange={setConfirmacaoSenha}
+                value={confirmacaoSenha}
+              />
+            </div>
+            <div className="mt-6 flex justify-end gap-3 border-t border-[#c4c6d4]/60 pt-5">
+              <button
+                className="rounded-lg px-4 py-2.5 text-sm font-semibold text-[#444652] hover:bg-[#f1f3fe]"
+                onClick={() => setModalSenhaAberto(false)}
+                type="button"
+              >
+                Cancelar
+              </button>
+              <button
+                className="rounded-lg bg-[#002c7c] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#194099]"
+                type="submit"
+              >
+                Confirmar alteração
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {modalAberto && (
         <div
@@ -432,6 +479,55 @@ function Campo({
         onChange={evento => onChange(evento.target.value)}
         required
         type={tipo}
+        value={value}
+      />
+    </label>
+  );
+}
+
+function CampoSomenteLeitura({
+  label,
+  valor,
+  ajuda,
+}: {
+  label: string;
+  valor: string;
+  ajuda?: string;
+}) {
+  return (
+    <label className="block text-sm font-semibold text-[#444652]">
+      {label}
+      <input
+        className="mt-1.5 w-full cursor-not-allowed rounded-lg border border-[#c4c6d4] bg-[#e9ebf4] px-4 py-2.5 font-normal text-[#444652]"
+        disabled
+        type="text"
+        value={valor}
+      />
+      {ajuda && <span className="mt-1.5 block text-xs font-normal text-[#747683]">{ajuda}</span>}
+    </label>
+  );
+}
+
+function CampoSenha({
+  label,
+  value,
+  onChange,
+  autoComplete,
+}: {
+  label: string;
+  value: string;
+  onChange: (valor: string) => void;
+  autoComplete: string;
+}) {
+  return (
+    <label className="block text-sm font-semibold text-[#444652]">
+      {label}
+      <input
+        autoComplete={autoComplete}
+        className="mt-1.5 w-full rounded-lg border border-[#c4c6d4] bg-white px-4 py-2.5 font-normal text-[#181c23] outline-none transition focus:border-[#002c7c] focus:ring-2 focus:ring-[#002c7c]/20"
+        onChange={evento => onChange(evento.target.value)}
+        required
+        type="password"
         value={value}
       />
     </label>
