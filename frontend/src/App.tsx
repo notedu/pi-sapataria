@@ -4,6 +4,8 @@ import Dashboard from './pages/Dashboard';
 import Busca from './pages/Busca';
 import Clientes from './pages/Clientes';
 import OrdensServico from './pages/OrdensServico';
+import DetalhesOrdemServico from './pages/DetalhesOrdemServico';
+import NovaOrdemServico from './pages/NovaOrdemServico';
 import Financeiro from './pages/Financeiro';
 import Funcionarios from './pages/Funcionarios';
 import Estoque from './pages/Estoque';
@@ -22,6 +24,8 @@ function App() {
         <Route path="/busca" element={<Busca />} />
         <Route path="/clientes" element={<Clientes />} />
         <Route path="/ordens-servico" element={<OrdensServico />} />
+        <Route path="/ordens-servico/nova" element={<NovaOrdemServico />} />
+        <Route path="/ordens-servico/:id" element={<DetalhesOrdemServico />} />
         <Route path="/financeiro" element={<Financeiro />} />
         <Route path="/funcionarios" element={<Funcionarios />} />
         <Route path="/estoque" element={<Estoque />} />
