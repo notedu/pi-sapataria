@@ -22,6 +22,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { ApiError, api } from '../services/api';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 type Funcionario = {
   id: number;
@@ -49,7 +50,6 @@ type OrdemDoFuncionario = OrdemServico & {
   clienteNome: string;
 };
 type DadosFormulario = Omit<Funcionario, 'id'>;
-type Tela = 'lista' | 'formulario' | 'perfil';
 
 const CARGOS = [
   'Sapateiro Master',
@@ -137,6 +137,14 @@ function formatarTelefone(valor: string) {
 }
 
 export default function Funcionarios() {
+  const navegar = useNavigate();
+  const localizacao = useLocation();
+  const { id: idDaRota } = useParams<{ id?: string }>();
+  const criando = localizacao.pathname === '/funcionarios/novo';
+  const editandoRota = Boolean(
+    idDaRota && localizacao.pathname.endsWith('/editar')
+  );
+  const perfilRota = Boolean(idDaRota && !editandoRota);
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [busca, setBusca] = useState('');
   const [carregando, setCarregando] = useState(true);
@@ -144,7 +152,6 @@ export default function Funcionarios() {
   const [erro, setErro] = useState('');
   const [aviso, setAviso] = useState('');
   const [notificacaoTemporaria, setNotificacaoTemporaria] = useState('');
-  const [tela, setTela] = useState<Tela>('lista');
   const [selecionado, setSelecionado] = useState<Funcionario | null>(null);
   const [dados, setDados] = useState<DadosFormulario>(dadosIniciais);
   const [ordens, setOrdens] = useState<OrdemDoFuncionario[]>([]);
@@ -182,31 +189,8 @@ export default function Funcionarios() {
     return () => window.clearTimeout(carregamentoInicial);
   }, []);
 
-  function abrirCadastro() {
-    setSelecionado(null);
-    setDados(dadosIniciais());
-    setErro('');
-    setAviso('');
-    setTela('formulario');
-  }
-  function abrirEdicao(funcionario: Funcionario) {
+  async function carregarPerfil(funcionario: Funcionario) {
     setSelecionado(funcionario);
-    setDados({
-      nome: funcionario.nome,
-      cpf: funcionario.cpf,
-      telefone: funcionario.telefone,
-      genero: funcionario.genero ?? '',
-      cargo: funcionario.cargo,
-      status: funcionario.status,
-      data_admissao: funcionario.data_admissao?.slice(0, 10),
-    });
-    setErro('');
-    setAviso('');
-    setTela('formulario');
-  }
-  async function abrirPerfil(funcionario: Funcionario) {
-    setSelecionado(funcionario);
-    setTela('perfil');
     setErro('');
     setAviso('');
     setOrdens([]);
@@ -237,11 +221,47 @@ export default function Funcionarios() {
     }
   }
   function voltarParaLista() {
-    setTela('lista');
-    setSelecionado(null);
+    navegar('/funcionarios');
     setErro('');
     setAviso('');
   }
+  useEffect(() => {
+    if (!criando && !editandoRota && !perfilRota) return;
+    const sincronizarRota = window.setTimeout(() => {
+      if (criando) {
+        setSelecionado(null);
+        setDados(dadosIniciais());
+        setErro('');
+        setAviso('');
+        return;
+      }
+      if (carregando) return;
+      const id = Number(idDaRota);
+      const funcionario = funcionarios.find(atual => atual.id === id);
+      if (!funcionario) {
+        setSelecionado(null);
+        setErro('Funcionário não encontrado.');
+        return;
+      }
+      if (editandoRota) {
+        setSelecionado(funcionario);
+        setDados({
+          nome: funcionario.nome,
+          cpf: funcionario.cpf,
+          telefone: funcionario.telefone,
+          genero: funcionario.genero ?? '',
+          cargo: funcionario.cargo,
+          status: funcionario.status,
+          data_admissao: funcionario.data_admissao?.slice(0, 10),
+        });
+        setErro('');
+        setAviso('');
+        return;
+      }
+      void carregarPerfil(funcionario);
+    }, 0);
+    return () => window.clearTimeout(sincronizarRota);
+  }, [carregando, criando, editandoRota, funcionarios, idDaRota, perfilRota]);
   async function salvarFuncionario(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     if (
@@ -272,7 +292,7 @@ export default function Funcionarios() {
         setNotificacaoTemporaria('Funcionário cadastrado com sucesso.');
       }
       await carregarFuncionarios();
-      setTela('lista');
+      navegar('/funcionarios');
       setSelecionado(null);
     } catch (erroAtual) {
       setErro(mensagemErro(erroAtual));
@@ -305,7 +325,7 @@ export default function Funcionarios() {
     }
   }
 
-  if (tela === 'formulario')
+  if (criando || editandoRota)
     return (
       <FormularioFuncionario
         dados={dados}
@@ -317,14 +337,14 @@ export default function Funcionarios() {
         aoSalvar={salvarFuncionario}
       />
     );
-  if (tela === 'perfil' && selecionado)
+  if (perfilRota && selecionado)
     return (
       <PerfilFuncionario
         funcionario={selecionado}
         ordens={ordens}
         carregandoOrdens={carregandoOrdens}
         aviso={aviso}
-        aoEditar={() => abrirEdicao(selecionado)}
+        aoEditar={() => navegar(`/funcionarios/${selecionado.id}/editar`)}
         aoVoltar={voltarParaLista}
       />
     );
@@ -342,7 +362,7 @@ export default function Funcionarios() {
         </div>
         <button
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#002c7c] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1d439c] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#002c7c] focus-visible:ring-offset-2"
-          onClick={abrirCadastro}
+          onClick={() => navegar('/funcionarios/novo')}
           type="button"
         >
           <Plus aria-hidden="true" className="size-4" />
@@ -440,7 +460,9 @@ export default function Funcionarios() {
                         <button
                           aria-label={`Editar ${funcionario.nome}`}
                           className="rounded-md p-2 text-[#605e59] transition hover:bg-[#e5e8f3] hover:text-[#002c7c]"
-                          onClick={() => abrirEdicao(funcionario)}
+                          onClick={() =>
+                            navegar(`/funcionarios/${funcionario.id}/editar`)
+                          }
                           type="button"
                         >
                           <Pencil aria-hidden="true" className="size-4" />
@@ -448,7 +470,7 @@ export default function Funcionarios() {
                         <button
                           aria-label={`Ver perfil de ${funcionario.nome}`}
                           className="rounded-md p-2 text-[#605e59] transition hover:bg-[#e5e8f3] hover:text-[#002c7c]"
-                          onClick={() => void abrirPerfil(funcionario)}
+                          onClick={() => navegar(`/funcionarios/${funcionario.id}`)}
                           type="button"
                         >
                           <Eye aria-hidden="true" className="size-4" />
@@ -846,6 +868,7 @@ function PerfilFuncionario({
                   <th className="px-6 py-4">Item</th>
                   <th className="px-6 py-4">Criada em</th>
                   <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -870,13 +893,22 @@ function PerfilFuncionario({
                         {ordem.status}
                       </span>
                     </td>
+                    <td className="px-6 py-4 text-right">
+                      <Link
+                        aria-label={`Ver ordem de serviço #${ordem.id}`}
+                        className="inline-flex rounded-md p-2 text-[#605e59] transition hover:bg-[#e5e8f3] hover:text-[#002c7c]"
+                        to={`/ordens-servico/${ordem.id}`}
+                      >
+                        <Eye aria-hidden="true" className="size-4" />
+                      </Link>
+                    </td>
                   </tr>
                 ))}
                 {ordens.length === 0 && (
                   <tr>
                     <td
                       className="px-6 py-10 text-center text-[#444652]"
-                      colSpan={5}
+                      colSpan={6}
                     >
                       Nenhuma ordem de serviço atribuída a este funcionário.
                     </td>
