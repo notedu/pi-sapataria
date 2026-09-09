@@ -38,9 +38,9 @@ export async function create(req: Request, res: Response) {
 
     // validação básica dos campos obrigatórios
     // (cargo entra aqui no lugar de "endereco", porque em funcionarios ele é obrigatório)
-    if (!nome || !cpf || !telefone || !cargo) {
+    if (!nome || !cpf || !telefone || !genero || !cargo) {
       return res.status(400).json({
-        erro: "Os campos nome, cpf, telefone e cargo são obrigatórios",
+        erro: "Os campos nome, cpf, telefone, genero e cargo são obrigatórios",
       });
     }
 
@@ -70,6 +70,12 @@ export async function update(req: Request, res: Response) {
     const id = Number(req.params.id);
     const { nome, cpf, telefone, genero, cargo, status, data_admissao } =
       req.body;
+
+    if (!nome || !cpf || !telefone || !genero || !cargo) {
+      return res.status(400).json({
+        erro: "Os campos nome, cpf, telefone, genero e cargo são obrigatórios",
+      });
+    }
 
     // PUT exige o objeto completo no body — sem valor padrão aqui,
     // diferente do create(). Se faltar campo, o front está enviando errado.
