@@ -123,7 +123,7 @@ export default function Financeiro() {
   }, [transacoes]);
 
   return (
-    <div className="mx-auto min-h-[calc(100dvh-4rem)] w-full max-w-[1200px] px-5 py-7 sm:px-8 md:px-16">
+    <div className="mx-auto min-h-[calc(100dvh-4rem)] w-full max-w-300 px-5 py-7 sm:px-8 md:px-16">
       <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-[#181c23] sm:text-4xl">
@@ -222,7 +222,7 @@ export default function Financeiro() {
                 </a>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[700px] text-left text-sm">
+                <table className="w-full min-w-175 text-left text-sm">
                   <thead className="bg-[#f1f3fe] text-xs uppercase tracking-wide text-[#444652]">
                     <tr>
                       <th className="px-4 py-4">Data</th>

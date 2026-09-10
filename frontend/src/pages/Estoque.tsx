@@ -387,7 +387,7 @@ export default function Estoque() {
       />
     );
   return (
-    <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-[1200px] flex-col gap-6 px-5 py-7 sm:px-8 md:px-16">
+    <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-300 flex-col gap-6 px-5 py-7 sm:px-8 md:px-16">
       <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-[#181c23] sm:text-4xl">
@@ -490,7 +490,7 @@ export default function Estoque() {
           <Carregando />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[820px] text-left text-sm">
+            <table className="w-full min-w-205 text-left text-sm">
               <thead className="bg-[#f1f3fe] text-xs uppercase tracking-wide text-[#444652]">
                 <tr>
                   <th className="px-6 py-4">Item</th>
@@ -572,7 +572,7 @@ function Linha({
     <tr className="border-t border-[#c4c6d4]/55 hover:bg-[#f1f3fe]/45">
       <td className="px-6 py-4">
         <strong>{item.nome}</strong>
-        {item.descricao && <div className="mt-1 text-xs text-[#747683]"><p className="break-words">{descricaoExpandida || item.descricao.length <= 140 ? item.descricao : `${item.descricao.slice(0, 140)}…`}</p>{item.descricao.length > 140 && <button aria-expanded={descricaoExpandida} className="mt-1 inline-flex items-center gap-1 font-semibold text-[#002c7c] hover:underline" onClick={() => setDescricaoExpandida(atual => !atual)} type="button">{descricaoExpandida ? <>Mostrar menos <ChevronUp className="size-3.5" /></> : <>Ver descrição completa <ChevronDown className="size-3.5" /></>}</button>}</div>}
+        {item.descricao && <div className="mt-1 text-xs text-[#747683]"><p className="wrap-break-word">{descricaoExpandida || item.descricao.length <= 140 ? item.descricao : `${item.descricao.slice(0, 140)}…`}</p>{item.descricao.length > 140 && <button aria-expanded={descricaoExpandida} className="mt-1 inline-flex items-center gap-1 font-semibold text-[#002c7c] hover:underline" onClick={() => setDescricaoExpandida(atual => !atual)} type="button">{descricaoExpandida ? <>Mostrar menos <ChevronUp className="size-3.5" /></> : <>Ver descrição completa <ChevronDown className="size-3.5" /></>}</button>}</div>}
       </td>
       <td className="px-6 py-4 text-[#444652]">
         {item.categoria || 'Sem categoria'}
@@ -817,7 +817,7 @@ function TelaFormulario({
     </label>
   );
   return (
-    <div className="mx-auto min-h-[calc(100dvh-4rem)] max-w-[1000px] px-5 py-7 sm:px-8 md:px-16">
+    <div className="mx-auto min-h-[calc(100dvh-4rem)] max-w-250 px-5 py-7 sm:px-8 md:px-16">
       <button
         className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-[#444652]"
         onClick={aoCancelar}
