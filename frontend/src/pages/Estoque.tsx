@@ -17,8 +17,6 @@ import {
 } from 'lucide-react';
 import { ApiError, api } from '../services/api';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import i18n from '../i18n/config';
 
 type Tipo = 'materia-prima' | 'produtos';
 type Materia = {
@@ -113,19 +111,19 @@ const CATEGORIAS_PRODUTOS = [
 ];
 const numero = (valor: string) => (valor === '' ? undefined : Number(valor));
 const moedaFormatada = (valor: number | string | null | undefined) =>
-  Number(valor ?? 0).toLocaleString(i18n.resolvedLanguage ?? 'pt-BR', {
+  Number(valor ?? 0).toLocaleString('pt-BR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 const moedaDigitada = (valor: string) =>
-  (Number(valor.replace(/\D/g, '') || '0') / 100).toLocaleString(i18n.resolvedLanguage ?? 'pt-BR', {
+  (Number(valor.replace(/\D/g, '') || '0') / 100).toLocaleString('pt-BR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 const valorMonetario = (valor: string) =>
   Number(valor.replace(/\./g, '').replace(',', '.'));
 const dinheiro = (valor: number | string | null | undefined) =>
-  new Intl.NumberFormat(i18n.resolvedLanguage ?? 'pt-BR', { style: 'currency', currency: 'BRL' }).format(
+  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
     Number(valor ?? 0)
   );
 function quantidadeFormatada(
@@ -165,7 +163,6 @@ function dadosDoItem(item: Materia | Produto): Formulario {
 }
 
 export default function Estoque() {
-  const { t } = useTranslation(['estoque', 'common']);
   const navegar = useNavigate();
   const { tipo: tipoDaRota, id: idDaRota } = useParams<{
     tipo?: string;
@@ -275,7 +272,7 @@ export default function Estoque() {
         setErro('');
       } else if (!carregando) {
         setEditando(null);
-        setErro(t('estoque:notFound'));
+        setErro('Item de estoque não encontrado.');
       }
     }, 0);
     return () => window.clearTimeout(sincronizarRota);
@@ -308,8 +305,8 @@ export default function Estoque() {
     ) {
       setErro(
         tipo === 'materia-prima'
-          ? t('estoque:requiredRawMaterial')
-          : t('estoque:requiredProduct')
+          ? 'Preencha nome, categoria, fornecedor, unidade, estoque mínimo e preço de custo.'
+          : 'Preencha nome, categoria, quantidade, valor de custo e valor de venda.'
       );
       return;
     }
@@ -342,7 +339,7 @@ export default function Estoque() {
       if (editando) await api.put(`${rota}/${editando.id}`, dados);
       else await api.post(rota, dados);
       setNotificacaoTemporaria(
-        editando ? t('estoque:updated') : t('estoque:saved')
+        editando ? 'Item atualizado com sucesso.' : 'Item cadastrado com sucesso.'
       );
       navegar('/estoque');
       await carregar();
@@ -360,7 +357,7 @@ export default function Estoque() {
         `${tipo === 'materia-prima' ? '/estoque-materia-prima' : '/estoque-produtos-venda'}/${excluir.id}`
       );
       setNotificacaoTemporaria(
-        t('estoque:removed', { name: excluir.nome })
+        `${excluir.nome} foi removido(a) do estoque.`
       );
       setExcluir(null);
       await carregar();
@@ -394,10 +391,10 @@ export default function Estoque() {
       <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-[#181c23] sm:text-4xl">
-            {t('estoque:title')}
+            Controle de Estoque
           </h1>
           <p className="mt-2 text-base text-[#444652]">
-            {t('estoque:subtitle')}
+            Acompanhe materiais e produtos disponíveis na sapataria.
           </p>
         </div>
         <button
@@ -406,7 +403,7 @@ export default function Estoque() {
           type="button"
         >
           <Plus className="size-4" />
-          {t('estoque:add', { type: tipo === 'materia-prima' ? t('estoque:rawMaterial') : t('estoque:product') })}
+          Adicionar {tipo === 'materia-prima' ? 'matéria-prima' : 'produto'}
         </button>
       </div>
       <div className="flex rounded-xl border border-[#c4c6d4]/70 bg-white p-1 sm:w-fit">
@@ -416,7 +413,7 @@ export default function Estoque() {
           type="button"
         >
           <Boxes className="mr-2 inline size-4" />
-          {t('estoque:rawMaterials')}
+          Matéria-prima
         </button>
         <button
           className={`flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold ${tipo === 'produtos' ? 'bg-[#002c7c] text-white' : 'text-[#444652] hover:bg-[#f1f3fe]'}`}
@@ -424,7 +421,7 @@ export default function Estoque() {
           type="button"
         >
           <ShoppingBag className="mr-2 inline size-4" />
-          {t('estoque:productsForSale')}
+          Produtos para venda
         </button>
       </div>
       {notificacaoTemporaria && (
@@ -439,8 +436,8 @@ export default function Estoque() {
           icone={Boxes}
           texto={
             tipo === 'materia-prima'
-              ? t('estoque:rawMaterials')
-              : t('estoque:productsForSale')
+              ? 'Itens de matéria-prima'
+              : 'Produtos cadastrados'
           }
           valor={String(itens.length)}
         />
@@ -449,8 +446,8 @@ export default function Estoque() {
           icone={AlertTriangle}
           texto={
             tipo === 'materia-prima'
-              ? t('estoque:lowStock')
-              : t('estoque:productsForSale')
+              ? 'Itens com estoque baixo'
+              : 'Itens em catálogo'
           }
           valor={String(tipo === 'materia-prima' ? baixos : itens.length)}
         />
@@ -458,8 +455,8 @@ export default function Estoque() {
           icone={ShoppingBag}
           texto={
             tipo === 'materia-prima'
-              ? t('estoque:rawMaterials')
-              : t('estoque:productsForSale')
+              ? 'Valor em matéria-prima'
+              : 'Valor potencial de venda'
           }
           valor={dinheiro(valorTotal)}
         />
@@ -470,7 +467,7 @@ export default function Estoque() {
           <input
             className="w-full rounded-lg border border-[#c4c6d4] bg-white py-3 pl-10 pr-4 text-sm outline-none focus:border-[#002c7c]"
             onChange={e => setBusca(e.target.value)}
-            placeholder={t('estoque:search')}
+            placeholder="Buscar item..."
             type="search"
             value={busca}
           />
@@ -496,22 +493,22 @@ export default function Estoque() {
             <table className="w-full min-w-[820px] text-left text-sm">
               <thead className="bg-[#f1f3fe] text-xs uppercase tracking-wide text-[#444652]">
                 <tr>
-                  <th className="px-6 py-4">{t('estoque:item')}</th>
-                  <th className="px-6 py-4">{t('estoque:category')}</th>
-                  <th className="px-6 py-4">{t('estoque:quantity')}</th>
+                  <th className="px-6 py-4">Item</th>
+                  <th className="px-6 py-4">Categoria</th>
+                  <th className="px-6 py-4">Quantidade</th>
                   {tipo === 'materia-prima' ? (
                     <>
-                      <th className="px-6 py-4">{t('estoque:minimum')}</th>
-                      <th className="px-6 py-4">{t('estoque:cost')}</th>
-                      <th className="px-6 py-4">{t('estoque:status')}</th>
+                      <th className="px-6 py-4">Mínimo</th>
+                      <th className="px-6 py-4">Custo</th>
+                      <th className="px-6 py-4">Status</th>
                     </>
                   ) : (
                     <>
-                      <th className="px-6 py-4">{t('estoque:cost')}</th>
-                      <th className="px-6 py-4">{t('estoque:sale')}</th>
+                      <th className="px-6 py-4">Custo</th>
+                      <th className="px-6 py-4">Venda</th>
                     </>
                   )}
-                  <th className="px-6 py-4 text-right">{t('estoque:actions')}</th>
+                  <th className="px-6 py-4 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -530,7 +527,7 @@ export default function Estoque() {
                       className="px-6 py-14 text-center text-[#444652]"
                       colSpan={7}
                     >
-                      {t('estoque:empty')}
+                      Nenhum item encontrado.
                     </td>
                   </tr>
                 )}
@@ -539,7 +536,7 @@ export default function Estoque() {
           </div>
         )}
         <footer className="mt-auto border-t border-[#c4c6d4]/60 px-6 py-4 text-sm text-[#444652]">
-          {t('estoque:showing', { shown: filtrados.length, total: itens.length })}
+          Mostrando {filtrados.length} de {itens.length} itens
         </footer>
       </section>
       {excluir && (
@@ -565,7 +562,6 @@ function Linha({
   aoEditar: () => void;
   aoExcluir: () => void;
 }) {
-  const { t } = useTranslation('estoque');
   const [descricaoExpandida, setDescricaoExpandida] = useState(false);
   const materia = item as Materia;
   const baixo =
@@ -579,7 +575,7 @@ function Linha({
         {item.descricao && <div className="mt-1 text-xs text-[#747683]"><p className="break-words">{descricaoExpandida || item.descricao.length <= 140 ? item.descricao : `${item.descricao.slice(0, 140)}…`}</p>{item.descricao.length > 140 && <button aria-expanded={descricaoExpandida} className="mt-1 inline-flex items-center gap-1 font-semibold text-[#002c7c] hover:underline" onClick={() => setDescricaoExpandida(atual => !atual)} type="button">{descricaoExpandida ? <>Mostrar menos <ChevronUp className="size-3.5" /></> : <>Ver descrição completa <ChevronDown className="size-3.5" /></>}</button>}</div>}
       </td>
       <td className="px-6 py-4 text-[#444652]">
-        {item.categoria || t('noCategory')}
+        {item.categoria || 'Sem categoria'}
       </td>
       <td
         className={
@@ -609,7 +605,7 @@ function Linha({
             <span
               className={`rounded-full px-2.5 py-1 text-xs font-semibold ${baixo ? 'bg-[#ffdad6] text-[#93000a]' : 'bg-[#d9f7e7] text-[#256b43]'}`}
             >
-              {baixo ? t('lowStock') : t('upToDate')}
+              {baixo ? 'Estoque baixo' : 'Em dia'}
             </span>
           </td>
         </>
@@ -694,7 +690,6 @@ function TelaFormulario({
   aoCancelar: () => void;
   aoSalvar: (e: FormEvent<HTMLFormElement>) => void;
 }) {
-  const { t } = useTranslation(['estoque', 'common']);
   const unidadesCompativeis =
     tipo === 'materia-prima'
       ? UNIDADES_MEDIDA.filter(unidade =>
@@ -766,7 +761,7 @@ function TelaFormulario({
         required={req}
         value={form[nome]}
       >
-        <option value="">{t('estoque:selectOption')}</option>
+        <option value="">Selecione uma opção</option>
         {opcoes.map(opcao => (
           <option key={opcao.valor} value={opcao.valor}>
             {opcao.texto}
@@ -829,17 +824,17 @@ function TelaFormulario({
         type="button"
       >
         <ArrowLeft className="size-4" />
-        {t('estoque:back')}
+        Voltar para o estoque
       </button>
       <h1 className="text-3xl font-semibold sm:text-4xl">
         {editando
-          ? t('estoque:editItem')
-          : t('estoque:newItem', { type: tipo === 'materia-prima' ? t('estoque:rawMaterial') : t('estoque:product') })}
+          ? 'Editar item'
+          : `Novo item de ${tipo === 'materia-prima' ? 'matéria-prima' : 'produto'}`}
       </h1>
       <p className="mt-2 text-[#444652]">
         {tipo === 'materia-prima'
-          ? t('estoque:subtitle')
-          : t('estoque:subtitle')}
+          ? 'Cadastre materiais usados nos serviços da sapataria.'
+          : 'Cadastre produtos para venda direta.'}
       </p>
       <form
         className="mt-7 rounded-xl border border-[#c4c6d4]/70 bg-white p-5 shadow-sm sm:p-8"
@@ -852,10 +847,10 @@ function TelaFormulario({
         )}
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            {campo(t('estoque:itemName'), 'nome', 'text', true)}
+            {campo('Nome do item', 'nome', 'text', true)}
           </div>
           {lista(
-            t('estoque:category'),
+            'Categoria',
             'categoria',
             (tipo === 'materia-prima'
               ? CATEGORIAS_MATERIA_PRIMA
@@ -865,27 +860,27 @@ function TelaFormulario({
           )}
           {tipo === 'materia-prima' ? (
             <>
-              {campo(t('estoque:supplier'), 'fornecedor', 'text', true)}
+              {campo('Fornecedor', 'fornecedor', 'text', true)}
               {lista(
-                t('estoque:unit'),
+                'Unidade de medida',
                 'unidade',
                 unidadesCompativeis,
                 true
               )}
-              {campoQuantidade(t('estoque:currentQuantity'), 'quantidade', true)}
-              {campoQuantidade(t('estoque:minimum'), 'minimo', true)}
-              {campoMoeda(t('estoque:costPrice'), 'custo', true)}
+              {campoQuantidade('Quantidade atual', 'quantidade', true)}
+              {campoQuantidade('Estoque mínimo', 'minimo', true)}
+              {campoMoeda('Preço de custo', 'custo', true)}
             </>
           ) : (
             <>
-              {campoQuantidade(t('estoque:quantity'), 'quantidade', true)}
-              {campoMoeda(t('estoque:costPrice'), 'custo', true)}
-              {campoMoeda(t('estoque:saleValue'), 'venda', true)}
+              {campoQuantidade('Quantidade', 'quantidade', true)}
+              {campoMoeda('Valor de custo', 'custo', true)}
+              {campoMoeda('Valor de venda', 'venda', true)}
             </>
           )}
           <label className="sm:col-span-2">
             <span className="text-xs font-semibold uppercase tracking-wide text-[#444652]">
-              {t('estoque:description')}
+              Descrição
             </span>
             <textarea
               className="mt-2 min-h-28 w-full rounded-lg border border-[#c4c6d4] px-4 py-3 text-sm outline-none focus:border-[#002c7c]"
@@ -894,7 +889,7 @@ function TelaFormulario({
               value={form.descricao}
             />
             <p className="mt-1 text-right text-xs text-[#747683]">
-              {t('estoque:characters', { count: form.descricao.length })}
+              {form.descricao.length}/200 caracteres
             </p>
           </label>
         </div>
@@ -904,7 +899,7 @@ function TelaFormulario({
             onClick={aoCancelar}
             type="button"
           >
-            {t('common:cancel')}
+            Cancelar
           </button>
           <button
             className="inline-flex items-center gap-2 rounded-lg bg-[#002c7c] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
@@ -916,7 +911,7 @@ function TelaFormulario({
             ) : (
               <PackagePlus className="size-4" />
             )}
-            {editando ? t('estoque:saveChanges') : t('estoque:createItem')}
+            {editando ? 'Salvar alterações' : 'Cadastrar item'}
           </button>
         </div>
       </form>
@@ -924,11 +919,10 @@ function TelaFormulario({
   );
 }
 function Carregando() {
-  const { t } = useTranslation('estoque');
   return (
     <div className="flex min-h-56 items-center justify-center gap-3 text-sm text-[#444652]">
       <LoaderCircle className="size-5 animate-spin text-[#002c7c]" />
-      {t('loading')}
+      Carregando estoque...
     </div>
   );
 }
@@ -990,7 +984,6 @@ function Confirmacao({
   aoCancelar: () => void;
   aoConfirmar: () => void;
 }) {
-  const { t } = useTranslation(['estoque', 'common']);
   return (
     <div
       aria-modal="true"
@@ -999,9 +992,10 @@ function Confirmacao({
     >
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
         <Trash2 className="size-6 text-[#ba1a1a]" />
-        <h2 className="mt-4 text-xl font-semibold">{t('estoque:deleteTitle')}</h2>
+        <h2 className="mt-4 text-xl font-semibold">Excluir item do estoque?</h2>
         <p className="mt-2 text-sm leading-6 text-[#444652]">
-          {t('estoque:deleteConfirm', { name: item.nome })}
+          Você tem certeza de que deseja excluir <strong>{item.nome}</strong>?
+          Esta ação não pode ser desfeita.
         </p>
         <div className="mt-6 flex justify-end gap-3">
           <button
@@ -1010,7 +1004,7 @@ function Confirmacao({
             onClick={aoCancelar}
             type="button"
           >
-            {t('common:cancel')}
+            Cancelar
           </button>
           <button
             className="rounded-lg bg-[#ba1a1a] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
@@ -1018,7 +1012,7 @@ function Confirmacao({
             onClick={aoConfirmar}
             type="button"
           >
-            {excluindo ? t('estoque:deleting') : t('estoque:deleteItem')}
+            {excluindo ? 'Excluindo...' : 'Excluir item'}
           </button>
         </div>
       </div>

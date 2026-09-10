@@ -9,7 +9,6 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { ApiError, api } from '../services/api';
-import { useTranslation } from 'react-i18next';
 
 type OrdemServico = {
   id: number;
@@ -22,18 +21,18 @@ type OrdemServico = {
 type Cliente = { id: number; nome: string };
 type Transacao = OrdemServico & { clienteNome: string; valor: number };
 
-function moeda(valor: number, locale: string) {
-  return new Intl.NumberFormat(locale, {
+function moeda(valor: number) {
+  return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
   }).format(valor);
 }
-function formatarData(data: string | null | undefined, locale: string, fallback: string) {
-  if (!data) return fallback;
+function formatarData(data?: string | null) {
+  if (!data) return 'Data não informada';
   const valor = new Date(data);
   return Number.isNaN(valor.getTime())
-    ? fallback
-    : new Intl.DateTimeFormat(locale, {
+    ? 'Data não informada'
+    : new Intl.DateTimeFormat('pt-BR', {
         day: '2-digit',
         month: 'short',
         year: 'numeric',
@@ -47,9 +46,13 @@ function statusConcluido(status?: string | null) {
 function statusCancelado(status?: string | null) {
   return status?.toLocaleLowerCase('pt-BR').includes('cancel') ?? false;
 }
+function mensagemErro(erro: unknown) {
+  return erro instanceof ApiError
+    ? erro.message
+    : 'Não foi possível carregar os dados financeiros. Verifique se o back-end está em execução.';
+}
+
 export default function Financeiro() {
-  const { t, i18n } = useTranslation(['financeiro', 'common']);
-  const locale = i18n.resolvedLanguage ?? 'pt-BR';
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
@@ -72,7 +75,7 @@ export default function Financeiro() {
           .map(ordem => ({
             ...ordem,
             clienteNome:
-              clientesPorId.get(ordem.cliente_id) ?? t('financeiro:unknownClient'),
+              clientesPorId.get(ordem.cliente_id) ?? 'Cliente não encontrado',
             valor: Number(ordem.valor_servico) || 0,
           }))
           .sort((primeira, segunda) => {
@@ -86,7 +89,7 @@ export default function Financeiro() {
           });
         if (ativo) setTransacoes(dados);
       } catch (erroAtual) {
-        if (ativo) setErro(erroAtual instanceof ApiError ? erroAtual.message : t('financeiro:apiError'));
+        if (ativo) setErro(mensagemErro(erroAtual));
       } finally {
         if (ativo) setCarregando(false);
       }
@@ -124,23 +127,23 @@ export default function Financeiro() {
       <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-[#181c23] sm:text-4xl">
-            {t('financeiro:title')}
+            Financeiro e Faturamento
           </h1>
           <p className="mt-2 text-base text-[#444652] sm:text-lg">
-            {t('financeiro:subtitle')}
+            Visão geral de contas, transações recentes e geração de documentos fiscais.
           </p>
         </div>
         <button
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#002c7c] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#194099]"
           onClick={() =>
             setAviso(
-              t('financeiro:invoiceNotice')
+              'A emissão de nota fiscal será disponibilizada quando a integração fiscal for adicionada ao sistema.'
             )
           }
           type="button"
         >
           <ReceiptText aria-hidden="true" className="size-4" />
-          {t('financeiro:generateInvoice')}
+          Gerar nota fiscal
         </button>
       </div>
 
@@ -148,7 +151,7 @@ export default function Financeiro() {
         <div className="mt-6 flex items-start justify-between gap-3 rounded-lg border border-[#b4c5ff] bg-[#edf1ff] px-4 py-3 text-sm text-[#18325c]">
           <span>{aviso}</span>
           <button
-            aria-label={t('common:close')}
+            aria-label="Fechar aviso"
             className="text-[#18325c] hover:text-[#002c7c]"
             onClick={() => setAviso('')}
             type="button"
@@ -166,40 +169,40 @@ export default function Financeiro() {
       {carregando ? (
         <div className="flex min-h-80 items-center justify-center gap-3 text-[#444652]">
           <LoaderCircle aria-hidden="true" className="size-5 animate-spin" />
-          {t('financeiro:loading')}
+          Carregando informações financeiras...
         </div>
       ) : (
         <>
           <section className="mt-7 grid gap-5 lg:grid-cols-3">
             <CardResumo
-              descricao={t('financeiro:monthlyBalance')}
+              descricao="Saldo mensal"
               icone={WalletCards}
               iconeClasse="bg-[#e0e8ff] text-[#002c7c]"
-              valor={moeda(resumo.saldo, locale)}
+              valor={moeda(resumo.saldo)}
               rodape={
                 resumo.saldo > 0
-                  ? t('financeiro:completedValues')
-                  : t('financeiro:noCompleted')
+                  ? 'Valores de ordens concluídas'
+                  : 'Nenhuma ordem concluída ainda'
               }
               rodapeClasse="text-[#256b43]"
             />
             <CardResumo
-              descricao={t('financeiro:pendingPayments')}
+              descricao="Pagamentos pendentes"
               icone={CalendarClock}
               iconeClasse="bg-[#ffe0df] text-[#ba1a1a]"
-              valor={moeda(resumo.pendente, locale)}
-              rodape={t('financeiro:pending', { count: resumo.pendentes.length })}
+              valor={moeda(resumo.pendente)}
+              rodape={`${resumo.pendentes.length} ${resumo.pendentes.length === 1 ? 'ordem aguardando' : 'ordens aguardando'} conclusão`}
               rodapeClasse="text-[#444652]"
             />
             <CardResumo
-              descricao={t('financeiro:invoices')}
+              descricao="NFs geradas (mês)"
               icone={FileText}
               iconeClasse="bg-[#e0e8ff] text-[#002c7c]"
               valor={String(resumo.notas.length)}
               rodape={
                 resumo.notas.length
-                  ? t('financeiro:totaling', { value: moeda(resumo.saldo, locale) })
-                  : t('financeiro:noInvoice')
+                  ? `Totalizando ${moeda(resumo.saldo)}`
+                  : 'Nenhuma nota disponível'
               }
               rodapeClasse="text-[#444652]"
             />
@@ -209,20 +212,24 @@ export default function Financeiro() {
             <div className="overflow-hidden rounded-xl border border-[#c4c6d4]/70 bg-white shadow-sm">
               <div className="flex items-center justify-between border-b border-[#c4c6d4]/60 px-6 py-5">
                 <h2 className="text-xl font-semibold text-[#181c23]">
-                  {t('financeiro:recentTransactions')}
+                  Transações Recentes
                 </h2>
                 <a
                   className="inline-flex items-center gap-1 text-sm font-semibold text-[#002c7c] hover:text-[#194099]"
                   href="/ordens-servico"
                 >
-                  {t('financeiro:viewAll')} <ArrowRight aria-hidden="true" className="size-4" />
+                  Ver tudo <ArrowRight aria-hidden="true" className="size-4" />
                 </a>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[700px] text-left text-sm">
                   <thead className="bg-[#f1f3fe] text-xs uppercase tracking-wide text-[#444652]">
                     <tr>
-                      <th className="px-4 py-4">{t('common:date')}</th><th className="px-4 py-4">{t('financeiro:description')}</th><th className="px-4 py-4">{t('common:client')}</th><th className="px-4 py-4">{t('common:value')}</th><th className="px-4 py-4">{t('common:status')}</th>
+                      <th className="px-4 py-4">Data</th>
+                      <th className="px-4 py-4">Descrição</th>
+                      <th className="px-4 py-4">Cliente</th>
+                      <th className="px-4 py-4">Valor</th>
+                      <th className="px-4 py-4">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -232,7 +239,7 @@ export default function Financeiro() {
                         key={transacao.id}
                       >
                         <td className="whitespace-nowrap px-4 py-4 text-[#444652]">
-                          {formatarData(transacao.criado_em, locale, t('financeiro:dateNotInformed'))}
+                          {formatarData(transacao.criado_em)}
                         </td>
                         <td className="max-w-48 px-4 py-4 font-medium text-[#181c23]">
                           {transacao.descricao_item}
@@ -241,7 +248,7 @@ export default function Financeiro() {
                           {transacao.clienteNome}
                         </td>
                         <td className="whitespace-nowrap px-4 py-4 font-semibold text-[#181c23]">
-                          {moeda(transacao.valor, locale)}
+                          {moeda(transacao.valor)}
                         </td>
                         <td className="px-4 py-4">
                           <StatusTransacao status={transacao.status} />
@@ -254,7 +261,7 @@ export default function Financeiro() {
                           className="px-4 py-10 text-center text-[#444652]"
                           colSpan={5}
                         >
-                          {t('financeiro:empty')}
+                          Nenhuma transação encontrada.
                         </td>
                       </tr>
                     )}
@@ -266,7 +273,7 @@ export default function Financeiro() {
             <aside className="overflow-hidden rounded-xl border border-[#c4c6d4]/70 bg-white shadow-sm">
               <div className="border-b border-[#c4c6d4]/60 px-6 py-5">
                 <h2 className="text-xl font-semibold text-[#181c23]">
-                  {t('financeiro:recentInvoices')}
+                  Notas Fiscais Recentes (NF-e)
                 </h2>
               </div>
               <div className="divide-y divide-[#c4c6d4]/55">
@@ -280,17 +287,17 @@ export default function Financeiro() {
                         NF-e #{String(nota.id).padStart(6, '0')}
                       </p>
                       <p className="truncate text-sm text-[#444652]">
-                        {nota.clienteNome} · {formatarData(nota.criado_em, locale, t('financeiro:dateNotInformed'))}
+                        {nota.clienteNome} · {formatarData(nota.criado_em)}
                       </p>
                     </div>
                     <span className="text-sm font-semibold text-[#181c23]">
-                      {moeda(nota.valor, locale)}
+                      {moeda(nota.valor)}
                     </span>
                   </div>
                 ))}
                 {resumo.notas.length === 0 && (
                   <div className="px-5 py-8 text-center text-sm text-[#444652]">
-                    {t('financeiro:noInvoiceAvailable')}
+                    Nenhuma nota fiscal disponível.
                   </div>
                 )}
                 {resumo.pendentes.length > 0 && (
@@ -299,7 +306,11 @@ export default function Financeiro() {
                       aria-hidden="true"
                       className="mt-0.5 size-5 shrink-0"
                     />
-                    <p>{t('financeiro:waiting', { count: resumo.pendentes.length })}</p>
+                    <p>
+                      {resumo.pendentes.length}{' '}
+                      {resumo.pendentes.length === 1 ? 'ordem está' : 'ordens estão'}
+                      {' '}aguardando conclusão para faturamento.
+                    </p>
                   </div>
                 )}
               </div>
@@ -307,7 +318,7 @@ export default function Financeiro() {
                 className="flex items-center justify-center gap-2 border-t border-[#c4c6d4]/60 px-5 py-4 text-sm font-semibold text-[#002c7c] hover:bg-[#f1f3fe]"
                 href="/ordens-servico"
               >
-                {t('financeiro:documentArchive')}
+                Ver arquivo de documentos
                 <ArrowRight aria-hidden="true" className="size-4" />
               </a>
             </aside>
@@ -352,10 +363,9 @@ function CardResumo({
 }
 
 function StatusTransacao({ status }: { status?: string | null }) {
-  const { t } = useTranslation('financeiro');
   const concluido = statusConcluido(status);
   const cancelado = statusCancelado(status);
-  const texto = concluido ? t('paid') : status || t('pendingStatus');
+  const texto = concluido ? 'Pago' : status || 'Pendente';
   const classe = concluido
     ? 'bg-[#d9f7e7] text-[#256b43]'
     : cancelado

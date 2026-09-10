@@ -9,7 +9,6 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '../context/auth';
-import { useTranslation } from 'react-i18next';
 
 type DadosSapataria = {
   nome: string;
@@ -64,7 +63,6 @@ function carregarConfiguracoes() {
 }
 
 export default function Configuracoes() {
-  const { t, i18n } = useTranslation(['configuracoes', 'common']);
   const { usuario } = useAuth();
   const [sapataria, setSapataria] = useState<DadosSapataria>(sapatariaInicial);
   const [preferencias, setPreferencias] = useState<Preferencias>(
@@ -109,7 +107,7 @@ export default function Configuracoes() {
     salvarDados(sapataria, preferencias);
     setModalAberto(false);
     setNotificacao({
-      mensagem: t('configuracoes:saved'),
+      mensagem: 'Dados comerciais salvos neste navegador.',
       tipo: 'sucesso',
     });
   }
@@ -118,21 +116,21 @@ export default function Configuracoes() {
     evento.preventDefault();
     if (!senhaAtual || !novaSenha || !confirmacaoSenha) {
       setNotificacao({
-        mensagem: t('configuracoes:passwordRequired'),
+        mensagem: 'Informe a senha atual, a nova senha e a confirmação.',
         tipo: 'erro',
       });
       return;
     }
     if (novaSenha !== confirmacaoSenha) {
       setNotificacao({
-        mensagem: t('configuracoes:passwordMismatch'),
+        mensagem: 'A confirmação da nova senha não confere.',
         tipo: 'erro',
       });
       return;
     }
     setNotificacao({
       mensagem:
-        t('configuracoes:passwordUnavailable'),
+        'A API atual ainda não disponibiliza a alteração de senha. Nenhuma senha foi modificada.',
       tipo: 'erro',
     });
     setSenhaAtual('');
@@ -145,10 +143,10 @@ export default function Configuracoes() {
     <div className="mx-auto min-h-[calc(100dvh-4rem)] w-full max-w-[1120px] px-5 py-7 sm:px-8 md:px-16">
       <div className="mb-8">
         <h1 className="text-3xl font-semibold tracking-tight text-[#002c7c] sm:text-4xl">
-          {t('configuracoes:title')}
+          Configurações
         </h1>
         <p className="mt-2 text-base text-[#444652] sm:text-lg">
-          {t('configuracoes:subtitle')}
+          Gerencie suas preferências de conta e sistema da sapataria.
         </p>
       </div>
 
@@ -165,37 +163,37 @@ export default function Configuracoes() {
       <div className="grid gap-7 lg:grid-cols-[minmax(0,1.7fr)_minmax(280px,.8fr)]">
         <div className="space-y-7">
           <section className="rounded-xl border border-[#c4c6d4] bg-[#f7f8ff] p-6">
-            <CabecalhoSecao icone={UserRound} titulo={t('configuracoes:userAccount')} />
+            <CabecalhoSecao icone={UserRound} titulo="Conta do Usuário" />
             <div className="mt-6 space-y-5">
               <div className="grid gap-5 sm:grid-cols-2">
                 <CampoSomenteLeitura
-                  label={t('configuracoes:fullName')}
-                  valor={usuario?.nome ?? t('configuracoes:unknownUser')}
+                  label="Nome completo"
+                  valor={usuario?.nome ?? 'Usuário não identificado'}
                 />
                 <CampoSomenteLeitura
                   ajuda={
                     usuario?.usuario.includes('@')
                       ? undefined
-                      : t('common:notInformed')
+                      : 'A autenticação atual ainda não possui um campo de e-mail.'
                   }
                   label={
                     usuario?.usuario.includes('@')
-                      ? t('configuracoes:email')
-                      : t('configuracoes:username')
+                      ? 'E-mail profissional'
+                      : 'Usuário de acesso'
                   }
-                  valor={usuario?.usuario ?? t('common:notInformed')}
+                  valor={usuario?.usuario ?? 'Não informado'}
                 />
               </div>
               <div className="flex flex-col gap-3 border-t border-[#c4c6d4]/60 pt-5 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-[#444652]">
-                  {t('configuracoes:passwordHint')}
+                  Para alterar a senha, confirme primeiro a senha atual.
                 </p>
                 <button
                   className="shrink-0 rounded-lg border border-[#002c7c] px-4 py-2.5 text-sm font-semibold text-[#002c7c] transition hover:bg-[#edf1ff]"
                   onClick={() => setModalSenhaAberto(true)}
                   type="button"
                 >
-                  {t('configuracoes:password')}
+                  Alterar senha
                 </button>
               </div>
             </div>
@@ -204,35 +202,33 @@ export default function Configuracoes() {
           <section className="rounded-xl border border-[#c4c6d4] bg-[#f7f8ff] p-6">
             <CabecalhoSecao
               icone={SlidersHorizontal}
-              titulo={t('configuracoes:systemPreferences')}
+              titulo="Preferências do Sistema"
             />
             <div className="mt-6 space-y-6">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <DescricaoPreferencia
-                  descricao={t('configuracoes:languageDescription')}
-                  titulo={t('configuracoes:language')}
+                  descricao="Selecione o idioma da interface"
+                  titulo="Idioma"
                 />
                 <select
                   className="rounded-lg border border-[#c4c6d4] bg-white px-4 py-2.5 text-sm text-[#181c23] outline-none focus:border-[#002c7c] focus:ring-2 focus:ring-[#002c7c]/20"
-                  onChange={evento => {
-                    const idioma = evento.target.value;
-                    void i18n.changeLanguage(idioma);
+                  onChange={evento =>
                     atualizarPreferencias({
                       ...preferencias,
-                      idioma,
-                    });
-                  }}
-                  value={i18n.resolvedLanguage ?? preferencias.idioma}
+                      idioma: evento.target.value,
+                    })
+                  }
+                  value={preferencias.idioma}
                 >
-                  <option value="pt-BR">{t('configuracoes:languagePt')}</option>
-                  <option value="en">{t('configuracoes:languageEn')}</option>
-                  <option value="es">{t('configuracoes:languageEs')}</option>
+                  <option value="pt-BR">Português (BR)</option>
+                  <option value="en-US">English (US)</option>
+                  <option value="es-ES">Español</option>
                 </select>
               </div>
               <div className="flex items-center justify-between gap-5">
                 <DescricaoPreferencia
-                  descricao={t('configuracoes:notificationsDescription')}
-                  titulo={t('configuracoes:notifications')}
+                  descricao="Receber alertas de novas ordens de serviço"
+                  titulo="Notificações"
                 />
                 <Alternador
                   ativo={preferencias.notificacoes}
@@ -263,10 +259,10 @@ export default function Configuracoes() {
               className="absolute -right-7 -top-7 size-32 rotate-12 text-[#d7e2ff]"
             />
             <div className="relative">
-              <CabecalhoSecao icone={Store} titulo={t('configuracoes:shopData')} />
+              <CabecalhoSecao icone={Store} titulo="Dados da Sapataria" />
               <dl className="mt-6 space-y-5">
-                <DadoComercial titulo={t('configuracoes:shopName')} valor={sapataria.nome} />
-                <DadoComercial titulo={t('configuracoes:address')} valor={sapataria.endereco} />
+                <DadoComercial titulo="Nome da loja" valor={sapataria.nome} />
+                <DadoComercial titulo="Endereço" valor={sapataria.endereco} />
                 <div>
                   <dt className="text-xs font-semibold uppercase tracking-wide text-[#444652]">
                     Contato oficial
@@ -284,7 +280,7 @@ export default function Configuracoes() {
                 onClick={() => setModalAberto(true)}
                 type="button"
               >
-                {t('configuracoes:editShopData')}
+                Editar dados comerciais
               </button>
             </div>
           </section>
@@ -307,7 +303,7 @@ export default function Configuracoes() {
                   Alterar senha
                 </h2>
                 <p className="mt-1 text-sm text-[#444652]">
-                  {t('configuracoes:passwordModalHint')}
+                  Confirme sua senha atual antes de definir uma nova.
                 </p>
               </div>
               <button
@@ -371,10 +367,10 @@ export default function Configuracoes() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-xl font-semibold text-[#181c23]">
-                  {t('configuracoes:commercialData')}
+                  Dados comerciais
                 </h2>
                 <p className="mt-1 text-sm text-[#444652]">
-                  {t('configuracoes:updateData')}
+                  Atualize os dados exibidos no sistema.
                 </p>
               </div>
               <button
@@ -389,7 +385,7 @@ export default function Configuracoes() {
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <Campo
-                  label={t('configuracoes:shopName')}
+                  label="Nome da loja"
                   onChange={nome =>
                     setSapataria(atual => ({ ...atual, nome }))
                   }
@@ -398,7 +394,7 @@ export default function Configuracoes() {
               </div>
               <div className="sm:col-span-2">
                 <label className="mb-1.5 block text-sm font-semibold text-[#444652]">
-                  {t('configuracoes:address')}
+                  Endereço
                 </label>
                 <textarea
                   className="min-h-28 w-full resize-y rounded-lg border border-[#c4c6d4] px-4 py-2.5 text-sm text-[#181c23] outline-none focus:border-[#002c7c] focus:ring-2 focus:ring-[#002c7c]/20"
@@ -412,14 +408,14 @@ export default function Configuracoes() {
                 />
               </div>
               <Campo
-                label={t('configuracoes:phone')}
+                label="Telefone"
                 onChange={telefone =>
                   setSapataria(atual => ({ ...atual, telefone }))
                 }
                 value={sapataria.telefone}
               />
               <Campo
-                label={t('configuracoes:email')}
+                label="E-mail"
                 onChange={email =>
                   setSapataria(atual => ({ ...atual, email }))
                 }
@@ -433,13 +429,13 @@ export default function Configuracoes() {
                 onClick={() => setModalAberto(false)}
                 type="button"
               >
-                {t('common:cancel')}
+                Cancelar
               </button>
               <button
                 className="rounded-lg bg-[#002c7c] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#194099]"
                 type="submit"
               >
-                {t('configuracoes:saveChanges')}
+                Salvar alterações
               </button>
             </div>
           </form>
