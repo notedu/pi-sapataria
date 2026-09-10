@@ -1,13 +1,14 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { BarChart3, CircleDollarSign, ClipboardPlus, LoaderCircle, Search, UserPlus } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../services/api';
 
 type Cliente = { id: number; nome: string; telefone: string; cpf?: string };
 type Ordem = { id: number; cliente_id: number; descricao_item: string; status?: string };
 
 export default function Busca() {
-  const [termo, setTermo] = useState(''); const [clientes, setClientes] = useState<Cliente[]>([]); const [ordens, setOrdens] = useState<Ordem[]>([]); const [erro, setErro] = useState(''); const [carregando, setCarregando] = useState(true);
+  const [parametros] = useSearchParams(); const termoDaUrl = parametros.get('q') ?? ''; const [termo, setTermo] = useState(termoDaUrl); const [clientes, setClientes] = useState<Cliente[]>([]); const [ordens, setOrdens] = useState<Ordem[]>([]); const [erro, setErro] = useState(''); const [carregando, setCarregando] = useState(true);
+  useEffect(() => { const sincronizarTermo = window.setTimeout(() => setTermo(termoDaUrl), 0); return () => window.clearTimeout(sincronizarTermo); }, [termoDaUrl]);
   useEffect(() => { Promise.all([api.get<Cliente[]>('/clientes'), api.get<Ordem[]>('/ordens-servico')]).then(([cs, os]) => { setClientes(cs); setOrdens(os); }).catch(() => setErro('Não foi possível acessar os registros. Confirme se a API está em execução.')).finally(() => setCarregando(false)); }, []);
   const resultado = useMemo(() => { const busca = termo.trim().toLowerCase(); if (!busca) return { clientes: [] as Cliente[], ordens: [] as Ordem[] }; const encontrados = clientes.filter(cliente => `${cliente.nome} ${cliente.telefone} ${cliente.cpf ?? ''}`.toLowerCase().includes(busca)); const ids = new Set(encontrados.map(cliente => cliente.id)); return { clientes: encontrados, ordens: ordens.filter(ordem => String(ordem.id).includes(busca) || ordem.descricao_item.toLowerCase().includes(busca) || ids.has(ordem.cliente_id)) }; }, [clientes, ordens, termo]);
   const clientePorId = new Map(clientes.map(cliente => [cliente.id, cliente])); const acoes = [{ nome: 'Nova O.S.', icone: ClipboardPlus, rota: '/ordens-servico' }, { nome: 'Cadastrar cliente', icone: UserPlus, rota: '/clientes' }, { nome: 'Consultar financeiro', icone: CircleDollarSign, rota: '/financeiro' }, { nome: 'Ver dashboard', icone: BarChart3, rota: '/dashboard' }];
