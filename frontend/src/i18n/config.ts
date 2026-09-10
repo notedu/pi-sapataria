@@ -1,0 +1,21 @@
+import i18n from 'i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
+import { initReactI18next } from 'react-i18next';
+import ptBRCommon from '../locales/pt-BR/common.json';
+import ptBRSidebar from '../locales/pt-BR/sidebar.json';
+import ptBRDashboard from '../locales/pt-BR/dashboard.json';
+import ptBRClientes from '../locales/pt-BR/clientes.json';
+import ptBROrdensServico from '../locales/pt-BR/ordensServico.json';
+import ptBRLogin from '../locales/pt-BR/login.json';
+import ptBRBusca from '../locales/pt-BR/busca.json';
+import ptBREmConstrucao from '../locales/pt-BR/emConstrucao.json';
+import ptBRConfiguracoes from '../locales/pt-BR/configuracoes.json';
+import ptBREstoque from '../locales/pt-BR/estoque.json';
+import ptBRFuncionarios from '../locales/pt-BR/funcionarios.json';
+import ptBRFinanceiro from '../locales/pt-BR/financeiro.json';
+import enCommon from '../locales/en/common.json'; import enSidebar from '../locales/en/sidebar.json'; import enDashboard from '../locales/en/dashboard.json'; import enClientes from '../locales/en/clientes.json'; import enOrdensServico from '../locales/en/ordensServico.json'; import enLogin from '../locales/en/login.json'; import enBusca from '../locales/en/busca.json'; import enEmConstrucao from '../locales/en/emConstrucao.json'; import enConfiguracoes from '../locales/en/configuracoes.json'; import enEstoque from '../locales/en/estoque.json'; import enFuncionarios from '../locales/en/funcionarios.json'; import enFinanceiro from '../locales/en/financeiro.json';
+import esCommon from '../locales/es/common.json'; import esSidebar from '../locales/es/sidebar.json'; import esDashboard from '../locales/es/dashboard.json'; import esClientes from '../locales/es/clientes.json'; import esOrdensServico from '../locales/es/ordensServico.json'; import esLogin from '../locales/es/login.json'; import esBusca from '../locales/es/busca.json'; import esEmConstrucao from '../locales/es/emConstrucao.json'; import esConfiguracoes from '../locales/es/configuracoes.json'; import esEstoque from '../locales/es/estoque.json'; import esFuncionarios from '../locales/es/funcionarios.json'; import esFinanceiro from '../locales/es/financeiro.json';
+
+const bundle = (common: object, sidebar: object, dashboard: object, clientes: object, ordensServico: object, login: object, busca: object, emConstrucao: object, configuracoes: object, estoque: object, funcionarios: object, financeiro: object) => ({ common, sidebar, dashboard, clientes, ordensServico, login, busca, emConstrucao, configuracoes, estoque, funcionarios, financeiro });
+i18n.use(LanguageDetector).use(initReactI18next).init({ resources: { 'pt-BR': bundle(ptBRCommon, ptBRSidebar, ptBRDashboard, ptBRClientes, ptBROrdensServico, ptBRLogin, ptBRBusca, ptBREmConstrucao, ptBRConfiguracoes, ptBREstoque, ptBRFuncionarios, ptBRFinanceiro), en: bundle(enCommon, enSidebar, enDashboard, enClientes, enOrdensServico, enLogin, enBusca, enEmConstrucao, enConfiguracoes, enEstoque, enFuncionarios, enFinanceiro), es: bundle(esCommon, esSidebar, esDashboard, esClientes, esOrdensServico, esLogin, esBusca, esEmConstrucao, esConfiguracoes, esEstoque, esFuncionarios, esFinanceiro) }, fallbackLng: 'pt-BR', supportedLngs: ['pt-BR', 'en', 'es'], interpolation: { escapeValue: false }, detection: { order: ['localStorage', 'navigator'], caches: ['localStorage'] } });
+export default i18n;

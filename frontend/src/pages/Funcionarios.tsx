@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { ApiError, api } from '../services/api';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 type Funcionario = {
   id: number;
@@ -137,6 +138,7 @@ function formatarTelefone(valor: string) {
 }
 
 export default function Funcionarios() {
+  const { t } = useTranslation(['funcionarios', 'common']);
   const navegar = useNavigate();
   const localizacao = useLocation();
   const { id: idDaRota } = useParams<{ id?: string }>();
@@ -240,7 +242,7 @@ export default function Funcionarios() {
       const funcionario = funcionarios.find(atual => atual.id === id);
       if (!funcionario) {
         setSelecionado(null);
-        setErro('Funcionário não encontrado.');
+        setErro(t('funcionarios:notFound'));
         return;
       }
       if (editandoRota) {
@@ -286,10 +288,10 @@ export default function Funcionarios() {
       };
       if (selecionado) {
         await api.put<Funcionario>(`/funcionarios/${selecionado.id}`, payload);
-        setAviso('Funcionário atualizado com sucesso.');
+        setAviso(t('funcionarios:updated'));
       } else {
         await api.post<Funcionario>('/funcionarios', payload);
-        setNotificacaoTemporaria('Funcionário cadastrado com sucesso.');
+        setNotificacaoTemporaria(t('funcionarios:saved'));
       }
       await carregarFuncionarios();
       navegar('/funcionarios');
@@ -314,7 +316,7 @@ export default function Funcionarios() {
         )
       );
       setNotificacaoTemporaria(
-        `${funcionarioParaExcluir.nome} foi removido(a) da equipe.`
+        t('funcionarios:removed', { name: funcionarioParaExcluir.nome })
       );
       setFuncionarioParaExcluir(null);
     } catch (erroAtual) {
@@ -354,10 +356,10 @@ export default function Funcionarios() {
       <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-[#181c23] sm:text-4xl">
-            Equipe
+            {t('funcionarios:title')}
           </h1>
           <p className="mt-2 text-base text-[#444652]">
-            Gerencie os funcionários da oficina.
+            {t('funcionarios:subtitle')}
           </p>
         </div>
         <button
@@ -366,7 +368,7 @@ export default function Funcionarios() {
           type="button"
         >
           <Plus aria-hidden="true" className="size-4" />
-          Novo Funcionário
+          {t('funcionarios:new')}
         </button>
       </div>
       {aviso && <Aviso tipo="sucesso">{aviso}</Aviso>}
@@ -379,7 +381,7 @@ export default function Funcionarios() {
       {erro && <Aviso tipo="erro">{erro}</Aviso>}
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <label className="relative w-full sm:max-w-sm">
-          <span className="sr-only">Buscar funcionário</span>
+          <span className="sr-only">{t('funcionarios:search')}</span>
           <Search
             aria-hidden="true"
             className="absolute left-3 top-1/2 size-5 -translate-y-1/2 text-[#444652]"
@@ -387,33 +389,30 @@ export default function Funcionarios() {
           <input
             className="w-full rounded-lg border border-[#c4c6d4] bg-white py-3 pl-10 pr-4 text-sm text-[#181c23] outline-none transition placeholder:text-[#747683] focus:border-[#002c7c] focus:ring-2 focus:ring-[#002c7c]/20"
             onChange={event => setBusca(event.target.value)}
-            placeholder="Buscar funcionário..."
+            placeholder={t('funcionarios:search')}
             type="search"
             value={busca}
           />
         </label>
         <span className="text-sm text-[#444652]">
-          {funcionarios.length}{' '}
-          {funcionarios.length === 1
-            ? 'funcionário cadastrado'
-            : 'funcionários cadastrados'}
+          {t('funcionarios:employees', { count: funcionarios.length })}
         </span>
       </div>
       <section className="flex flex-1 flex-col overflow-hidden rounded-xl border border-[#c4c6d4]/70 bg-white shadow-sm">
         {carregando ? (
-          <Carregando texto="Carregando equipe..." />
+          <Carregando texto={t('funcionarios:loading')} />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] text-left">
               <thead className="border-b border-[#c4c6d4]/60 bg-[#f1f3fe] text-xs uppercase tracking-wide text-[#444652]">
                 <tr>
-                  <th className="px-6 py-4 font-semibold">Nome</th>
-                  <th className="px-6 py-4 font-semibold">CPF</th>
-                  <th className="px-6 py-4 font-semibold">Telefone</th>
-                  <th className="px-6 py-4 font-semibold">Gênero</th>
-                  <th className="px-6 py-4 font-semibold">Cargo</th>
-                  <th className="px-6 py-4 font-semibold">Status</th>
-                  <th className="px-6 py-4 text-right font-semibold">Ações</th>
+                  <th className="px-6 py-4 font-semibold">{t('funcionarios:name')}</th>
+                  <th className="px-6 py-4 font-semibold">{t('funcionarios:cpf')}</th>
+                  <th className="px-6 py-4 font-semibold">{t('funcionarios:phone')}</th>
+                  <th className="px-6 py-4 font-semibold">{t('funcionarios:gender')}</th>
+                  <th className="px-6 py-4 font-semibold">{t('funcionarios:role')}</th>
+                  <th className="px-6 py-4 font-semibold">{t('common:status')}</th>
+                  <th className="px-6 py-4 text-right font-semibold">{t('funcionarios:actions')}</th>
                 </tr>
               </thead>
               <tbody className="text-sm">
@@ -493,7 +492,7 @@ export default function Funcionarios() {
                       className="px-6 py-14 text-center text-[#444652]"
                       colSpan={7}
                     >
-                      Nenhum funcionário encontrado.
+                      {t('funcionarios:empty')}
                     </td>
                   </tr>
                 )}
@@ -503,8 +502,7 @@ export default function Funcionarios() {
         )}
         <footer className="mt-auto flex items-center justify-between border-t border-[#c4c6d4]/60 px-6 py-4 text-sm text-[#444652]">
           <span>
-            Mostrando {funcionariosFiltrados.length} de {funcionarios.length}{' '}
-            funcionários
+            {t('funcionarios:showing', { shown: funcionariosFiltrados.length, total: funcionarios.length })}
           </span>
           <div className="flex gap-2">
             <button
@@ -555,6 +553,7 @@ function FormularioFuncionario({
   aoMudar: (dados: DadosFormulario) => void;
   aoSalvar: (evento: FormEvent<HTMLFormElement>) => void;
 }) {
+  const { t } = useTranslation(['funcionarios', 'common']);
   function alterar(campo: keyof DadosFormulario, valor: string) {
     aoMudar({ ...dados, [campo]: valor });
   }
@@ -568,15 +567,15 @@ function FormularioFuncionario({
         type="button"
       >
         <ArrowLeft aria-hidden="true" className="size-4" />
-        Voltar para equipe
+        {t('funcionarios:back')}
       </button>
       <h1 className="text-3xl font-semibold tracking-tight text-[#181c23] sm:text-4xl">
-        {editando ? 'Editar Funcionário' : 'Novo Cadastro de Funcionário'}
+        {editando ? t('funcionarios:edit') : t('funcionarios:newRegistration')}
       </h1>
       <p className="mt-2 text-[#444652]">
         {editando
-          ? 'Atualize os dados do membro da equipe.'
-          : 'Preencha os dados abaixo para adicionar um novo membro à equipe da oficina.'}
+          ? t('funcionarios:editSubtitle')
+          : t('funcionarios:newSubtitle')}
       </p>
       <form
         className="mt-7 rounded-xl border border-[#c4c6d4]/70 bg-white p-5 shadow-sm sm:p-8"
@@ -590,12 +589,12 @@ function FormularioFuncionario({
         <div className="grid gap-5 sm:grid-cols-2">
           <label className="sm:col-span-2">
             <span className="text-xs font-semibold uppercase tracking-wide text-[#444652]">
-              Nome completo *
+              {t('funcionarios:fullName')} *
             </span>
             <input
               className={classeInput}
               onChange={event => alterar('nome', event.target.value)}
-              placeholder="Ex.: João da Silva"
+              placeholder={t('funcionarios:nameExample')}
               required
               type="text"
               value={dados.nome}
@@ -620,7 +619,7 @@ function FormularioFuncionario({
           </label>
           <label>
             <span className="text-xs font-semibold uppercase tracking-wide text-[#444652]">
-              Telefone *
+              {t('funcionarios:phone')} *
             </span>
             <input
               className={classeInput}
@@ -637,7 +636,7 @@ function FormularioFuncionario({
           </label>
           <label>
             <span className="text-xs font-semibold uppercase tracking-wide text-[#444652]">
-              Gênero
+              {t('funcionarios:gender')}
             </span>
             <select
               className={classeInput}
@@ -645,7 +644,7 @@ function FormularioFuncionario({
               required
               value={dados.genero ?? ''}
             >
-              <option value="">Selecione uma opção</option>
+              <option value="">{t('funcionarios:selectOption')}</option>
               {GENEROS.map(genero => (
                 <option key={genero} value={genero}>
                   {genero}
@@ -655,7 +654,7 @@ function FormularioFuncionario({
           </label>
           <label>
             <span className="text-xs font-semibold uppercase tracking-wide text-[#444652]">
-              Cargo *
+              {t('funcionarios:role')} *
             </span>
             <select
               className={classeInput}
@@ -663,7 +662,7 @@ function FormularioFuncionario({
               required
               value={dados.cargo}
             >
-              <option value="">Selecione uma opção</option>
+              <option value="">{t('funcionarios:selectOption')}</option>
               {CARGOS.map(cargo => (
                 <option key={cargo} value={cargo}>
                   {cargo}
@@ -673,20 +672,20 @@ function FormularioFuncionario({
           </label>
           <label>
             <span className="text-xs font-semibold uppercase tracking-wide text-[#444652]">
-              Status
+              {t('common:status')}
             </span>
             <select
               className={classeInput}
               onChange={event => alterar('status', event.target.value)}
               value={dados.status}
             >
-              <option value="Ativo">Ativo</option>
-              <option value="Inativo">Inativo</option>
+              <option value="Ativo">{t('funcionarios:active')}</option>
+              <option value="Inativo">{t('funcionarios:inactive')}</option>
             </select>
           </label>
           <label>
             <span className="text-xs font-semibold uppercase tracking-wide text-[#444652]">
-              Data de admissão
+              {t('funcionarios:admissionDate')}
             </span>
             <input
               className={classeInput}
@@ -702,7 +701,7 @@ function FormularioFuncionario({
             onClick={aoCancelar}
             type="button"
           >
-            Cancelar
+            {t('common:cancel')}
           </button>
           <button
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#002c7c] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1d439c] disabled:cursor-not-allowed disabled:opacity-60"
@@ -715,7 +714,7 @@ function FormularioFuncionario({
                 className="size-4 animate-spin"
               />
             )}
-            {editando ? 'Salvar alterações' : 'Salvar funcionário'}
+            {editando ? t('funcionarios:saveChanges') : t('funcionarios:saveEmployee')}
           </button>
         </div>
       </form>
@@ -1029,6 +1028,7 @@ function ConfirmacaoExclusao({
   aoCancelar: () => void;
   aoConfirmar: () => void;
 }) {
+  const { t } = useTranslation(['funcionarios', 'common']);
   return (
     <div
       aria-labelledby="titulo-confirmacao-exclusao"
@@ -1044,11 +1044,10 @@ function ConfirmacaoExclusao({
           className="mt-4 text-xl font-semibold text-[#181c23]"
           id="titulo-confirmacao-exclusao"
         >
-          Excluir funcionário?
+          {t('funcionarios:deleteTitle')}
         </h2>
         <p className="mt-2 text-sm leading-6 text-[#444652]">
-          Você tem certeza de que deseja excluir{' '}
-          <strong>{funcionario.nome}</strong>? Esta ação não pode ser desfeita.
+          {t('funcionarios:deleteConfirm', { name: funcionario.nome })}
         </p>
         <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <button
@@ -1057,7 +1056,7 @@ function ConfirmacaoExclusao({
             onClick={aoCancelar}
             type="button"
           >
-            Cancelar
+            {t('common:cancel')}
           </button>
           <button
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#ba1a1a] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#93000a] disabled:cursor-not-allowed disabled:opacity-60"
@@ -1071,7 +1070,7 @@ function ConfirmacaoExclusao({
                 className="size-4 animate-spin"
               />
             )}
-            Excluir funcionário
+            {t('funcionarios:deleteEmployee')}
           </button>
         </div>
       </div>
