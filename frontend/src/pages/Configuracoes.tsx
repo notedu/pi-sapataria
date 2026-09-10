@@ -138,7 +138,7 @@ export default function Configuracoes() {
   }
 
   return (
-    <div className="mx-auto min-h-[calc(100dvh-4rem)] w-full max-w-[1120px] px-5 py-7 sm:px-8 md:px-16">
+    <div className="mx-auto min-h-[calc(100dvh-4rem)] w-full max-w-280 px-5 py-7 sm:px-8 md:px-16">
       <div className="mb-8">
         <h1 className="text-3xl font-semibold tracking-tight text-[#002c7c] sm:text-4xl">
           Configurações

@@ -350,7 +350,7 @@ export default function Funcionarios() {
     );
 
   return (
-    <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-[1200px] flex-col gap-6 px-5 py-7 sm:px-8 md:px-16">
+    <div className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-300 flex-col gap-6 px-5 py-7 sm:px-8 md:px-16">
       <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight text-[#181c23] sm:text-4xl">
@@ -404,7 +404,7 @@ export default function Funcionarios() {
           <Carregando texto="Carregando equipe..." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left">
+            <table className="w-full min-w-225 text-left">
               <thead className="border-b border-[#c4c6d4]/60 bg-[#f1f3fe] text-xs uppercase tracking-wide text-[#444652]">
                 <tr>
                   <th className="px-6 py-4 font-semibold">Nome</th>
@@ -561,7 +561,7 @@ function FormularioFuncionario({
   const classeInput =
     'mt-2 w-full rounded-lg border border-[#c4c6d4] bg-white px-4 py-3 text-sm text-[#181c23] outline-none transition placeholder:text-[#747683] focus:border-[#002c7c] focus:ring-2 focus:ring-[#002c7c]/20';
   return (
-    <div className="mx-auto min-h-[calc(100dvh-4rem)] w-full max-w-[1000px] px-5 py-7 sm:px-8 md:px-16">
+    <div className="mx-auto min-h-[calc(100dvh-4rem)] w-full max-w-250 px-5 py-7 sm:px-8 md:px-16">
       <button
         className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-[#444652] transition hover:text-[#002c7c]"
         onClick={aoCancelar}
@@ -744,7 +744,7 @@ function PerfilFuncionario({
       ordem.status.toLowerCase() === 'concluido'
   ).length;
   return (
-    <div className="mx-auto min-h-[calc(100dvh-4rem)] w-full max-w-[1200px] px-5 py-7 sm:px-8 md:px-16">
+    <div className="mx-auto min-h-[calc(100dvh-4rem)] w-full max-w-300 px-5 py-7 sm:px-8 md:px-16">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <button
@@ -860,7 +860,7 @@ function PerfilFuncionario({
           <Carregando texto="Carregando ordens de serviço..." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[820px] text-left text-sm">
+            <table className="w-full min-w-205 text-left text-sm">
               <thead className="bg-[#f1f3fe] text-xs uppercase tracking-wide text-[#444652]">
                 <tr>
                   <th className="px-6 py-4">OS #</th>
