@@ -93,6 +93,7 @@ export default function Configuracoes() {
         preferencias: proximasPreferencias,
       })
     );
+    window.dispatchEvent(new Event('configuracoes:atualizadas'));
   }
 
   function atualizarPreferencias(proximas: Preferencias) {
