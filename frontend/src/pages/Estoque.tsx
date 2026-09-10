@@ -12,11 +12,13 @@ import {
   Plus,
   Search,
   ShoppingBag,
+  Sparkles,
   Trash2,
   XCircle,
 } from 'lucide-react';
 import { ApiError, api } from '../services/api';
 import { useNavigate, useParams } from 'react-router-dom';
+import { gerarDescricaoEstoque } from '../utils/gerarDescricaoEstoque';
 
 type Tipo = 'materia-prima' | 'produtos';
 type Materia = {
@@ -55,7 +57,7 @@ const novoForm = (): Formulario => ({
   descricao: '',
   categoria: '',
   quantidade: '0',
-  unidade: 'unidade',
+  unidade: '',
   minimo: '',
   custo: '0,00',
   fornecedor: '',
@@ -109,6 +111,7 @@ const CATEGORIAS_PRODUTOS = [
   'Bolsas',
   'Outros',
 ];
+const LIMITE_DESCRICAO_RESUMIDA = 80;
 const numero = (valor: string) => (valor === '' ? undefined : Number(valor));
 const moedaFormatada = (valor: number | string | null | undefined) =>
   Number(valor ?? 0).toLocaleString('pt-BR', {
@@ -490,25 +493,25 @@ export default function Estoque() {
           <Carregando />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-205 text-left text-sm">
+            <table className="w-full table-fixed text-left text-sm">
               <thead className="bg-[#f1f3fe] text-xs uppercase tracking-wide text-[#444652]">
                 <tr>
-                  <th className="px-6 py-4">Item</th>
-                  <th className="px-6 py-4">Categoria</th>
-                  <th className="px-6 py-4">Quantidade</th>
+                  <th className="w-[30%] px-6 py-4">Item</th>
+                  <th className="w-32 whitespace-nowrap px-6 py-4">Categoria</th>
+                  <th className="w-32 whitespace-nowrap px-6 py-4">Quantidade</th>
                   {tipo === 'materia-prima' ? (
                     <>
-                      <th className="px-6 py-4">Mínimo</th>
-                      <th className="px-6 py-4">Custo</th>
-                      <th className="px-6 py-4">Status</th>
+                      <th className="w-28 whitespace-nowrap px-6 py-4">Mínimo</th>
+                      <th className="w-28 whitespace-nowrap px-6 py-4">Custo</th>
+                      <th className="w-32 whitespace-nowrap px-6 py-4">Status</th>
                     </>
                   ) : (
                     <>
-                      <th className="px-6 py-4">Custo</th>
-                      <th className="px-6 py-4">Venda</th>
+                      <th className="w-28 whitespace-nowrap px-6 py-4">Custo</th>
+                      <th className="w-28 whitespace-nowrap px-6 py-4">Venda</th>
                     </>
                   )}
-                  <th className="px-6 py-4 text-right">Ações</th>
+                  <th className="w-24 whitespace-nowrap px-6 py-4 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -572,7 +575,7 @@ function Linha({
     <tr className="border-t border-[#c4c6d4]/55 hover:bg-[#f1f3fe]/45">
       <td className="px-6 py-4">
         <strong>{item.nome}</strong>
-        {item.descricao && <div className="mt-1 text-xs text-[#747683]"><p className="wrap-break-word">{descricaoExpandida || item.descricao.length <= 140 ? item.descricao : `${item.descricao.slice(0, 140)}…`}</p>{item.descricao.length > 140 && <button aria-expanded={descricaoExpandida} className="mt-1 inline-flex items-center gap-1 font-semibold text-[#002c7c] hover:underline" onClick={() => setDescricaoExpandida(atual => !atual)} type="button">{descricaoExpandida ? <>Mostrar menos <ChevronUp className="size-3.5" /></> : <>Ver descrição completa <ChevronDown className="size-3.5" /></>}</button>}</div>}
+        {item.descricao && <div className="mt-1 text-xs text-[#747683]"><p className="wrap-break-word">{descricaoExpandida || item.descricao.length <= LIMITE_DESCRICAO_RESUMIDA ? item.descricao : `${item.descricao.slice(0, LIMITE_DESCRICAO_RESUMIDA)}…`}</p>{item.descricao.length > LIMITE_DESCRICAO_RESUMIDA && <button aria-expanded={descricaoExpandida} className="mt-1 inline-flex items-center gap-1 font-semibold text-[#002c7c] hover:underline" onClick={() => setDescricaoExpandida(atual => !atual)} type="button">{descricaoExpandida ? <>Mostrar menos <ChevronUp className="size-3.5" /></> : <>Ver descrição completa <ChevronDown className="size-3.5" /></>}</button>}</div>}
       </td>
       <td className="px-6 py-4 text-[#444652]">
         {item.categoria || 'Sem categoria'}
@@ -601,9 +604,9 @@ function Linha({
                 )}
           </td>
           <td className="px-6 py-4">{dinheiro(materia.valor_unitario)}</td>
-          <td className="px-6 py-4">
+          <td className="w-32 whitespace-nowrap px-6 py-4">
             <span
-              className={`rounded-full px-2.5 py-1 text-xs font-semibold ${baixo ? 'bg-[#ffdad6] text-[#93000a]' : 'bg-[#d9f7e7] text-[#256b43]'}`}
+              className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ${baixo ? 'bg-[#ffdad6] text-[#93000a]' : 'bg-[#d9f7e7] text-[#256b43]'}`}
             >
               {baixo ? 'Estoque baixo' : 'Em dia'}
             </span>
@@ -619,7 +622,7 @@ function Linha({
           </td>
         </>
       )}
-      <td className="px-6 py-4">
+      <td className="w-24 px-6 py-4">
         <div className="flex justify-end gap-1">
           <button
             aria-label={`Editar ${item.nome}`}
@@ -690,6 +693,7 @@ function TelaFormulario({
   aoCancelar: () => void;
   aoSalvar: (e: FormEvent<HTMLFormElement>) => void;
 }) {
+  const [gerandoDescricao, setGerandoDescricao] = useState(false);
   const unidadesCompativeis =
     tipo === 'materia-prima'
       ? UNIDADES_MEDIDA.filter(unidade =>
@@ -742,10 +746,8 @@ function TelaFormulario({
           aoAlterar(nome, valor);
           let unidadeSelecionada = valor;
           if (nome === 'categoria' && tipo === 'materia-prima') {
-            const primeiraUnidade =
-              UNIDADES_POR_CATEGORIA[valor]?.[0] ?? UNIDADES_MEDIDA[0].valor;
-            aoAlterar('unidade', primeiraUnidade);
-            unidadeSelecionada = primeiraUnidade;
+            aoAlterar('unidade', '');
+            unidadeSelecionada = '';
           }
           if (
             tipo === 'materia-prima' &&
@@ -816,6 +818,26 @@ function TelaFormulario({
       />
     </label>
   );
+
+  function gerarDescricao() {
+    if (form.descricao && !window.confirm('Substituir a descrição atual pela descrição gerada?')) {
+      return;
+    }
+    setGerandoDescricao(true);
+    window.setTimeout(() => {
+      aoAlterar(
+        'descricao',
+        gerarDescricaoEstoque({
+          tipo,
+          categoria: form.categoria,
+          unidade: form.unidade,
+          fornecedor: form.fornecedor,
+        })
+      );
+      setGerandoDescricao(false);
+    }, 450);
+  }
+
   return (
     <div className="mx-auto min-h-[calc(100dvh-4rem)] max-w-250 px-5 py-7 sm:px-8 md:px-16">
       <button
@@ -879,8 +901,23 @@ function TelaFormulario({
             </>
           )}
           <label className="sm:col-span-2">
-            <span className="text-xs font-semibold uppercase tracking-wide text-[#444652]">
+            <span className="flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-wide text-[#444652]">
               Descrição
+              <button
+                className="inline-flex items-center gap-1.5 rounded-md bg-[#edf1ff] px-2.5 py-1.5 text-xs font-semibold normal-case tracking-normal text-[#002c7c] transition hover:bg-[#d7e2ff] disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={
+                  !form.nome.trim() ||
+                  !form.categoria ||
+                  !form.unidade ||
+                  (tipo === 'materia-prima' && !form.fornecedor.trim()) ||
+                  gerandoDescricao
+                }
+                onClick={gerarDescricao}
+                type="button"
+              >
+                {gerandoDescricao ? <LoaderCircle aria-hidden="true" className="size-3.5 animate-spin" /> : <Sparkles aria-hidden="true" className="size-3.5" />}
+                {gerandoDescricao ? 'Gerando...' : 'Gerar descrição'}
+              </button>
             </span>
             <textarea
               className="mt-2 min-h-28 w-full rounded-lg border border-[#c4c6d4] px-4 py-3 text-sm outline-none focus:border-[#002c7c]"
