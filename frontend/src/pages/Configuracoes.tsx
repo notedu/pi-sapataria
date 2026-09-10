@@ -17,7 +17,6 @@ type DadosSapataria = {
   email: string;
 };
 type Preferencias = {
-  idioma: string;
   notificacoes: boolean;
 };
 type Notificacao = {
@@ -33,7 +32,6 @@ const sapatariaInicial: DadosSapataria = {
   email: 'contato@sedaecouro.com.br',
 };
 const preferenciasIniciais: Preferencias = {
-  idioma: 'pt-BR',
   notificacoes: true,
 };
 
@@ -205,26 +203,6 @@ export default function Configuracoes() {
               titulo="Preferências do Sistema"
             />
             <div className="mt-6 space-y-6">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <DescricaoPreferencia
-                  descricao="Selecione o idioma da interface"
-                  titulo="Idioma"
-                />
-                <select
-                  className="rounded-lg border border-[#c4c6d4] bg-white px-4 py-2.5 text-sm text-[#181c23] outline-none focus:border-[#002c7c] focus:ring-2 focus:ring-[#002c7c]/20"
-                  onChange={evento =>
-                    atualizarPreferencias({
-                      ...preferencias,
-                      idioma: evento.target.value,
-                    })
-                  }
-                  value={preferencias.idioma}
-                >
-                  <option value="pt-BR">Português (BR)</option>
-                  <option value="en-US">English (US)</option>
-                  <option value="es-ES">Español</option>
-                </select>
-              </div>
               <div className="flex items-center justify-between gap-5">
                 <DescricaoPreferencia
                   descricao="Receber alertas de novas ordens de serviço"
