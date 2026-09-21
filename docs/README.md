@@ -9,6 +9,7 @@ Esta pasta organiza a documentação do sistema de gestão interna da sapataria 
 | [Guia do Projeto](guia-do-projeto.md) | Fonte do escopo, das exigências acadêmicas, das definições do rascunho, das sugestões e dos pontos em aberto. |
 | [Requisitos](requisitos.md) | Catálogo identificado do que o sistema deve oferecer, das restrições técnicas e das entregas acadêmicas. |
 | [Regras de negócio](regras-de-negocio.md) | Regras, permissões e relações entre OS, vendas, estoques e financeiro; mantém explícitas as decisões em aberto. |
+| [Arquitetura](arquitetura.md) | Partes do sistema, responsabilidades e comunicação previstas, com distinção entre planejamento, implementação e decisões pendentes. |
 | [README do projeto](../README.md) | Apresentação, tecnologias e execução disponíveis no estágio atual. |
 | [Como contribuir](../CONTRIBUTING.md) | Orientações de convivência, Issues, branches, commits e revisão. |
 | [Histórico de mudanças](../CHANGELOG.md) | Mudanças registradas e situação dos lançamentos. |
