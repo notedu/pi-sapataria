@@ -8,37 +8,42 @@
 
 ## Documentação de referência
 
-Antes de implementar uma funcionalidade, consulte os documentos relacionados:
+Use `docs/README.md` como índice e consulte somente as partes relacionadas à tarefa:
 
 - `docs/README.md`: índice da documentação.
 - `docs/guia-do-projeto.md`: contexto, escopo e orientações acadêmicas.
 - `docs/requisitos.md`: comportamentos esperados do sistema.
 - `docs/regras-de-negocio.md`: condições, restrições e permissões.
 - `docs/arquitetura.md`: organização técnica e responsabilidades das partes.
+- `docs/modelo-de-dados.md`: entidades, campos, relacionamentos e restrições.
+- `docs/api.md`: operações, dados enviados, respostas e erros da API.
+- `docs/telas-e-fluxos.md`: telas, navegação e fluxos de uso.
 - `CONTRIBUTING.md`: padrões de colaboração e validação.
 
-Consulte as partes da documentação relevantes à tarefa; não é necessário reler todos os documentos em cada alteração.
+Não é necessário reler toda a documentação em cada alteração nem concluí-la integralmente antes de começar a implementação.
 
 Se algum arquivo estiver ausente, informe a ausência. Não invente seu conteúdo.
 
-## Respeito às decisões
+## Decisões e coerência
 
-- Diferencie decisões aprovadas, sugestões e pendências.
+- Diferencie aprovado, proposto, pendente e efetivamente implementado.
 - Não implemente sugestões como se já estivessem aprovadas.
 - Não invente campos obrigatórios, permissões, fórmulas financeiras ou condições de movimentação de estoque.
-- Peça esclarecimento quando a dúvida afetar comportamento de negócio, escopo ou uma decisão arquitetural importante, antes de implementar a parte que depende dela.
-- Continue as partes independentes quando isso for possível.
-- Se houver conflito entre documentos, apresente a divergência em vez de escolher silenciosamente uma versão.
+- Não reabra decisões aprovadas nem crie novas pautas extensas. Pautas e sugestões são material de apoio, não impedimento geral à implementação.
+- Quando faltar uma decisão de negócio, escopo ou arquitetura importante, peça somente o esclarecimento necessário antes de implementar a parte dependente; continue as partes independentes.
+- Explique conflitos relevantes entre documentos ou entre documentação e código antes de alterar o comportamento afetado; não escolha silenciosamente uma versão.
+- Mantenha modelo de dados, contrato da API e telas alinhados. Quando a equipe confirmar uma decisão durante a implementação, registre-a objetivamente apenas nos documentos relacionados.
+- Não modifique uma regra documentada apenas para acomodar o código produzido.
+
+## Implementação por funcionalidade
+
+- Trabalhe em etapas pequenas e verificáveis, conectando interface, API e banco conforme necessário para o comportamento da etapa.
 - Resolva detalhes comuns de programação seguindo a arquitetura e os padrões existentes.
-
-## Implementação
-
 - Mantenha as alterações relacionadas ao pedido.
 - Reutilize componentes e funções existentes quando forem adequados.
 - Respeite a separação de responsabilidades definida na arquitetura.
 - Validações na interface não substituem as verificações necessárias na API e no banco.
 - Não acrescente bibliotecas ou serviços sem necessidade. Explique a justificativa quando uma nova dependência for necessária.
-- Não modifique uma regra documentada apenas para acomodar o código produzido.
 
 ## Banco de dados
 
@@ -50,8 +55,9 @@ Se algum arquivo estiver ausente, informe a ausência. Não invente seu conteúd
 
 ## Verificação
 
-- Execute as verificações disponíveis e pertinentes à alteração.
+- Execute verificações disponíveis e proporcionais à alteração, cobrindo os comportamentos relevantes.
 - Para mudanças no front-end, consulte os comandos atuais no README e no package.json.
+- Compilar e passar no lint não comprovam, sozinhos, o funcionamento das regras de negócio.
 - Verifique o comportamento esperado, incluindo situações de erro relevantes.
 - Para regras de negócio, use cenários derivados das definições aprovadas.
 - Não afirme que algo foi testado quando a verificação não foi executada.
@@ -59,9 +65,9 @@ Se algum arquivo estiver ausente, informe a ausência. Não invente seu conteúd
 
 ## Entrega
 
-Ao concluir, apresente:
+Ao concluir, apresente de forma breve, sem exigir relatórios extensos:
 
-- O que foi implementado.
+- O resultado e o que foi alterado ou implementado.
 - Quais requisitos e regras foram atendidos, usando os identificadores existentes.
 - Como o resultado foi verificado.
 - Quais pendências ou limitações permanecem.

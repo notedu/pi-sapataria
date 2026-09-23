@@ -10,6 +10,9 @@ Esta pasta organiza a documentação do sistema de gestão interna da sapataria 
 | [Requisitos](requisitos.md) | Catálogo identificado do que o sistema deve oferecer, das restrições técnicas e das entregas acadêmicas. |
 | [Regras de negócio](regras-de-negocio.md) | Regras, permissões e relações entre OS, vendas, estoques e financeiro; mantém explícitas as decisões em aberto. |
 | [Arquitetura](arquitetura.md) | Partes do sistema, responsabilidades e comunicação previstas, com distinção entre planejamento, implementação e decisões pendentes. |
+| [Modelo de dados](modelo-de-dados.md) | Modelo inicial do sistema completo: entidades, cardinalidades, campos propostos, pendências e etapas de implementação. |
+| [Contrato da API](api.md) | Contrato inicial do sistema completo: operações propostas, dados, respostas, permissões e efeitos pendentes; API não implementada. |
+| [Telas e fluxos](telas-e-fluxos.md) | Mapa das telas e fluxos principais do sistema, padrões comuns e sequência de implementação por funcionalidade. |
 | [README do projeto](../README.md) | Apresentação, tecnologias e execução disponíveis no estágio atual. |
 | [Como contribuir](../CONTRIBUTING.md) | Orientações de convivência, Issues, branches, commits e revisão. |
 | [Histórico de mudanças](../CHANGELOG.md) | Mudanças registradas e situação dos lançamentos. |
