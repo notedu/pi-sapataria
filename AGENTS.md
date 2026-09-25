@@ -18,11 +18,22 @@ Use `docs/README.md` como índice e consulte somente as partes relacionadas à t
 - `docs/modelo-de-dados.md`: entidades, campos, relacionamentos e restrições.
 - `docs/api.md`: operações, dados enviados, respostas e erros da API.
 - `docs/telas-e-fluxos.md`: telas, navegação e fluxos de uso.
+- `docs/planejamento.md`: responsabilidades confirmadas, sequência de trabalho e marcos sugeridos.
 - `CONTRIBUTING.md`: padrões de colaboração e validação.
 
 Não é necessário reler toda a documentação em cada alteração nem concluí-la integralmente antes de começar a implementação.
 
 Se algum arquivo estiver ausente, informe a ausência. Não invente seu conteúdo.
+
+## Responsabilidades e planejamento
+
+- **Integrante 1:** base compartilhada Node.js/Express, autenticação, clientes, gerenciamento de funcionários e landing page pública de apresentação.
+- **João Contin:** design do sistema e funcionalidades de ordens de serviço (OS).
+- **João Franco:** estoques de materiais e produtos para venda, movimentações e vendas independentes.
+- Cada integrante implementa também as operações de API e alterações de banco do próprio módulo. A base preparada pelo Integrante 1 não o torna responsável por toda a API.
+- São responsabilidades principais, não exclusividade de edição. Uma solicitação explícita da equipe pode envolver qualquer módulo; não atribua responsabilidades adicionais por inferência.
+- Considere a meta de **20/10/2026** para priorizar entregas pequenas e integração antecipada. Os marcos do planejamento são propostas ajustáveis; o prazo não autoriza remover requisitos, enfraquecer segurança ou declarar testes não executados.
+- Use **Materiais** para itens utilizados nos serviços, **Produtos para venda** para itens vendidos avulsos e **Administrador** para o perfil administrativo. Os nomes não alteram regras ou permissões.
 
 ## Decisões e coerência
 
@@ -31,6 +42,7 @@ Se algum arquivo estiver ausente, informe a ausência. Não invente seu conteúd
 - Não invente campos obrigatórios, permissões, fórmulas financeiras ou condições de movimentação de estoque.
 - Não reabra decisões aprovadas nem crie novas pautas extensas. Pautas e sugestões são material de apoio, não impedimento geral à implementação.
 - Quando faltar uma decisão de negócio, escopo ou arquitetura importante, peça somente o esclarecimento necessário antes de implementar a parte dependente; continue as partes independentes.
+- Pendências não relacionadas à tarefa não bloqueiam seu desenvolvimento.
 - Explique conflitos relevantes entre documentos ou entre documentação e código antes de alterar o comportamento afetado; não escolha silenciosamente uma versão.
 - Mantenha modelo de dados, contrato da API e telas alinhados. Quando a equipe confirmar uma decisão durante a implementação, registre-a objetivamente apenas nos documentos relacionados.
 - Não modifique uma regra documentada apenas para acomodar o código produzido.
@@ -40,8 +52,13 @@ Se algum arquivo estiver ausente, informe a ausência. Não invente seu conteúd
 - Trabalhe em etapas pequenas e verificáveis, conectando interface, API e banco conforme necessário para o comportamento da etapa.
 - Resolva detalhes comuns de programação seguindo a arquitetura e os padrões existentes.
 - Mantenha as alterações relacionadas ao pedido.
+- Antes de editar, confira as alterações existentes e preserve o trabalho de outras pessoas.
 - Reutilize componentes e funções existentes quando forem adequados.
 - Respeite a separação de responsabilidades definida na arquitetura.
+- Preserve contratos compartilhados de autenticação/permissões, requisições/respostas, modelo de dados/migrações e componentes/padrões visuais. Antes de alterá-los, examine seus usos e explique impactos relevantes. Não peça aprovação para ajustes rotineiros já autorizados; esclareça apenas mudanças de comportamento não confirmadas, conflitos importantes ou decisões em aberto.
+- Na integração OS–estoque, João Contin e João Franco coordenam o acordo comum. Reutilize a lógica de movimentação, respeite os gatilhos de consumo aprovados e evite baixas duplicadas ou implementações divergentes.
+- O design evolui por etapas. Quando necessário, avance com interface funcional simples, identificando escolhas visuais provisórias sem apresentá-las como identidade aprovada.
+- Siga o CONTRIBUTING para colaboração, branches e revisão, sem criar um processo paralelo.
 - Validações na interface não substituem as verificações necessárias na API e no banco.
 - Não acrescente bibliotecas ou serviços sem necessidade. Explique a justificativa quando uma nova dependência for necessária.
 

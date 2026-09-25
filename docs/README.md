@@ -13,6 +13,7 @@ Esta pasta organiza a documentação do sistema de gestão interna da sapataria 
 | [Modelo de dados](modelo-de-dados.md) | Modelo inicial do sistema completo: entidades, cardinalidades, campos propostos, pendências e etapas de implementação. |
 | [Contrato da API](api.md) | Contrato inicial do sistema completo: operações propostas, dados, respostas, permissões e efeitos pendentes; API não implementada. |
 | [Telas e fluxos](telas-e-fluxos.md) | Mapa das telas e fluxos principais do sistema, padrões comuns e sequência de implementação por funcionalidade. |
+| [Planejamento](planejamento.md) · [PDF](planejamento.pdf) | Responsabilidades confirmadas, marcos sugeridos até 20/10/2026, integração e cobertura ainda em aberto. |
 | [README do projeto](../README.md) | Apresentação, tecnologias e execução disponíveis no estágio atual. |
 | [Como contribuir](../CONTRIBUTING.md) | Orientações de convivência, Issues, branches, commits e revisão. |
 | [Histórico de mudanças](../CHANGELOG.md) | Mudanças registradas e situação dos lançamentos. |
