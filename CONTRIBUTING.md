@@ -55,7 +55,7 @@ git push -u origin docs/instalacao
 - Evite incluir refatorações e mudanças de formatação sem relação com a tarefa.
 - Ao alterar dependências, mantenha `package.json` e `package-lock.json` consistentes e explique a necessidade na PR.
 - Não envie `node_modules/`, builds, senhas, tokens, credenciais nem dados reais de clientes e funcionários. Use dados fictícios nos exemplos e testes.
-- Caso introduza arquivos `.env`, configure a exclusão no `.gitignore` e forneça um `.env.example` apenas com valores fictícios. A configuração atual ainda não ignora `.env` explicitamente.
+- Caso introduza arquivos `.env`, configure a exclusão no `.gitignore` e forneça um `.env.example` apenas com valores fictícios. O `.gitignore` já ignora `.env` e permite `.env.example`.
 
 Use mensagens curtas no formato `tipo: descrição`:
 
@@ -83,6 +83,8 @@ npm run build
 ```
 
 Teste também o comportamento alterado no navegador, incluindo situações de erro e diferentes tamanhos de tela, quando aplicável. Ainda não há script de testes automatizados no projeto; lint e build não substituem testes de comportamento. Para alterações apenas de documentação, confira comandos, links e coerência com o código.
+
+Para mudanças no back-end, execute `npm run typecheck` dentro de `backend/` e verifique os fluxos relevantes da API. Não há suíte persistente de testes automatizados neste estágio; as verificações de autenticação foram executadas com PostgreSQL real e rollback. Use somente contas/dados temporários e preserve registros existentes. O README descreve cookie, CSRF e cadastro inicial para testes manuais no Insomnia.
 
 Antes de solicitar revisão:
 

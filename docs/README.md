@@ -11,7 +11,7 @@ Esta pasta organiza a documentação do sistema de gestão interna da sapataria 
 | [Regras de negócio](regras-de-negocio.md) | Regras, permissões e relações entre OS, vendas, estoques e financeiro; mantém explícitas as decisões em aberto. |
 | [Arquitetura](arquitetura.md) | Partes do sistema, responsabilidades e comunicação previstas, com distinção entre planejamento, implementação e decisões pendentes. |
 | [Modelo de dados](modelo-de-dados.md) | Modelo inicial do sistema completo: entidades, cardinalidades, campos propostos, pendências e etapas de implementação. |
-| [Contrato da API](api.md) | Contrato inicial do sistema completo: operações propostas, dados, respostas, permissões e efeitos pendentes; API não implementada. |
+| [Contrato da API](api.md) | Contrato inicial do sistema completo: operações propostas, dados, respostas, permissões e efeitos pendentes; Login, cadastros, consultas e operações de OS/vendas/estoque implementados. |
 | [Telas e fluxos](telas-e-fluxos.md) | Mapa das telas e fluxos principais do sistema, padrões comuns e sequência de implementação por funcionalidade. |
 | [Planejamento](planejamento.md) · [PDF](planejamento.pdf) | Responsabilidades confirmadas, marcos sugeridos até 20/10/2026, integração e cobertura ainda em aberto. |
 | [README do projeto](../README.md) | Apresentação, tecnologias e execução disponíveis no estágio atual. |
@@ -42,7 +42,7 @@ As marcações também se aplicam a seções inteiras:
 
 ## Definição e implementação são situações diferentes
 
-O [README do projeto](../README.md), no aviso inicial e em “Tecnologias”, informa que existe a base React/TypeScript/Vite/ESLint, mas ainda não existem as telas de negócio, a API e o banco implementados. O [CHANGELOG](../CHANGELOG.md), em “Não lançado”, registra essa base e não registra versão publicada.
+O [README do projeto](../README.md), no aviso inicial e em “Tecnologias”, informa que existe a base React/TypeScript/Vite/ESLint, e a base Express com Clientes, Funcionários e autenticação; telas e demais módulos continuam pendentes. O [CHANGELOG](../CHANGELOG.md), em “Não lançado”, registra essa base e não registra versão publicada.
 
 Essas são evidências documentais do estágio atual, não uma auditoria de código feita por estes documentos. Uma exigência ou definição pode estar documentada e ainda não implementada. Uma sugestão continua proposta, mesmo que conste em um roteiro de desenvolvimento.
 

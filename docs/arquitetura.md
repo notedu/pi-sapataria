@@ -2,6 +2,18 @@
 
 [Índice da documentação](README.md) · [Guia do Projeto](guia-do-projeto.md) · [Requisitos](requisitos.md) · [Regras de negócio](regras-de-negocio.md)
 
+## Implementação atual — autenticação, cadastros e consultas
+
+A base Express usa `server.ts`, `src/routes`, `src/controllers`, `src/models` e `src/config`. `src/middlewares` verifica sessão, perfil e CSRF; `src/utils` reúne validação e hash de senha. O histórico de planejamento abaixo não representa a ausência desses módulos já implementados.
+
+A autenticação é da aplicação Node.js: scrypt para senhas, express-session para cookie e connect-pg-simple para sessões no mesmo PostgreSQL. `SESSION_SECRET` assina cookies; `DATABASE_URL`/`DATABASE_CA_CERT` configuram o banco. O Supabase hospeda o PostgreSQL temporariamente, sem uso de Supabase Auth; as tabelas e a lógica de login podem acompanhar a aplicação para AWS. Não houve implantação na AWS.
+
+A sessão guarda somente identidade, versão de acesso, expiração e token CSRF. A API consulta perfil/ativo atuais e exige novo login quando a versão muda. Clientes exige sessão; Funcionários exige administrador. Bootstrap do primeiro administrador é local e transacional, pelo comando `npm run criar:admin`. A futura interface usa cookies com `credentials: include` e `X-CSRF-Token` em alterações.
+
+Materiais, Produtos, OS, Vendas e Movimentações possuem Models, Controllers e Routes de consulta e gravação. `config/transacao.ts` mantém as operações relacionadas na mesma conexão. `models/estoqueModel.ts` concentra saldo, movimentação e reversão, reutilizados por venda e consumo. Bloqueios de linha e ordem comum de produtos protegem operações concorrentes. Itens e usos pertencem aos comandos de Venda/OS; não possuem CRUD genérico. Não há baixa automática por inserir diretamente uma linha via SQL.
+
+Configuração de produção: HTTPS, APP_ORIGIN exata, NODE_ENV=production, HOST e proxies confiáveis conforme a infraestrutura. Recuperação/troca de senha e telas ainda não implementadas. Contratos e exemplos atuais estão em `api.md` e no README raiz.
+
 ## 1. Objetivo e situação do documento
 
 Este documento explica as partes do sistema, suas responsabilidades e a comunicação prevista, distinguindo o planejamento da implementação encontrada no repositório. Sua criação não aprova sugestões nem resolve decisões pendentes.

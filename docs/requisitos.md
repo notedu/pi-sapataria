@@ -8,7 +8,11 @@ Este catálogo organiza as funcionalidades e restrições extraídas das fontes.
 
 “Guia §…” indica a seção de origem no Guia do Projeto. Os critérios são somente desdobramentos do conteúdo indicado, sem acrescentar campos, permissões ou parâmetros. Nas tabelas de sugestões, todos os critérios são propostos. A aprovação da documentação não os aprova como comportamento.
 
-**Situação da implementação:** todos os RF abaixo estão **não implementados conforme o aviso inicial do README da raiz**. Nos RNF, a situação é indicada por registro. Para os RA, o cumprimento é não informado, salvo evidência documental indicada. Fonte adicional: CHANGELOG, “Não lançado”. Não foi realizada auditoria de implementação para este catálogo.
+**Situação da implementação:** API de autenticação, Clientes, Funcionários, Materiais, Produtos, OS, Vendas e Estoque implementada nas operações de `api.md`. Telas, filtros, alertas e indicadores financeiros não estão concluídos. Os requisitos de módulos que incluem essas partes continuam parcialmente atendidos.
+
+## Atualização — operações de negócio
+
+RF-017/RF-018/RF-020/RF-021/RF-022: cadastros e operações aprovadas disponíveis na API, incluindo exclusões sem histórico, sequência de OS, consumo, estoque e venda/cancelamento. RN-018/RN-019: transações e bloqueios impedem registros parciais e saldo negativo, verificados por HTTP e concorrência real. Cálculo da OS e financeiro, filtros, alertas e telas continuam pendentes.
 
 ## Escopo
 
@@ -16,13 +20,19 @@ Este catálogo organiza as funcionalidades e restrições extraídas das fontes.
 - **Sugestão — Guia §1.4:** deixar emissão de nota fiscal, integração com meios de pagamento e aplicativo mobile nativo fora do escopo inicial. A exclusão não está aprovada; ver [PD-R02](#pd-r02).
 - Exigências acadêmicas de interface, API, integração e nuvem estão identificadas abaixo. O roteiro de etapas do Guia §15 é **sugestão**, sem comprovar conclusão ou fixar datas.
 
+## Atualização de implementação — autenticação e Funcionários
+
+RF-001/RF-015: login individual por usuário e senha e logout implementados na API, com sessões PostgreSQL de 8h; tela de login pendente. RF-005/RF-019 e RN-001: cadastro, listagem, consulta e alteração de perfil/ativo exclusivos do administrador. RNF-005: hash scrypt, consultas parametrizadas, cookies de sessão, CSRF e limite de tentativas verificados; não representa conclusão da segurança de módulos ainda não implementados. RF-003/RF-017: Clientes agora exige login dos dois perfis. Contratos atuais em `api.md`.
+
+RF-004/RF-006/RF-007/RF-008: estrutura e consultas autenticadas implementadas para OS, Vendas, Materiais e Produtos, com itens/usos relacionados e Movimentações. RNF-004/RN-019: integridade referencial, obrigatoriedade, estoque não negativo e vínculo exclusivo verificados. Isso não conclui os fluxos de gravação, consumo, venda, financeiro ou telas. As permissões desta etapa se limitam à leitura por ambos os perfis autenticados.
+
 ## Requisitos funcionais definidos no rascunho
 
 Todos os registros desta tabela têm classificação **Definição da equipe** e situação da definição **definido no rascunho**, no nível de objetivo e telas. Seus detalhes sugeridos ficam na tabela seguinte.
 
 | ID | Requisito e critério de aceitação no nível documentado | Origem | Relações e limites |
 |---|---|---|---|
-| <a id="rf-001"></a>RF-001 | Login: identificar quem está usando o sistema. Critério: disponibilizar a identificação do usuário; mecanismo e fluxo definitivo pendentes. | Guia §§4 e 5.1 | RF-015; [PD-N02](regras-de-negocio.md#pd-n02). |
+| <a id="rf-001"></a>RF-001 | Login: identificar quem está usando o sistema. Critério: disponibilizar a identificação do usuário; API implementada com usuário/senha e sessão, interface pendente. | Guia §§4 e 5.1 | RF-015; [PD-N02](regras-de-negocio.md#pd-n02). |
 | <a id="rf-002"></a>RF-002 | Dashboard: oferecer visão rápida da situação da sapataria. Critério: disponibilizar essa tela; conteúdo definitivo pendente. | Guia §§4 e 5.2 | RF-016. |
 | <a id="rf-003"></a>RF-003 | Clientes: manter dados organizados e acessíveis. Critério: disponibilizar cadastro, página de clientes e perfil do cliente. | Guia §§1.3, 4 e 5.3 | RF-017; campos não aprovados. |
 | <a id="rf-004"></a>RF-004 | OS: registrar e acompanhar serviços. Critério: disponibilizar cadastro, página de OS e detalhes da OS. | Guia §§1.3, 4 e 5.4 | RF-018; estados em [RN-010](regras-de-negocio.md#rn-010). |
@@ -72,9 +82,9 @@ A classificação determina a situação da definição conforme a legenda. Quan
 |---|---|---|---|
 | <a id="rnf-001"></a>RNF-001 | Front-end em React, com componentes reutilizáveis. Critério: uso da biblioteca e organização reutilizável das funcionalidades. | Guia §§7.1 e 11.1: **Exigência acadêmica**; React também é **Definição da equipe** no §7.1. Divergência com §14 em PD-R03. | React configurado conforme README, “Tecnologias”; componentes das funcionalidades não implementados conforme aviso inicial. |
 | <a id="rnf-002"></a>RNF-002 | Layout responsivo, funcionando em diferentes tamanhos de tela. Critério: funcionamento responsivo; não há dimensões ou lista obrigatória de dispositivos definida. | Guia §§11.1 e 14: **Exigência acadêmica**. | Não demonstrado para as telas de negócio, ainda não implementadas. |
-| <a id="rnf-003"></a>RNF-003 | API RESTful em Node.js com GET, POST, PUT e DELETE e endpoints versionados. Critério: atender aos métodos e ao versionamento documentados. | Guia §§2.4, 7.1 e 9–9.1: **Exigência acadêmica**; Node.js também é **Definição da equipe** no §7.1. | API não implementada conforme README. |
-| <a id="rnf-004"></a>RNF-004 | Validar e padronizar dados, com mensagem clara na recusa; preservar consistência e chaves estrangeiras. Critérios de domínio em [RN-018](regras-de-negocio.md#rn-018) e [RN-019](regras-de-negocio.md#rn-019). | Guia §8.2: **Exigência acadêmica**. | Integração/API/banco não implementados conforme README. |
-| <a id="rnf-005"></a>RNF-005 | Segurança: senhas “criptografadas”, acesso por perfil, segredos fora do repositório e consultas parametrizadas. Critério limitado ao texto da fonte; não escolhe mecanismo de senha nem matriz de permissões. | Guia §8.2: **Exigência acadêmica**; §14: origem mista de orientação e sugestão. Divergência em PD-R04. | Segurança da aplicação não demonstrada; API não implementada. A orientação do CONTRIBUTING não comprova atendimento. |
+| <a id="rnf-003"></a>RNF-003 | API RESTful em Node.js com GET, POST, PUT e DELETE e endpoints versionados. Critério: atender aos métodos e ao versionamento documentados. | Guia §§2.4, 7.1 e 9–9.1: **Exigência acadêmica**; Node.js também é **Definição da equipe** no §7.1. | Base Express implementada com GET/POST/PUT/DELETE em /api/v1; exclusão conforme histórico e saldo. |
+| <a id="rnf-004"></a>RNF-004 | Validar e padronizar dados, com mensagem clara na recusa; preservar consistência e chaves estrangeiras. Critérios de domínio em [RN-018](regras-de-negocio.md#rn-018) e [RN-019](regras-de-negocio.md#rn-019). | Guia §8.2: **Exigência acadêmica**. | Validação na API e restrições/transações de estoque, venda e OS implementadas; formulários pendentes. |
+| <a id="rnf-005"></a>RNF-005 | Segurança: senhas “criptografadas”, acesso por perfil, segredos fora do repositório e consultas parametrizadas. Critério limitado ao texto da fonte; não escolhe mecanismo de senha nem matriz de permissões. | Guia §8.2: **Exigência acadêmica**; §14: origem mista de orientação e sugestão. Divergência em PD-R04. | Sessão, CSRF e permissões aplicados aos módulos operacionais; consultas parametrizadas e segredos fora do código. |
 | <a id="rnf-006"></a>RNF-006 | TypeScript, Vite, Tailwind CSS e PostgreSQL como tecnologias do projeto. Critério: utilização das tecnologias escolhidas no rascunho, sem alegar que todas sejam exigência da faculdade. | Guia §7.1: **Definição da equipe**. TypeScript como sugestão no §14: divergência em PD-R03; enquadramento acadêmico em PD-R05. | TypeScript e Vite configurados; Tailwind e PostgreSQL previstos, conforme README, “Tecnologias”. |
 | <a id="rnf-007"></a>RNF-007 | Interface simples e intuitiva, baseada na identidade visual da Seda e Couro. Critério: aderência à identidade; códigos da paleta ainda pendentes. | Guia §§11.2 e 11.6: **Definição da equipe**; cores em §17: **Pendência**. | Não demonstrado nas telas de negócio. |
 | <a id="rnf-008"></a>RNF-008 | Aplicação e banco na nuvem com suporte a Node.js e API em execução automática. Critério: hospedagem e execução automática; não estabelece SLA. | Guia §§2.4 e 12.2: **Exigência acadêmica**. AWS Academy é plano A; divergência de redação em PD-R06. | Hospedagem planejada conforme README; atendimento não demonstrado. |
@@ -112,7 +122,7 @@ Todos os registros abaixo têm classificação **Pendência** e situação **Pen
 | <a id="pd-r01"></a>PD-R01 | Confirmar a adoção das práticas de branches, commits e revisão por PR e reconciliar a redação dos documentos. | Guia §13.2: **Sugestão**; CONTRIBUTING, “Fluxo de trabalho” e “Padrões de código e commits”: redação normativa. Não há decisão explícita de aprovação nesta edição. |
 | <a id="pd-r02"></a>PD-R02 | Confirmar as exclusões do escopo inicial. | Guia §1.4: **Sugestão** de excluir nota fiscal, integração de pagamentos e aplicativo nativo. |
 | <a id="pd-r03"></a>PD-R03 | Reconciliar a classificação de manutenção. | Guia §14 agrupa TypeScript e componentes reutilizáveis como **Sugestão**; §7.1 trata TypeScript como **Definição da equipe** e §11.1 exige componentes reutilizáveis. RNF-001/RNF-006 mantêm as origens sem apagar a divergência. |
-| <a id="pd-r04"></a>PD-R04 | Esclarecer o alcance das exigências de segurança e o mecanismo referido como “senhas criptografadas”. | Guia §8.2: **Exigência acadêmica**; §14: origem mista; §§5.1 e 9.4: proteção de telas/rotas sugerida. Políticas e permissões: PD-N01/PD-N02. |
+| <a id="pd-r04"></a>PD-R04 | Mecanismo confirmado: hash scrypt com salt, sem armazenamento reversível. Permissões de Clientes/Funcionários e sessões implementadas; recuperação de senha e demais módulos pendentes. | Guia §8.2: **Exigência acadêmica**; §14: origem mista; §§5.1 e 9.4: proteção de telas/rotas sugerida. Políticas e permissões: PD-N01/PD-N02. |
 | <a id="pd-r05"></a>PD-R05 | Confirmar se TypeScript, Vite, Tailwind e PostgreSQL constam no guia técnico do módulo. | Guia §§7.1 e 17. A escolha do rascunho não comprova exigência acadêmica. |
 | <a id="pd-r06"></a>PD-R06 | Confirmar provedor, serviços e estratégia de execução automática. | Guia §§2.4 e 12.2: AWS Academy como plano A; nota do §12.1: “hospedagem oficial”; README, “Tecnologias”: plano A. PM2/serviço do sistema e serviços da tabela de custos são **Sugestões**. |
 | <a id="pd-r07"></a>PD-R07 | Definir códigos da paleta da Seda e Couro. | Guia §§11.6 e 17; uso de variáveis do Tailwind é **Sugestão**. |

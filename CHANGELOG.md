@@ -6,7 +6,29 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ## Não lançado
 
+### Corrigido
+
+- Configuração TypeScript compartilhada entre editor e `typecheck` no back-end, incluindo os tipos de sessão sem gerar arquivos compilados.
+
 ### Adicionado
+
+- Cadastros/edição/exclusão de Materiais e Produtos e exclusão de Clientes sem vínculos.
+- Abertura, edição, sequência de estados, cancelamento, consumo e devolução de materiais de OS.
+- Vendas com preço histórico, total calculado no PostgreSQL, baixa atômica e cancelamento com devoluções explícitas.
+- Entradas, saídas e estornos com histórico, validação de quantidades/valores e proteção contra concorrência; alteração incremental em `operacoes.sql` aplicada ao Supabase sem inserir dados.
+
+- Sete tabelas restantes de negócio aplicadas no Supabase, com obrigatoriedade confirmada, nove relacionamentos, estoque inicial zero e vínculo exclusivo nas movimentações.
+- Consultas autenticadas de Materiais, Produtos, OS, Vendas, itens/usos vinculados e Movimentações; ampliadas pelas operações registradas acima.
+
+- Funcionários e login por usuário/senha na aplicação Express, com sessões PostgreSQL, hash scrypt, controle de perfil, CSRF e limite de tentativas; tabelas aplicadas no Supabase.
+- Comando local `npm run criar:admin` para a primeira conta, sem senha padrão, e `npm run typecheck`.
+- Clientes agora exige login; alterações exigem token CSRF. Fluxo verificado com dados temporários revertidos.
+
+- Certificado oficial do Supabase configurado por `DATABASE_CA_CERT`, sem pasta de certificados, com conexão TLS validada.
+
+- Model, Controller e rotas locais de Clientes para cadastro, listagem, consulta e edição; Tabela aplicada no Supabase com obrigatoriedade confirmada; persistência verificada sem manter dados de teste.
+
+- Servidor Express com `GET /api/v1/health`, porta configurável e comandos `npm run dev` e `npm start` no back-end.
 
 - Base do front-end em React e TypeScript, com Vite e ESLint, ainda com a tela de exemplo.
 - Guia do Projeto com escopo, requisitos e planejamento acadêmico.

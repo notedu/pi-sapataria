@@ -8,11 +8,36 @@ Este documento registra permissões, condições e relações entre os módulos 
 
 Cada RN informa origem, classificação, situação da definição e limite do critério de aceitação. “Guia §…” remete à seção do Guia do Projeto. **Sugestão significa proposta não aprovada**, inclusive quando a fonte usa verbos afirmativos. As marcações dos §§3, 5, 6, 9.3 e 10 também abrangem tabelas e listas internas, conforme a [legenda documental](README.md#como-interpretar-as-classificacoes).
 
-**Situação da implementação de todas as RN:** não implementadas nas funcionalidades de negócio, conforme o aviso inicial do [README do projeto](../README.md). O [CHANGELOG](../CHANGELOG.md), em “Não lançado”, registra somente a base inicial e a documentação. Essa atribuição é documental; não houve auditoria de código para confirmar cada regra.
+**Situação atual:** autenticação e operações descritas nas decisões abaixo estão implementadas. Regras financeiras, alertas e telas não são consideradas concluídas.
 
 Critérios de sugestões são propostos e condicionados à aprovação. Quando falta decisão, o texto registra **Pendente de definição**. A autorização de criação destes documentos não altera a classificação original.
 
 ## Permissões e identificação
+
+### Decisões confirmadas e implementadas nesta etapa — acesso
+
+- Login individual por **usuário e senha**, sem diferenciação de maiúsculas/minúsculas no usuário; e-mail obrigatório apenas para contato. Usuário único, perfis administrador/funcionario sem perfil padrão e ativo=true por padrão.
+- Apenas administrador acessa cadastro/listagem/consulta/alteração de acesso de Funcionários (RN-001). Os dois perfis autenticados podem operar Clientes, Materiais, Produtos, OS, Vendas e Movimentações, incluindo exclusões permitidas, cancelamentos e correções.
+- Senha com 15–128 caracteres, armazenada como hash scrypt; sessão PostgreSQL com duração absoluta de 8h. Login inválido não revela se a pessoa existe ou está inativa. Limite de 10 tentativas por usuário e 50 por IP em 15min.
+- Desativação e mudança de perfil invalidam sessões anteriores, verificadas em cada requisição. Reativação exige novo login. O logout encerra a sessão utilizada.
+- Operações que alteram dados exigem token CSRF ligado ao cookie de sessão. Primeiro administrador criado apenas por comando local quando não há funcionários; nenhum cadastro público ou conta padrão.
+- Recuperação e troca de senha, e exclusão de funcionário não foram implementadas. A interface permanece pendente.
+
+Essas decisões atualizam as pendências correspondentes de RN-001/RN-002/RN-004 e PD-N01/PD-N02; as referências ao guia abaixo são mantidas como origem histórica.
+
+### Decisões operacionais confirmadas pelo Integrante 1 e implementadas
+
+- RN-002: ambos os perfis operam os módulos de negócio; administração de funcionários continua exclusiva do administrador.
+- RN-009: PIX, crédito, débito e dinheiro, representados por `pix`, `credito`, `debito`, `dinheiro`. Pagamento opcional na OS e obrigatório na venda. Parcelas, descontos e reembolsos não foram definidos.
+- RN-010: OS nasce Aberta; sequência Aberta → Em andamento → Pronta → Entregue. Responsável ativo escolhido no cadastro. Edição e novos usos somente Aberta/Em andamento. Cancelamento permitido até Pronta; Entregue/Cancelada finais. Valor manual; cálculo automático adiado.
+- RN-011: venda com pelo menos um produto, vendedor da sessão, preço do cadastro preservado em cada item e total calculado pela soma de quantidade × preço. Cadastro da venda e baixa são uma transação. Preço não pode ser sobrescrito na venda.
+- RN-012: baixa no registro do uso efetivo, uma linha por uso. Cancelamento de OS não repõe materiais. Devolução de material não utilizado é registrada separadamente e limitada ao consumo ainda não revertido. Indicadores de custo/financeiro permanecem pendentes.
+- RN-018/RN-019: materiais fracionáveis; produtos inteiros; valores monetários com até duas casas, zero permitido, negativos recusados. Saldos começam em zero, nunca negativos; quantidade mínima não negativa. Entrada, uso, saída e venda exigem quantidade positiva. Custo do material corresponde à unidade informada.
+- Entradas e saídas manuais registram motivo, data automática e saldo na mesma transação. Não há edição direta de saldo. OS e vendas também têm data automática.
+- Correções preservam a origem e registram movimento inverso. Um movimento manual pode ser estornado integralmente uma vez; venda usa cancelamento próprio e consumo usa devolução própria. Venda cancelada repõe somente quantidades efetivamente devolvidas, informadas no cancelamento. Não se edita/apaga movimento original.
+- RN-020: Clientes somente sem vínculos; Materiais/Produtos somente sem vínculos e com saldo zero. OS/Vendas são canceladas, funcionários desativados; histórico preservado.
+
+Estas confirmações substituem as pendências correspondentes das sugestões originais abaixo. Financeiro, alertas, cadastro auxiliar de configurações e telas continuam fora desta etapa.
 
 ### RN-001
 
@@ -21,7 +46,7 @@ Critérios de sugestões são propostos e condicionados à aprovação. Quando f
 - **Origem:** Guia §§3, 4 e 5.5; a introdução do §4 ressalva expressamente essa permissão como definida no rascunho.
 - **Classificação:** Definição da equipe. **Situação da definição:** definida no rascunho.
 - **Regra e critério:** somente o administrador pode acessar o cadastro de funcionários. Isso não concede automaticamente acesso administrativo às outras áreas.
-- **Pendente de definição:** mecanismo de bloqueio, mensagem ou redirecionamento para acesso negado; ver [PD-N01](#pd-n01).
+- **Implementado na API:** sem sessão válida retorna 401; perfil insuficiente retorna 403. Redirecionamento e menu da interface continuam pendentes.
 - **Requisito relacionado:** [RF-005](requisitos.md#rf-005).
 
 ### RN-002
@@ -68,7 +93,7 @@ Critérios de sugestões são propostos e condicionados à aprovação. Quando f
 - **Origem:** Guia §5.1, sob a marcação de sugestão da introdução do §5; §9.4 sugere rotas protegidas. Exigência geral de segurança no §8.2, com classificação mista no §14.
 - **Classificação:** Sugestão para o comportamento específico de proteger as demais telas; Exigência acadêmica para segurança e acesso por perfil no §8.2. **Situação da definição:** comportamento proposto, com alcance a esclarecer.
 - **Regra e critério propostos:** as telas além do Login só abrem para usuários autenticados.
-- **Pendente de definição:** política concreta de autenticação em [PD-N02](#pd-n02) e divergência de segurança em [PD-R04](requisitos.md#pd-r04). Não estão especificados recuperação de senha, expiração de sessão ou limite de tentativas.
+- **Atualização:** mecanismo de login, expiração e limites confirmados na seção de decisões acima. Recuperação/troca de senha e interface continuam pendentes.
 - **Requisitos relacionados:** [RF-001](requisitos.md#rf-001), [RF-015](requisitos.md#rf-015) e [RNF-005](requisitos.md#rnf-005).
 
 ### RN-005
@@ -116,6 +141,8 @@ Critérios de sugestões são propostos e condicionados à aprovação. Quando f
 
 ### RN-009
 
+**Atualização aprovada:** Formas aceitas confirmadas e implementadas: pix, credito, debito e dinheiro; opcional em OS. Demais condições de pagamento continuam pendentes.
+
 **Formas e condições de pagamento.**
 
 - **Origem:** Guia §17; §§5.4, 5.6 e 5.10 sugerem campos e cadastro auxiliar de formas de pagamento.
@@ -125,6 +152,8 @@ Critérios de sugestões são propostos e condicionados à aprovação. Quando f
 - **Requisitos relacionados:** [RF-018](requisitos.md#rf-018), [RF-020](requisitos.md#rf-020) e [RF-024](requisitos.md#rf-024).
 
 ### RN-010
+
+**Atualização aprovada:** Estados e sequência confirmados e implementados conforme decisões operacionais acima. Cancelada encerra a OS, inclusive após início, preservando consumo já registrado.
 
 **Estados e significados da OS.**
 
@@ -145,6 +174,8 @@ Critérios de sugestões são propostos e condicionados à aprovação. Quando f
 
 ### RN-011
 
+**Atualização aprovada:** Registro, preço histórico, total e baixa confirmados e implementados. Apuração do painel financeiro continua pendente.
+
 **Efeitos da venda independente.**
 
 - **Origem:** Guia §§5.6, 5.8, 6.2 e 6.3; detalhes e fluxo sugeridos.
@@ -157,6 +188,8 @@ Critérios de sugestões são propostos e condicionados à aprovação. Quando f
 ## Estoques e indicadores financeiros
 
 ### RN-012
+
+**Atualização aprovada:** Consumo efetivo, baixa e devolução confirmados e implementados. Cálculo financeiro de materiais continua pendente.
 
 **Uso de materiais em OS.**
 
@@ -241,6 +274,8 @@ Critérios de sugestões são propostos e condicionados à aprovação. Quando f
 
 ### RN-020
 
+**Atualização aprovada:** Exclusão sem vínculos e com saldo zero para estoques confirmada e implementada. Funcionários são desativados; OS/vendas canceladas.
+
 **Remoção ou desativação por entidade.**
 
 - **Origem:** Guia §9.1, no contexto da exigência acadêmica de métodos HTTP; DELETE é descrito como “Remover (ou desativar) um registro”. O §5.5 sugere ativar/desativar acesso de funcionários.
@@ -252,19 +287,19 @@ Critérios de sugestões são propostos e condicionados à aprovação. Quando f
 <a id="pendencias"></a>
 ## Decisões de negócio em aberto
 
-Todos os registros têm classificação **Pendência** e situação **Pendente de definição**. Não são funcionalidades novas: registram lacunas ou dúvidas das fontes que impedem fechar regras e critérios. A ausência de uma política não autoriza implementá-la por inferência.
+A situação de cada registro abaixo indica o que foi resolvido e o que permanece pendente. Não são funcionalidades novas: registram lacunas ou dúvidas das fontes que impedem fechar regras e critérios. A ausência de uma política não autoriza implementá-la por inferência.
 
 | ID | Decisão necessária | Origem e regras relacionadas |
 |---|---|---|
-| <a id="pd-n01"></a>PD-N01 | Aprovar perfis e acessos; definir Configuração e Financeiro; esclarecer ações autorizadas, resposta a acesso negado e alcance do financeiro somente para consulta. | Guia §§3, 4, 5.5, 9.3 e 17; RN-001, RN-002, RN-003 e RN-007. “Todas as telas” do administrador é sugestão em tensão com acessos explicitamente pendentes. |
-| <a id="pd-n02"></a>PD-N02 | Escolher usuário ou e-mail para login, aprovar o fluxo de autenticação, definir a política de alteração de senha e efeitos da desativação de acesso. | Guia §§5.1, 5.5 e 5.9; RN-004. Mecanismo técnico de armazenamento de senha em [PD-R04](requisitos.md#pd-r04). |
-| <a id="pd-n03"></a>PD-N03 | Aprovar campos, obrigatoriedade, formatos, dados editáveis e relacionamentos. Reconciliar detalhes da OS entre §§5.4 e 10 e esclarecer o vínculo de compras ao cliente, ausente no modelo sugerido de venda. | Guia §5 (validação exigida, detalhes sugeridos), §§5.3–5.4, 5.9, 10 e 17; RN-006 e RN-010. Listar um campo não o torna obrigatório. |
-| <a id="pd-n04"></a>PD-N04 | Aprovar estados e transições da OS; definir tratamento do cancelamento após início do serviço, tipos de serviço e prazos padrão, se adotados. | Guia §§6.1 e 17; RN-010. O guia define apenas significados sugeridos, não transições ou duração. |
-| <a id="pd-n05"></a>PD-N05 | Definir formas de pagamento aceitas e esclarecer situações em que retirada e pagamento não coincidam. | Guia §§5.4, 5.6, 6.1–6.2 e 17; RN-009 a RN-011. Não há política documentada de parcelamento ou pagamento parcial. |
+| <a id="pd-n01"></a>PD-N01 | Resolvido: ambos os perfis operam Clientes/OS/Vendas/Estoques, incluindo exclusões, cancelamentos e correções permitidos; Funcionários exclusivo do administrador. Pendente: Configuração e Financeiro. | Guia §§3, 4, 5.5, 9.3 e 17; RN-001, RN-002, RN-003 e RN-007. “Todas as telas” do administrador é sugestão em tensão com acessos explicitamente pendentes. |
+| <a id="pd-n02"></a>PD-N02 | Resolvido nesta etapa: usuário e senha, sessões de 8h, limites de tentativas e invalidação na alteração de acesso. Pendente: política e fluxo de alteração/recuperação de senha. | Guia §§5.1, 5.5 e 5.9; RN-004. Mecanismo técnico de armazenamento de senha em [PD-R04](requisitos.md#pd-r04). |
+| <a id="pd-n03"></a>PD-N03 | Resolvidos campos/obrigatoriedade e operações dos nove cadastros conforme modelo/API. Pendentes: vínculos Cliente–Venda e OS–Venda, autoedição de perfil e cadastros auxiliares. | Guia §5 (validação exigida, detalhes sugeridos), §§5.3–5.4, 5.9, 10 e 17; RN-006 e RN-010. Listar um campo não o torna obrigatório. |
+| <a id="pd-n04"></a>PD-N04 | Resolvidos estados, transições, edição e cancelamento da OS. Prazo permanece opcional, sem cálculo automático; catálogo de serviços não definido. | Guia §§6.1 e 17; RN-010. O guia define apenas significados sugeridos, não transições ou duração. |
+| <a id="pd-n05"></a>PD-N05 | Formas aceitas resolvidas: PIX, crédito, débito, dinheiro. Pagamento opcional em OS, obrigatório em venda. Situações financeiras adicionais permanecem pendentes. | Guia §§5.4, 5.6, 6.1–6.2 e 17; RN-009 a RN-011. Não há política documentada de parcelamento ou pagamento parcial. |
 | <a id="pd-n06"></a>PD-N06 | Aprovar critérios de faturamento e períodos, apuração de materiais, fórmula de lucro, custos incluídos e regra/parâmetro do imposto. | Guia §§5.11, 6.1, 6.3 e 17; RN-012 e RN-014 a RN-017. Definições atuais são sugestões; lucro e imposto são pendências explícitas. |
-| <a id="pd-n07"></a>PD-N07 | Definir gatilhos e momentos de baixa, operações que devem acontecer juntas e tratamento de correções, cancelamentos e tentativa de saldo negativo. | Guia §§5.6–5.8 e 6: **Sugestões**; §8.2: **Exigência acadêmica** de consistência; RN-011, RN-012, RN-018 e RN-019. Preservar ambas as classificações. |
+| <a id="pd-n07"></a>PD-N07 | Resolvido para esta etapa: baixas no uso/venda; operações atômicas; estoque não negativo; estorno de movimento manual; devolução de material não utilizado; cancelamento de venda com itens efetivamente devolvidos. | Guia §§5.6–5.8 e 6: **Sugestões**; §8.2: **Exigência acadêmica** de consistência; RN-011, RN-012, RN-018 e RN-019. Preservar ambas as classificações. |
 | <a id="pd-n08"></a>PD-N08 | Aprovar alertas e definir mínimos de materiais, critério de estoque baixo de produtos e proximidade de prazo de OS. | Guia §§1.2, 5.2, 5.7 e 5.8; RN-013. O critério “abaixo do mínimo” é sugerido para materiais, sem valores definidos. |
-| <a id="pd-n09"></a>PD-N09 | Definir remoção ou desativação por entidade e o tratamento dos vínculos e históricos nessas operações. | Guia §§5.5 e 9.1; RN-020. As alternativas não estão resolvidas por recurso. |
+| <a id="pd-n09"></a>PD-N09 | Resolvido: Clientes sem vínculos; Materiais/Produtos sem vínculos e com saldo zero; funcionários desativados; OS/vendas canceladas; movimentos preservados. | Guia §§5.5 e 9.1; RN-020. As alternativas não estão resolvidas por recurso. |
 | <a id="pd-n10"></a>PD-N10 | Confirmar a classificação da frase sobre visibilidade de Funcionários no menu. | Guia §11.3; RN-005. Preservar a ambiguidade da marcação posterior ao esboço, sem enfraquecer a restrição de acesso de RN-001. |
 
 Pendências de tecnologias, nuvem, identidade visual, colaboração e entregas acadêmicas estão no [catálogo de requisitos](requisitos.md#pendencias), para evitar duplicação.
