@@ -4,35 +4,35 @@
 
 ## Escopo e situação
 
-Modelo inicial do banco completo, sujeito a evolução. O contrato da API e o documento de telas apresentam o mesmo conjunto de funcionalidades, com detalhes pendentes marcados localmente; cadastro/listagem de clientes permanece como primeiro recorte de implementação.
+Modelo inicial do banco completo, sujeito a evolução. O contrato da API e o documento de telas apresentam o mesmo conjunto de funcionalidades, com detalhes pendentes marcados localmente; as nove tabelas de negócio estão aplicadas, com cadastros, consultas e operações de estoque, OS e vendas implementados.
 
 - **Definição da equipe:** objetivos dos módulos (Guia §§1.3, 4 e 5; RF-003 a RF-011), PostgreSQL (§7.1), cadastro de funcionários exclusivo do administrador (RN-001) e venda independente de OS (RN-008).
 - **Exigência acadêmica:** validação, chaves estrangeiras, consistência, estoque não negativo e segurança (§8.2; RNF-004/RNF-005, RN-018/RN-019).
 - **Sugestões das fontes:** entidades e campos do §10, detalhes do §5 e fluxos do §6. Sua presença neste modelo não os aprova.
-- **Propostas técnicas desta versão:** nomes de tabelas/campos, tipos, chaves e cardinalidades abaixo. Nenhum esquema foi implementado ou aprovado por esta edição.
+- **Implementação aprovada:** nove tabelas de negócio em `sapataria`, com campos, tipos, chaves e obrigatoriedade descritos abaixo. Fluxos de gravação e total da venda implementados; cálculo automático da OS e indicadores financeiros pendentes.
 - **Pendências de negócio:** apontadas junto aos elementos afetados, por identificadores de [regras de negócio](regras-de-negocio.md#pendencias). Ausência de definição não significa campo opcional.
 
-**Situação observada:** `backend/.gitkeep` apenas reserva a pasta; não há modelo de negócio, conexão ou migração no repositório. Referência: [Arquitetura §§4, 7 e 12](arquitetura.md). Nenhuma migração foi gerada e nenhum banco foi alterado.
+**Situação atual:** SQL de Clientes, Funcionários e `backend/src/database/entidades.sql` aplicados no Supabase. A última etapa acrescentou sete tabelas, nove FKs e três restrições de estoque/vínculo, sem alterar os dados existentes. Há também três tabelas técnicas de autenticação.
 
-## Convenções propostas
+## Convenções adotadas
 
 **PK** é a chave primária: identifica uma linha. **FK** é a chave estrangeira: aponta para uma linha existente de outra tabela. Por exemplo, `cliente_id` aponta para `clientes.id`.
 
-Todas as nove tabelas principais terão, **como proposta**, `id integer` gerado pelo banco, PK, único e não nulo. As FKs usam `integer`. Essa exigência técnica de identificação não torna obrigatório um dado cadastral.
+Todas as nove tabelas principais possuem `id integer` gerado pelo banco, PK, único e não nulo. As FKs usam `integer`. Essa exigência técnica de identificação não torna obrigatório um dado cadastral.
 
-Nas tabelas seguintes, **Pendente** significa obrigatoriedade de negócio ainda não definida (PD-N03); **Proposta: sim** indica uma restrição estrutural sugerida, não aprovada. Campos agrupados mantêm o mesmo tipo e situação. Não se propõem limites de texto, valores padrão, unicidade de nomes/contatos ou exclusões em cascata. Remoção/desativação e preservação de históricos permanecem em PD-N09.
+A obrigatoriedade abaixo incorpora as decisões confirmadas pelo Integrante 1. Não há unicidade de nomes/contatos nem exclusões em cascata; usuário de login tem unicidade própria. Remoção de Clientes exige ausência de vínculos; Materiais/Produtos exigem também saldo zero. OS/Vendas e movimentos preservam o histórico.
 
-Tipos propostos: `text` para texto; `boolean` para ativo/inativo; `numeric` para valores e quantidades exatas, com precisão, escala e arredondamento a definir conforme unidades e regras financeiras; `date` para datas sem horário; `timestamptz` para instantes com referência de fuso. Essas escolhas não definem períodos financeiros nem admitem automaticamente quantidades fracionadas em todos os produtos. Para o contrato da API, propõe-se serializar `numeric` como string decimal, `date` como `YYYY-MM-DD` e `timestamptz` como string ISO 8601 com fuso; IDs continuam números inteiros. São representações de transporte, não novas regras de cálculo.
+Tipos: `text` para textos; `boolean` para ativo; `numeric` sem escala fixa para valores e quantidades, sem impor arredondamento ainda não aprovado; `date` para datas sem horário; `timestamptz` para instantes. A API retorna numeric como string decimal, date como `YYYY-MM-DD` e timestamptz como ISO 8601 UTC; IDs continuam números inteiros. Essa representação preserva precisão e datas. Restrições de operação permitem frações de materiais e exigem unidades inteiras para produtos; valores monetários têm até duas casas.
 
-## Diagrama geral — proposta, não implementada
+## Diagrama geral — relações implementadas
 
-As relações partem do Guia §10; **todas as cardinalidades são propostas técnicas para revisão**. `||` significa exatamente um; `o|`, zero ou um; `o{`, zero ou vários. A ausência de obrigatoriedade confirmada é representada provisoriamente por zero ou um nas referências de OS e Venda; isso **não autoriza registros sem cliente ou responsável** antes da decisão de negócio.
+`||` significa exatamente um; `o|`, zero ou um; `o{`, zero ou vários. Cliente e responsável da OS, vendedor da venda e vínculos das tabelas intermediárias são obrigatórios.
 
 ```mermaid
 erDiagram
-    CLIENTE o|--o{ ORDEM_SERVICO : possui
-    FUNCIONARIO o|--o{ ORDEM_SERVICO : responde
-    FUNCIONARIO o|--o{ VENDA : registra
+    CLIENTE ||--o{ ORDEM_SERVICO : possui
+    FUNCIONARIO ||--o{ ORDEM_SERVICO : responde
+    FUNCIONARIO ||--o{ VENDA : registra
     ORDEM_SERVICO ||--o{ MATERIAL_OS : utiliza
     MATERIAL ||--o{ MATERIAL_OS : participa
     VENDA ||--o{ ITEM_VENDA : contem
@@ -41,145 +41,128 @@ erDiagram
     PRODUTO o|--o{ MOVIMENTACAO_ESTOQUE : movimenta
 ```
 
-Um cliente pode estar associado a várias OS; cada OS aponta para no máximo um cliente neste desenho. Um funcionário pode responder por várias OS e registrar várias vendas. Confirmar se a loja precisa de mais de um responsável por OS antes de mudar essa estrutura (PD-N03).
+Um cliente pode estar associado a várias OS; cada OS aponta para exatamente um cliente. Um funcionário pode responder por várias OS e registrar várias vendas. Confirmar se a loja precisa de mais de um responsável por OS antes de mudar essa estrutura (PD-N03).
 
-Uma OS pode utilizar vários materiais e o mesmo material pode aparecer em várias OS: `MATERIAL_OS` registra cada uso. Da mesma forma, `ITEM_VENDA` liga uma venda aos produtos vendidos. A proposta exige os dois vínculos em cada linha dessas tabelas intermediárias. O diagrama não decide o mínimo de itens para concluir uma venda, nem se o mesmo produto/material pode aparecer repetido na mesma operação (PD-N03/PD-N07).
+Uma OS pode utilizar vários materiais e o mesmo material pode aparecer em várias OS: `MATERIAL_OS` registra cada uso. Da mesma forma, `ITEM_VENDA` liga uma venda aos produtos vendidos. A estrutura exige os dois vínculos em cada linha dessas tabelas intermediárias. O diagrama não decide o mínimo de itens para concluir uma venda, nem se o mesmo produto/material pode aparecer repetido na mesma operação (PD-N03/PD-N07).
 
-Cada movimentação aponta **para um Material ou um Produto, nunca ambos**, conforme proposta de restrição abaixo; as duas ligações opcionais no diagrama devem ser lidas juntas com essa condição.
+Cada movimentação aponta **para um Material ou um Produto, nunca ambos**, conforme restrição aplicada no banco; as duas ligações opcionais no diagrama devem ser lidas juntas com essa condição.
 
 **Relações ainda não desenhadas:** Cliente–Venda (histórico de compras sugerido no §5.3, mas ausente no §10) e OS–Venda (vendas ligadas a OS no §1.3, sem modelo correspondente no §10). A existência de venda independente está definida, mas não resolve como representar as vendas ligadas a OS. Cardinalidade e campos desses vínculos permanecem pendentes; não se cria tabela adicional nem FK por suposição (PD-N03/PD-N05).
 
 ## Entidades e campos
 
-### Funcionário/usuário — `funcionarios`
+### Funcionário/usuário — `sapataria.funcionarios`
 
-**Finalidade:** identificar quem acessa o sistema e quem registra operações. Uma entidade atende cadastro e perfil do usuário, sem duplicar a pessoa por tela. **Origem:** Guia §§5.5, 5.9 e 10; RF-005/RF-009 definidos no nível de objetivo; detalhes em RF-019/RF-023 são sugestões. Administração do cadastro segue RN-001.
+**Confirmado e implementado:** conta individual com usuário e senha, sem Supabase Auth. Referências: RF-001/RF-005/RF-015/RF-019, RN-001/RN-004. Tabela e índices aplicados no Supabase; verificação com dados temporários revertida.
 
-| Campo (além de `id`) | Finalidade / tipo proposto | Obrigatoriedade | Restrição ou pendência |
-|---|---|---|---|
-| `nome` | Identificação / `text` | Pendente | Dados pessoais exatos e formatos: PD-N03. |
-| `email` | Contato e possível identificador de entrada / `text` | Pendente | Login por e-mail ou usuário ainda não decidido; não presumir unicidade de contato (PD-N02). |
-| `senha_protegida` | Representação protegida da senha / `text` | Pendente, conforme autenticação | Nunca senha em texto aberto nem dado devolvido na API. Mecanismo e política ainda não escolhidos (PD-R04/PD-N02). |
-| `perfil` | Perfil de acesso / `text` | Pendente | Administrador/funcionário são sugestões; não fixar enumeração, privilégios ou padrão antes de PD-N01. |
-| `ativo` | Estado de acesso / `boolean` | Pendente | Sem valor padrão; efeitos sobre acesso já iniciado e autoria histórica: PD-N02/PD-N09. |
+| Campo | Tipo | Obrigatoriedade / regra |
+|---|---|---|
+| `id` | `integer` | Gerado pelo banco, chave primária |
+| `nome` | `text` | Obrigatório |
+| `usuario` | `text` | Obrigatório; único pelo índice `lower(usuario)`; API remove espaços externos e salva em minúsculas |
+| `email` | `text` | Obrigatório como contato; não é login; sem unicidade exigida |
+| `senha_protegida` | `text` | Obrigatório; hash scrypt com salt; nunca devolvido pela API |
+| `perfil` | `text` | Obrigatório; administrador ou funcionario; sem padrão |
+| `ativo` | `boolean` | Obrigatório no banco; padrão true |
+| `versao_acesso` | `integer` | Técnico; padrão 1; incrementa ao mudar perfil/ativo; invalida sessões anteriores |
 
-Se login por nome de usuário for aprovado, o identificador correspondente precisará ser incluído e ter sua unicidade definida. Não se cria agora uma tabela de permissões ou recuperação de senha sem mecanismo escolhido. Outros contatos só entram após confirmar necessidade (§5.5).
+A API recebe `senha` (15–128 caracteres), não `senha_protegida`. A senha não é normalizada. Nenhum cadastro público: o primeiro administrador é criado pelo comando local `npm run criar:admin`, que recusa execução quando já existem funcionários. Só administradores autenticados gerenciam as demais contas. Exclusão e recuperação/troca de senha não foram implementadas.
+
+**Tabelas técnicas:** `sessoes` (`sid`, `sess`, `expire`) armazena identificadores e estado de sessão conforme connect-pg-simple; `tentativas_login` (`chave`, `tentativas`, `expira_em`) controla tentativas por usuário/IP com chaves derivadas por HMAC, sem senha. Sessões contêm ID do funcionário, versão de acesso, expiração e token CSRF, não dados da credencial. Limite absoluto de 8h; mudança de acesso exige novo login. Essas tabelas não representam novas entidades de negócio.
+
+O script `backend/src/database/funcionarios.sql` cria apenas essa etapa. Alterações futuras em tabelas existentes deverão ser registradas em novos scripts; `CREATE TABLE IF NOT EXISTS` não atualiza colunas antigas.
 
 ## Cliente
 
-**Tabela proposta:** `clientes`. **Finalidade:** organizar identificação e contato de quem solicita serviços.
+**Tabela:** `sapataria.clientes`. Campos e obrigatoriedade confirmados pelo Integrante 1 nesta conversa. Tabela criada e colunas conferidas no Supabase; operações da API verificadas com o banco real e rollback dos dados temporários.
 
-Os cinco campos de negócio vêm das **sugestões** dos §§5.3 e 10, reunidas em [RF-017](requisitos.md#rf-017). Nomes técnicos sem acentos, tipos, identificação e representação de ausência abaixo são **propostas técnicas desta versão, ainda não adotadas**. Não há campo CPF previsto neste recorte.
+| Campo | Tipo PostgreSQL / JSON | Obrigatoriedade |
+|---|---|---|
+| `id` | `integer` / número inteiro | Gerado pelo banco; chave primária; somente leitura na API |
+| `nome` | `text` / string | Obrigatório |
+| `telefone` | `text` / string | Obrigatório |
+| `endereco` | `text` / string | Obrigatório |
+| `email` | `text` / string ou null | Opcional |
+| `observacoes` | `text` / string ou null | Opcional |
 
-| Campo | Finalidade | Tipo proposto (PostgreSQL / JSON) | Obrigatoriedade | Restrições |
-|---|---|---|---|---|
-| `id` | Identificar o registro sem depender de nome ou telefone | `integer` / número inteiro | Proposta: gerado pelo banco, presente na resposta; não preenchido no formulário | Proposta: chave primária, única e não nula; não é regra de identificação civil. |
-| `nome` | Nome do cliente | `text` / string | Pendente de definição | Formato e limites pendentes; não presumir unicidade. |
-| `telefone` | Contato telefônico | `text` / string | Pendente de definição | Formato pendente; texto preserva sinais e zeros; não presumir unicidade. |
-| `email` | Contato por e-mail | `text` / string | Pendente de definição | Validação de formato exigida se adotado; regra concreta pendente; não presumir unicidade. |
-| `endereco` | Endereço do cliente | `text` / string | Pendente de definição | Texto único é proposta; não pressupõe CEP ou consulta externa. |
-| `observacoes` | Anotações cadastrais | `text` / string | Pendente de definição | Conteúdo e limites pendentes. |
+A API remove espaços nas extremidades e rejeita campos obrigatórios vazios. Campos opcionais omitidos, nulos ou em branco são armazenados como `NULL`. O e-mail informado deve ter formato básico `usuario@dominio.extensao`; isso não comprova que a caixa existe. Telefone permanece texto, sem máscara obrigatória. Nome, telefone e e-mail não têm regra de unicidade.
 
-**Proposta de representação:** para campos que forem aprovados como opcionais, ausência no pedido ou `null` representa ausência de valor; no banco, `NULL`; na resposta, a chave permanece com `null`. Isso não torna os cinco campos opcionais. Tratamento de texto vazio e normalização deve acompanhar as validações aprovadas. `id` é somente de leitura para o cliente da API.
+No `PUT`, os cinco campos de negócio são editáveis; todos os obrigatórios devem ser enviados e os opcionais ausentes ficam nulos. Não há exclusão, CPF, novos vínculos nem criação de dados fictícios nesta etapa. Referências: RF-003/RF-017.
 
 <a id="pendencias-que-afetam-o-cadastro-e-a-listagem"></a>
-## Pendências que afetam o cadastro e a listagem
+### Pendências de Clientes
 
-- **Dados — PD-N03:** equipe e sapataria precisam confirmar os campos deste recorte, quais são obrigatórios e quais formatos aceitar. Não interpretar ausência de definição como permissão para salvar cadastro vazio. Nenhuma regra de rejeição ou fusão de duplicados está autorizada por este modelo.
-- **Acesso — PD-N01/PD-N02:** confirmar quem pode cadastrar e quem pode listar; a proteção depende da definição de autenticação. Ver [permissões no contrato](api.md#permissoes).
-- **Técnica — PD-R09:** alinhar os tipos e a representação propostos com o contrato e escolher acesso ao banco/migrações antes da implementação da persistência. São escolhas ainda não adotadas, não novas regras da sapataria.
-
-Critérios práticos compartilhados estão em [Telas e fluxos](telas-e-fluxos.md#verificacao). CEP, CSV e histórico continuam com suas classificações originais; não precisam ser resolvidos para preparar este cadastro.
+- Clientes exige login e permite os dois perfis; operações de alteração exigem token CSRF. Exclusão permitida somente sem OS vinculada.
 
 ## Ordem de serviço — `ordens_servico`
 
-**Finalidade:** registrar e acompanhar o reparo. **Origem:** Guia §§5.4, 6.1 e 10; RF-004 definido, detalhes RF-018/RN-010 sugeridos. A seção §5.4 menciona serviço(s), pagamento e observações; o §10 resume serviço no singular e acrescenta responsável. As diferenças permanecem explícitas.
+RF-004/RF-018. Todos os campos abaixo são obrigatórios, exceto `prazo_entrega`, `forma_pagamento` e `observacoes`.
 
-| Campo (além de `id`) | Finalidade / tipo proposto | Obrigatoriedade | Restrição ou pendência |
-|---|---|---|---|
-| `cliente_id` | Cliente atendido / `integer`, FK → `clientes.id` | Pendente | Até um cliente no desenho; confirmar vínculo obrigatório (PD-N03). |
-| `responsavel_id` | Funcionário responsável / `integer`, FK → `funcionarios.id` | Pendente | Não confundir automaticamente responsável e autor do cadastro (PD-N03). |
-| `descricao_calcado` | Identificar o calçado / `text` | Pendente | Formato e conteúdo: PD-N03. |
-| `servico` | Descrever trabalho solicitado / representação pendente | Pendente | Texto único ou vínculo com catálogo; um ou vários serviços: PD-N03/PD-N04. Não definir FK antes dessa decisão. |
-| `valor` | Valor do serviço / `numeric` | Pendente | Composição e validação pendentes; não presume pagamento ou faturamento (PD-N05/PD-N06). |
-| `data_entrada` | Data de recebimento / `date` | Pendente | Horário não está definido; sem preenchimento automático aprovado. |
-| `prazo_entrega` | Data prevista / `date` | Pendente | Prazo padrão e validação entre datas: PD-N04. |
-| `status` | Situação do serviço / `text` | Pendente | Estados e transições de RN-010 são sugestões; sem valor inicial presumido. |
-| `forma_pagamento` | Forma informada / representação pendente | Pendente | Texto ou FK ao cadastro auxiliar; momento de registro e formas aceitas: PD-N05. |
-| `observacoes` | Anotações sobre a OS / `text` | Pendente | Previsto no §5.4, ausente da tabela resumida do §10; confirmar adoção (PD-N03). |
+| Campo (além de id) | Tipo / vínculo | Definição |
+|---|---|---|
+| cliente_id | integer → clientes.id | Cliente atendido |
+| responsavel_id | integer → funcionarios.id | Responsável pelo serviço; não define automaticamente autoria |
+| descricao_calcado | text | Descrição do calçado |
+| servico | text | Descrição do serviço nesta etapa; não foi criado catálogo auxiliar |
+| valor | numeric | Valor informado, sem cálculo automático |
+| data_entrada | date | Padrão: data do registro em America/Sao_Paulo |
+| prazo_entrega | date, opcional | Sem prazo padrão |
+| status | text | Padrão Aberta; Em andamento, Pronta, Entregue ou Cancelada, conforme RN-010 |
+| forma_pagamento | text, opcional | pix, credito, debito ou dinheiro |
+| observacoes | text, opcional | Anotações |
 
-Materiais ficam em `materiais_os`, não em uma lista de IDs dentro da OS. Não se cria tabela Pagamento, parcelamento ou data de recebimento por inferência: retirada e pagamento em momentos diferentes ainda precisam de regra (PD-N05). A solução dessa pendência poderá exigir evolução do modelo antes do financeiro.
+Usos de materiais ficam em `materiais_os`. Cadastro, edição, avanço de status, consumo, devolução e cancelamento estão disponíveis na API, conforme RN-010/RN-012. O cálculo da OS foi adiado pelo usuário.
 
 ## Estoques — `materiais` e `produtos`
 
-**Finalidades:** Material representa insumo consumido no reparo; Produto representa item para venda. **Origem:** Guia §§5.7–5.8 e 10; RF-007/RF-008 definidos, detalhes RF-021/RF-022 sugeridos.
+RF-007/RF-008, RF-021/RF-022. Todos os campos são obrigatórios no banco. Ambos têm saldo `quantidade numeric NOT NULL DEFAULT 0 CHECK (quantidade >= 0)`, conforme RN-019.
 
-| Tabela / campo (além de `id`) | Tipo proposto | Obrigatoriedade | Finalidade, restrição ou pendência |
-|---|---|---|---|
-| Ambas: `nome` | `text` | Pendente | Identificar item; sem unicidade presumida. |
-| Ambas: `categoria` | Representação pendente | Pendente | Classificação; texto ou FK conforme avaliação dos auxiliares (§5.10). |
-| Ambas: `quantidade` | `numeric` | Pendente | Saldo atual. **Exigência:** nunca negativo (RN-019); proposta de restrição `>= 0`, sem padrão zero presumido. |
-| Material: `unidade` | `text` | Pendente | Como medir o consumo; unidades e frações precisam de confirmação (PD-N03). |
-| Material: `quantidade_minima` | `numeric` | Pendente | Mínimo para alerta sugerido; adoção e valor em PD-N08. |
-| Material: `custo` | `numeric` | Pendente | Custo informado; significado unitário/total e método de apuração pendentes (PD-N06). |
-| Produto: `preco_custo`, `preco_venda` | `numeric` | Pendente | Valores de compra e venda; validações, casas decimais e custeio pendentes. |
+| Tabela | Campos além de id |
+|---|---|
+| materiais | nome text, categoria text, unidade text, quantidade numeric, quantidade_minima numeric, custo numeric |
+| produtos | nome text, categoria text, quantidade numeric, preco_custo numeric, preco_venda numeric |
 
-A proposta mantém o saldo indicado no guia. Se aprovado, atualização de saldo e movimentação precisam ocorrer juntas, conforme RN-018; uma **transação** confirma essas gravações em conjunto ou as desfaz se houver falha. Não se permite editar saldo isoladamente como atalho: entradas, saídas e correções dependem de PD-N07. Valores negativos de preço, quantidade mínima e quantidades de operação não recebem regras inventadas; seus limites devem ser confirmados.
+Categoria e unidade são textos nesta etapa. Sem catálogo, lista fechada ou unicidade de nome presumida. Somente o saldo tem padrão zero; quantidade mínima, custos e preços não receberam valores padrão. Custo é por unidade informada; materiais aceitam frações e produtos inteiros. Valores monetários não negativos, com até duas casas; mínimo não negativo. Cadastro/edição não alteram saldo. Entradas, saídas, consumo, venda e reversões atualizam movimento e saldo juntos (RN-018). Alertas continuam pendentes.
 
 ## Venda — `vendas`
 
-**Finalidade:** registrar a venda de produtos. **Origem:** Guia §§5.6, 6.2 e 10; RF-006/RN-008 definidos quanto à venda independente; campos e efeitos de estoque são sugestões (RF-020/RN-011).
+RF-006/RF-020, RN-008. Campos obrigatórios, exceto cancelada_em:
 
-| Campo (além de `id`) | Finalidade / tipo proposto | Obrigatoriedade | Restrição ou pendência |
-|---|---|---|---|
-| `data` | Momento da venda / `timestamptz` | Pendente | Registrar horário é proposta; não define data de recebimento financeiro (PD-N06). |
-| `vendedor_id` | Funcionário que registra / `integer`, FK → `funcionarios.id` | Pendente | Confirmar obrigatoriedade e autoria (PD-N03). |
-| `forma_pagamento` | Forma informada / representação pendente | Pendente | Texto ou FK; opções e condições reais em PD-N05. |
-| `total` | Valor total / `numeric` | Pendente | Regra de composição e relação com recebimento em PD-N05/PD-N06; não acrescenta desconto, imposto ou parcelas. |
+| Campo (além de id) | Tipo / vínculo | Definição |
+|---|---|---|
+| data | timestamptz | Padrão CURRENT_TIMESTAMP; instante do registro |
+| vendedor_id | integer → funcionarios.id | Funcionário autenticado que registra a venda |
+| forma_pagamento | text | pix, credito, debito ou dinheiro |
+| total | numeric | Soma exata de quantidade × preco_unitario dos itens |
+| cancelada_em | timestamptz, opcional | Nulo em venda vigente; instante automático de cancelamento |
 
-`cliente_id` e `ordem_servico_id` **não são campos aprovados nem definidos nesta tabela**: representam os vínculos em aberto descritos após o diagrama. A venda independente não exige criação de OS (RN-008); isso não exclui o outro fluxo citado no Guia §1.3.
+A venda não exige OS. Não foram acrescentados cliente_id, ordem_servico_id, desconto, imposto ou parcelas. POST grava venda, itens, movimentos e baixa juntos. Cancelamento mantém os registros e total originais; devolve somente as quantidades efetivamente retornadas.
 
 ## Item de venda — `itens_venda`
 
-**Finalidade:** registrar produto, quantidade e preço de cada linha vendida. **Origem:** Guia §§5.6 e 10; sugestão em RF-020. `id` segue a convenção geral.
-
-| Campo | Tipo proposto | Obrigatoriedade | Restrição ou pendência |
-|---|---|---|---|
-| `venda_id` | `integer`, FK → `vendas.id` | Proposta: sim | Exatamente uma venda por linha. |
-| `produto_id` | `integer`, FK → `produtos.id` | Proposta: sim | Exatamente um produto por linha. |
-| `quantidade` | `numeric` | Pendente | Quantidade vendida; frações, mínimo e correções em PD-N03/PD-N07. |
-| `preco_unitario` | `numeric` | Pendente | Preço registrado na venda; proposta: não recalcular o histórico quando mudar `produtos.preco_venda`. Origem do preço e possibilidade de alteração devem ser confirmadas. |
-
-Não se impõe unicidade ao par venda/produto: falta decidir se o mesmo produto pode aparecer em mais de uma linha. Composição do total e baixa de estoque permanecem em PD-N06/PD-N07; a existência da tabela não escolhe o gatilho da baixa.
+Todos os campos obrigatórios: `venda_id integer` → vendas.id; `produto_id integer` → produtos.id; `quantidade numeric`; `preco_unitario numeric`, além de id gerado. Quantidade não recebe padrão zero. Não há unicidade por venda/produto. Quantidade inteira positiva; preco_unitario copia o preço de venda do produto e permanece no histórico. Consulta em `GET /vendas/:id/itens`; sem CRUD independente.
 
 ## Material utilizado em OS — `materiais_os`
 
-**Finalidade:** ligar cada uso de material à OS correspondente. **Origem:** Guia §§5.4, 6.3 e 10; RF-018/RN-012 sugeridos. `id` segue a convenção geral.
-
-| Campo | Tipo proposto | Obrigatoriedade | Restrição ou pendência |
-|---|---|---|---|
-| `ordem_servico_id` | `integer`, FK → `ordens_servico.id` | Proposta: sim | Exatamente uma OS por uso. |
-| `material_id` | `integer`, FK → `materiais.id` | Proposta: sim | Exatamente um material por uso. |
-| `quantidade_usada` | `numeric` | Pendente | Medida na unidade do material; limites, frações e momento de registro em PD-N03/PD-N07. |
-
-Não se impõe unicidade ao par OS/material: confirmar se usos repetidos serão agrupados ou separados. O guia não define como guardar o custo histórico de cada uso; não se toma o custo atual do material como custo histórico automaticamente (PD-N06). Nenhuma fórmula financeira é aprovada aqui.
+Todos os campos obrigatórios: `ordem_servico_id integer` → ordens_servico.id; `material_id integer` → materiais.id; `quantidade_usada numeric`, além de id gerado. Quantidade não recebe padrão zero. Não há unicidade por OS/material nem fórmula de custo. Quantidade positiva, fracionável. Registrar um uso na API baixa o material e cria uma movimentação vinculada, na mesma transação. Consulta em `GET /ordens-servico/:id/materiais`; sem CRUD independente.
 
 ## Movimentação de estoque — `movimentacoes_estoque`
 
-**Finalidade:** registrar entradas e saídas. **Origem:** Guia §§5.7–5.8 e 10; campos sugeridos. Integridade e saldo não negativo são exigências do §8.2 (RN-018/RN-019). `id` segue a convenção geral.
+| Campo (além de id) | Tipo / vínculo | Obrigatoriedade |
+|---|---|---|
+| tipo | text | Obrigatório: entrada ou saida |
+| material_id | integer → materiais.id | Condicional |
+| produto_id | integer → produtos.id | Condicional |
+| quantidade | numeric | Obrigatória, sem padrão zero |
+| data | timestamptz | Obrigatória; padrão CURRENT_TIMESTAMP |
+| motivo | text | Obrigatório; informado na operação manual ou gerado pelo fluxo |
+| item_venda_id | integer → itens_venda.id, único quando preenchido | Somente saída originada por item de venda |
+| material_os_id | integer → materiais_os.id, único quando preenchido | Somente saída originada por uso de material |
+| reversao_de_id | integer → movimentacoes_estoque.id | Reversão/devolução vinculada ao movimento original |
 
-| Campo | Tipo proposto | Obrigatoriedade | Restrição ou pendência |
-|---|---|---|---|
-| `tipo` | `text` | Pendente | Entrada/saída são valores sugeridos; correção/cancelamento em PD-N07, sem novo tipo presumido. |
-| `material_id` | `integer`, FK → `materiais.id` | Condicional, proposta | Preencher se a movimentação for de material. |
-| `produto_id` | `integer`, FK → `produtos.id` | Condicional, proposta | Preencher se a movimentação for de produto. |
-| `quantidade` | `numeric` | Pendente | Volume movimentado; sinal, unidade e limites a confirmar em PD-N07. |
-| `data` | `timestamptz` | Pendente | Instante do movimento, proposta de detalhamento da data do §10. |
-| `motivo` | `text` | Pendente | Explicação registrada; obrigatoriedade e conteúdo em PD-N03/PD-N07. |
+A restrição `movimentacao_um_item` exige **exatamente um** entre material_id e produto_id; nenhum ou ambos são rejeitados pelo banco. Quantidade positiva e finita; produtos exigem inteiros. No máximo um vínculo de origem (item_venda_id, material_os_id, reversao_de_id). Movimento manual não possui origem. Vendas/usos geram uma saída por linha; devoluções apontam para essa saída. Bloqueios transacionais na API impedem reversões acima da quantidade original. Não há edição/exclusão de movimentos na API.
 
-**Proposta técnica:** exatamente uma das duas FKs deve estar preenchida, verificado no banco. Isso evita um `item_id` sem vínculo verificável que ora represente produto, ora material. A proposta traduz o “Material ou produto” do §10; não cria uma tabela genérica de itens.
-
-**Pendente junto à relação:** o guia sugere movimentos causados por vendas e uso em OS, mas não define como vinculá-los aos registros de origem. Antes de implementar baixas e correções automáticas, definir a granularidade (por item/uso ou agrupada) e as FKs necessárias (PD-N07). O modelo atual não deve ser tratado como suficiente para esses fluxos automáticos sem essa definição.
+**Alteração incremental aplicada no Supabase:** `backend/src/database/operacoes.sql`, após os três scripts de estrutura anteriores. Acrescenta restrições e vínculos sem inserir dados nem converter valores existentes. A aplicação usa transações para manter saldos coerentes; inserir diretamente uma linha por SQL não executa os fluxos da API.
 
 ## Cadastros auxiliares e informações calculadas
 
@@ -188,7 +171,7 @@ O Guia §5.10 sugere cadastros auxiliares, mas ainda não resolve seu formato. A
 | Assunto | Necessidade respaldada e representação a avaliar |
 |---|---|
 | Tipos de serviço | Se a Configuração administrar um catálogo, considerar `tipos_servico` com `id` PK e `nome text` (obrigatoriedade pendente). Um ou vários serviços por OS precisa ser definido antes de escolher FK única ou tabela de ligação (PD-N03/PD-N04). |
-| Formas de pagamento | Se houver catálogo administrável, considerar `formas_pagamento` com `id` PK e `nome text` (obrigatoriedade pendente), referenciado por OS/Venda. Confirmar opções e comportamento real antes de fixar vínculos (PD-N05). |
+| Formas de pagamento | Se houver catálogo administrável, considerar `formas_pagamento` com `id` PK e `nome text` (obrigatoriedade pendente), referenciado por OS/Venda. As quatro opções atuais foram confirmadas; um catálogo administrável permanece pendente. |
 | Categorias de produtos e materiais | Se forem administradas em Configuração, considerar cadastro com `id` PK e `nome text` (obrigatoriedade pendente). Catálogo compartilhado ou separado ainda não definido; não duplicar tabelas nem fixar uma categoria obrigatória por item (PD-N03). |
 | Dados da empresa e parâmetros financeiros | Previstos em §5.10, mas sem campos ou regras suficientes. Representação pendente; não criar tabela genérica de configurações nem fixar alíquota (PD-N03/PD-N06). |
 
@@ -196,7 +179,7 @@ Login, Perfil e Dashboard não são novas entidades só por serem telas. Faturam
 
 ## Sequência sugerida de implementação
 
-Etapas técnicas propostas, sem prazos e sem aprovação implícita das pendências:
+A estrutura, consultas e operações aprovadas foram implementadas. A sequência histórica abaixo foi atendida nos pontos descritos nesta atualização; ampliações continuam sujeitas às decisões da equipe:
 
 1. **Base de persistência e cadastros:** alinhar convenções e mecanismo de migrações (PD-R09); implementar `clientes` e `funcionarios` após confirmar seus campos e acesso. Preservar o contrato inicial de Clientes ou revisá-lo explicitamente se a equipe aprovar outra representação.
 2. **Itens de estoque e auxiliares necessários:** `materiais` e `produtos`; criar apenas os auxiliares efetivamente aprovados antes de suas FKs. Confirmar unidades e significado dos custos.
