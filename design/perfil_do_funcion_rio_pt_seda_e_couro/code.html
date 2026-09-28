@@ -1,0 +1,304 @@
+<!DOCTYPE html><html class="light" lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Seda e Couro - Perfil do Funcionário</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#dbe1ff",
+                        "surface": "#f9f9ff",
+                        "surface-tint": "#3759b3",
+                        "primary": "#002c7c",
+                        "tertiary-container": "#314974",
+                        "on-error-container": "#93000a",
+                        "on-primary": "#ffffff",
+                        "outline-variant": "#c4c6d4",
+                        "surface-dim": "#d7dae4",
+                        "inverse-surface": "#2c3038",
+                        "on-secondary-container": "#66645f",
+                        "on-background": "#181c23",
+                        "error": "#ba1a1a",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#747683",
+                        "on-tertiary-fixed": "#001b3f",
+                        "on-tertiary-container": "#a1b9eb",
+                        "on-error": "#ffffff",
+                        "surface-container": "#ebeef8",
+                        "tertiary-fixed": "#d7e2ff",
+                        "on-surface": "#181c23",
+                        "secondary-container": "#e6e2db",
+                        "inverse-on-surface": "#eef0fb",
+                        "on-secondary-fixed-variant": "#484742",
+                        "surface-bright": "#f9f9ff",
+                        "on-secondary": "#ffffff",
+                        "primary-container": "#1d439c",
+                        "background": "#f9f9ff",
+                        "on-primary-fixed": "#00174b",
+                        "tertiary": "#18325c",
+                        "secondary": "#605e59",
+                        "on-secondary-fixed": "#1c1c18",
+                        "surface-variant": "#dfe2ed",
+                        "secondary-fixed": "#e6e2db",
+                        "on-primary-fixed-variant": "#194099",
+                        "surface-container-high": "#e5e8f3",
+                        "secondary-fixed-dim": "#c9c6bf",
+                        "on-tertiary-fixed-variant": "#2e4772",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "tertiary-fixed-dim": "#afc7fa",
+                        "surface-container-highest": "#dfe2ed",
+                        "error-container": "#ffdad6",
+                        "surface-container-low": "#f1f3fe",
+                        "on-surface-variant": "#444652",
+                        "inverse-primary": "#b4c5ff",
+                        "on-primary-container": "#a0b6ff",
+                        "surface-container-lowest": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "container-max": "1200px",
+                        "unit": "8px",
+                        "margin-mobile": "20px",
+                        "margin-desktop": "64px"
+                    },
+                    "fontFamily": {
+                        "headline-xl": ["Hanken Grotesk"],
+                        "label-md": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "label-sm": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "34px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Hanken Grotesk', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex min-h-screen">
+<!-- SideNavBar (Shared Component) -->
+<nav class="hidden md:flex bg-secondary-container border-r border-outline-variant/20 fixed left-0 top-0 h-screen w-64 flex-col py-6 z-20" style="background-color: rgb(230, 226, 219);">
+<div class="px-6 mb-8 flex items-center gap-3"><div class="flex items-center gap-3"><div class="w-6 h-6 flex items-center justify-center text-primary"><span class="material-symbols-outlined text-lg">diamond</span></div><div><h1 class="font-headline-md text-headline-md" style="color: #002c7c;">Seda e Couro</h1><p class="font-label-sm text-label-sm" style="color: #605e59; letter-spacing: 0.1em; text-transform: uppercase;">Sapataria Profissional</p></div></div></div>
+
+<ul class="flex-1 px-2 space-y-1"><li class=""><a class="flex items-center gap-3 px-6 py-3 text-primary font-label-md" href="#"><span class="material-symbols-outlined" style="color: #605e59;">dashboard</span> Dashboard</a></li><li class=""><a class="flex items-center gap-3 px-6 py-3 text-primary font-label-md hover:bg-primary/5 transition-colors" href="#"><span class="material-symbols-outlined" style="color: #605e59;">search</span> Busca</a></li><li class=""><a class="flex items-center gap-3 px-6 py-3 text-primary font-label-md" href="#"><span class="material-symbols-outlined" style="color: #605e59;">group</span> Clientes</a></li><li class=""><a class="flex items-center gap-3 px-6 py-3 text-primary font-label-md" href="#"><span class="material-symbols-outlined" style="color: #605e59;">handyman</span> Ordens de Serviço</a></li><li class=""><a class="flex items-center gap-3 px-6 py-3 text-primary font-label-md" href="#"><span class="material-symbols-outlined" style="color: #605e59;">payments</span> Financeiro</a></li><li class=""><a class="flex items-center gap-3 px-6 py-3 bg-[#002c7c] text-white rounded-md mx-2" href="#"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">badge</span> Funcionários</a></li><li class=""><a class="flex items-center gap-3 px-6 py-3 text-primary font-label-md hover:bg-primary/5 transition-colors" href="#"><span class="material-symbols-outlined" style="color: #605e59;">inventory_2</span> Estoque</a></li></ul>
+<div class="mt-auto px-4 pb-6 space-y-6"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-lg bg-[#dbe1ff] flex items-center justify-center text-primary font-bold">JS</div><div><p class="font-label-md text-on-surface">João Silva</p><p class="font-label-sm text-on-surface-variant">Gerente</p></div></div><ul class="space-y-2"><li class=""><a class="flex items-center gap-3 py-2 text-on-surface-variant hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined">settings</span> Configurações</a></li><li class=""><a class="flex items-center gap-3 py-2 text-[#ba1a1a] hover:opacity-80 transition-colors" href="#"><span class="material-symbols-outlined">logout</span> Sair</a></li></ul></div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 p-margin-mobile md:p-margin-desktop bg-surface w-full max-w-[1456px] mx-auto min-h-screen flex flex-col">
+<!-- Header -->
+<header class="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-4">
+<div>
+<div class="flex items-center gap-2 text-on-surface-variant mb-2">
+<span class="font-label-sm text-label-sm">Funcionários</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="font-label-sm text-label-sm text-primary">João Silva</span>
+</div>
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">João Silva</h2>
+</div>
+<button class="bg-surface border border-primary/20 text-primary font-label-md text-label-md px-6 py-2.5 rounded-lg hover:bg-primary/5 transition-colors flex items-center gap-2 self-start md:self-auto">
+<span class="material-symbols-outlined text-lg">edit</span>
+                Editar Perfil
+            </button>
+</header>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter mb-12">
+<!-- Left Column: Profile Summary -->
+<div class="lg:col-span-4 flex flex-col gap-gutter">
+<div class="bg-secondary-container border border-primary/10 rounded-xl p-8 flex flex-col items-center text-center">
+<div class="w-32 h-32 rounded-full overflow-hidden border-4 border-surface mb-6 relative shadow-sm">
+<img class="w-full h-full object-cover" data-alt="A professional, brightly lit portrait of a skilled male cobbler in his mid-40s, named João Silva. He is wearing a clean, modern beige canvas apron over a crisp white shirt. The background is a slightly blurred, minimalist artisanal workshop reflecting the Seda e Couro brand aesthetic. Soft natural lighting, highly detailed." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9bVDxU98rOgrhPiKOAVFULwWMIV23bmvLoYojo6NVhrm7Boc1joYZ2OkIBduQvaSFtrEM8aXLdpzOa8aLvCO7wit5ZYRRj_jg9zyfq6r6YEK-xpIqzsblIu38v6sQBSQjEUAudxL93BV5LN6KNo79nvsdLU29yLmkrvuZax3Ef826po29dPqC1yGRuJpo6w0bU9f_UgpLIFhyHKUrkJaKiLhLrTo91AMRq90o3hRUcbMoaNOm_IT7iQ">
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-1">João Silva</h3>
+<div class="bg-tertiary-container/10 text-primary font-label-sm text-label-sm px-3 py-1 rounded-full border border-primary/10 inline-flex items-center gap-1 mb-6">
+<span class="material-symbols-outlined text-sm">work</span>
+                        Sapateiro Master
+                    </div>
+<div class="w-full pt-6 border-t border-primary/10 flex justify-center gap-6 text-on-surface-variant">
+<div class="flex flex-col items-center">
+<span class="font-headline-md text-headline-md text-primary">142</span>
+<span class="font-label-sm text-label-sm">OS Concluídas</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="font-headline-md text-headline-md text-primary">4.9</span>
+<span class="font-label-sm text-label-sm">Avaliação</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Details Grid -->
+<div class="lg:col-span-8 flex flex-col gap-gutter">
+<!-- Informações Pessoais -->
+<section class="bg-surface border border-primary/20 rounded-xl p-6 md:p-8 relative overflow-hidden">
+<!-- Subtle background decoration -->
+<svg class="absolute -right-12 -top-12 w-48 h-48 text-primary/5 rotate-12 pointer-events-none" fill="currentColor" viewBox="0 0 100 100">
+<path d="M50 0 L100 50 L50 100 L0 50 Z"></path>
+</svg>
+<h3 class="font-headline-md text-headline-md text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined">person</span>
+                        Informações Pessoais
+                    </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-1">Nome Completo</p>
+<p class="font-body-md text-body-md text-on-surface">João da Silva Ferreira</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-1">CPF</p>
+<p class="font-body-md text-body-md text-on-surface">123.456.789-00</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-1">Telefone</p>
+<p class="font-body-md text-body-md text-on-surface">(11) 98765-4321</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-1">Gênero</p>
+<p class="font-body-md text-body-md text-on-surface">Masculino</p>
+</div>
+</div>
+</section>
+<!-- Informações Profissionais -->
+<section class="bg-surface border border-primary/20 rounded-xl p-6 md:p-8">
+<h3 class="font-headline-md text-headline-md text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined">badge</span>
+                        Informações Profissionais
+                    </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-1">Cargo Atual</p>
+<p class="font-body-md text-body-md text-on-surface">Sapateiro Master</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-1">Data de Admissão</p>
+<p class="font-body-md text-body-md text-on-surface">15 de Março, 2021</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-1">Especialidade</p>
+<p class="font-body-md text-body-md text-on-surface">Restauração de Couro Legítimo</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-1">Status</p>
+<div class="inline-flex items-center gap-1.5 bg-[#e8f5e9] text-[#2e7d32] px-2.5 py-1 rounded-md border border-[#c8e6c9]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#4caf50]"></span>
+<span class="font-label-sm text-label-sm">Ativo</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+<!-- Activity History (Full Width Bottom) -->
+<section class="bg-surface border border-primary/20 rounded-xl p-6 md:p-8">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-headline-md text-headline-md text-primary flex items-center gap-2">
+<span class="material-symbols-outlined">history</span>
+                    Ordens de Serviço Recentes
+                </h3>
+<button class="text-primary hover:text-primary/80 font-label-sm text-label-sm flex items-center gap-1 transition-colors">
+                    Ver todas
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant/30 text-on-surface-variant">
+<th class="py-3 px-4 font-label-sm text-label-sm font-semibold">OS #</th>
+<th class="py-3 px-4 font-label-sm text-label-sm font-semibold">Serviço</th>
+<th class="py-3 px-4 font-label-sm text-label-sm font-semibold">Data de Início</th>
+<th class="py-3 px-4 font-label-sm text-label-sm font-semibold">Status</th>
+<th class="py-3 px-4 font-label-sm text-label-sm font-semibold text-right">Ação</th>
+</tr>
+</thead>
+<tbody class="text-on-surface divide-y divide-outline-variant/10">
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-4 px-4 font-label-md text-label-md text-primary">#10452</td>
+<td class="py-4 px-4">
+<p class="font-body-md text-body-md">Troca de Sola - Bota Oxford</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Cliente: Sra. Almeida</p>
+</td>
+<td class="py-4 px-4 font-body-md text-body-md text-on-surface-variant">Hoje, 09:30</td>
+<td class="py-4 px-4">
+<span class="bg-[#fff8e1] text-[#f57f17] border border-[#ffecb3] font-label-sm text-label-sm px-2.5 py-1 rounded-md inline-block">Em Andamento</span>
+</td>
+<td class="py-4 px-4 text-right">
+<button class="text-outline hover:text-primary transition-colors opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-4 px-4 font-label-md text-label-md text-primary">#10448</td>
+<td class="py-4 px-4">
+<p class="font-body-md text-body-md">Hidratação Completa - Mocassim</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Cliente: Sr. Roberto</p>
+</td>
+<td class="py-4 px-4 font-body-md text-body-md text-on-surface-variant">Ontem, 14:15</td>
+<td class="py-4 px-4">
+<span class="bg-[#e8f5e9] text-[#2e7d32] border border-[#c8e6c9] font-label-sm text-label-sm px-2.5 py-1 rounded-md inline-block">Concluído</span>
+</td>
+<td class="py-4 px-4 text-right">
+<button class="text-outline hover:text-primary transition-colors opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-4 px-4 font-label-md text-label-md text-primary">#10439</td>
+<td class="py-4 px-4">
+<p class="font-body-md text-body-md">Costura Lateral - Bolsa Seda</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Cliente: Mariana L.</p>
+</td>
+<td class="py-4 px-4 font-body-md text-body-md text-on-surface-variant">12 Out, 2024</td>
+<td class="py-4 px-4">
+<span class="bg-[#e8f5e9] text-[#2e7d32] border border-[#c8e6c9] font-label-sm text-label-sm px-2.5 py-1 rounded-md inline-block">Concluído</span>
+</td>
+<td class="py-4 px-4 text-right">
+<button class="text-outline hover:text-primary transition-colors opacity-0 group-hover:opacity-100">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+
+
+
+
+
+
+</body></html>

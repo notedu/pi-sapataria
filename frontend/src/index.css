@@ -1,111 +1,127 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+@import url("https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+/* Referência: design/seda_e_couro_system/DESIGN.md.
+ * Os valores seguem a tabela do guia. `static` mantém todas as variáveis
+ * disponíveis em CSS, mesmo antes de serem utilizadas pelas telas.
+ */
+@theme static {
+  /* Cores: geram classes como bg-primary, text-on-surface e border-outline. */
+  --color-surface: #f9f9ff;
+  --color-surface-dim: #d7dae4;
+  --color-surface-bright: #f9f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f1f3fe;
+  --color-surface-container: #ebeef8;
+  --color-surface-container-high: #e5e8f3;
+  --color-surface-container-highest: #dfe2ed;
+  --color-on-surface: #181c23;
+  --color-on-surface-variant: #444652;
+  --color-inverse-surface: #2c3038;
+  --color-inverse-on-surface: #eef0fb;
+  --color-outline: #747683;
+  --color-outline-variant: #c4c6d4;
+  --color-surface-tint: #3759b3;
+  --color-primary: #002c7c;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #1d439c;
+  --color-on-primary-container: #a0b6ff;
+  --color-inverse-primary: #b4c5ff;
+  --color-secondary: #605e59;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #e6e2db;
+  --color-on-secondary-container: #66645f;
+  --color-tertiary: #18325c;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #314974;
+  --color-on-tertiary-container: #a1b9eb;
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  --color-primary-fixed: #dbe1ff;
+  --color-primary-fixed-dim: #b4c5ff;
+  --color-on-primary-fixed: #00174b;
+  --color-on-primary-fixed-variant: #194099;
+  --color-secondary-fixed: #e6e2db;
+  --color-secondary-fixed-dim: #c9c6bf;
+  --color-on-secondary-fixed: #1c1c18;
+  --color-on-secondary-fixed-variant: #484742;
+  --color-tertiary-fixed: #d7e2ff;
+  --color-tertiary-fixed-dim: #afc7fa;
+  --color-on-tertiary-fixed: #001b3f;
+  --color-on-tertiary-fixed-variant: #2e4772;
+  --color-background: #f9f9ff;
+  --color-on-background: #181c23;
+  --color-surface-variant: #dfe2ed;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Fonte global; sans-serif é a alternativa caso a fonte externa não carregue. */
+  --font-sans: "Hanken Grotesk", sans-serif;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
+  /* Cada classe text-* aplica tamanho, altura de linha e peso em conjunto.
+   * Exemplo responsivo: text-headline-lg-mobile md:text-headline-lg.
+   */
+  --text-headline-xl: 48px;
+  --text-headline-xl--line-height: 56px;
+  --text-headline-xl--font-weight: 700;
+  --text-headline-xl--letter-spacing: -0.02em;
+
+  --text-headline-lg: 32px;
+  --text-headline-lg--line-height: 40px;
+  --text-headline-lg--font-weight: 600;
+  --text-headline-lg--letter-spacing: -0.01em;
+
+  --text-headline-lg-mobile: 28px;
+  --text-headline-lg-mobile--line-height: 34px;
+  --text-headline-lg-mobile--font-weight: 600;
+
+  --text-headline-md: 24px;
+  --text-headline-md--line-height: 32px;
+  --text-headline-md--font-weight: 600;
+
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 28px;
+  --text-body-lg--font-weight: 400;
+
+  --text-body-md: 16px;
+  --text-body-md--line-height: 24px;
+  --text-body-md--font-weight: 400;
+
+  --text-label-md: 14px;
+  --text-label-md--line-height: 20px;
+  --text-label-md--font-weight: 600;
+  --text-label-md--letter-spacing: 0.02em;
+
+  --text-label-sm: 12px;
+  --text-label-sm--line-height: 16px;
+  --text-label-sm--font-weight: 500;
+  --text-label-sm--letter-spacing: 0.04em;
+
+  /* DEFAULT do guia vira rounded-default; os demais usam rounded-sm, etc. */
+  --radius-sm: 0.25rem;
+  --radius-default: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Espaços nomeados preservam a escala numérica original (p-4, gap-2, etc.). */
+  --spacing-unit: 8px;
+  --spacing-gutter: 24px;
+  --spacing-margin-desktop: 64px;
+  --spacing-margin-mobile: 20px;
+
+  /* Largura de conteúdo: max-w-container-max. */
+  --container-container-max: 1200px;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    font-size: var(--text-body-md);
+    line-height: var(--text-body-md--line-height);
+    font-weight: var(--text-body-md--font-weight);
+    color: var(--color-on-background);
+    background-color: var(--color-background);
   }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-}
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
 }

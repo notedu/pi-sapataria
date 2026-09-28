@@ -1,0 +1,213 @@
+<!DOCTYPE html><html class="light" lang="pt-BR" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Sapataria Pro - Novo Cadastro de Funcionário</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;900&amp;family=JetBrains+Mono:wght@500&amp;family=Work+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed": "#001c3a",
+                        "secondary-fixed-dim": "#a5c8ff",
+                        "on-primary-fixed-variant": "#5d4037",
+                        "secondary": "#005faf",
+                        "inverse-primary": "#e7bdb1",
+                        "tertiary-container": "#354a54",
+                        "on-surface-variant": "#504441",
+                        "on-secondary-fixed-variant": "#004786",
+                        "on-error-container": "#93000a",
+                        "surface-variant": "#e2e2e2",
+                        "on-background": "#1a1c1c",
+                        "on-primary-fixed": "#2c160e",
+                        "surface-bright": "#f9f9f9",
+                        "primary": "#442a22",
+                        "on-tertiary-fixed": "#071e27",
+                        "primary-fixed-dim": "#e7bdb1",
+                        "outline": "#827470",
+                        "outline-variant": "#d4c3be",
+                        "tertiary-fixed": "#cfe6f2",
+                        "inverse-surface": "#2f3131",
+                        "surface-container-low": "#f3f3f3",
+                        "on-secondary": "#ffffff",
+                        "surface": "#f9f9f9",
+                        "on-tertiary-container": "#a3b9c4",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#b4cad6",
+                        "on-surface": "#1a1c1c",
+                        "error": "#ba1a1a",
+                        "error-container": "#ffdad6",
+                        "surface-dim": "#dadada",
+                        "on-secondary-container": "#003567",
+                        "background": "#f9f9f9",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#eeeeee",
+                        "surface-container-high": "#e8e8e8",
+                        "inverse-on-surface": "#f1f1f1",
+                        "surface-container-highest": "#e2e2e2",
+                        "primary-fixed": "#ffdbd0",
+                        "secondary-fixed": "#d4e3ff",
+                        "on-tertiary-fixed-variant": "#354a53",
+                        "on-tertiary": "#ffffff",
+                        "tertiary": "#1e333d",
+                        "primary-container": "#5d4037",
+                        "on-primary-container": "#d4ada1",
+                        "surface-tint": "#77574d",
+                        "on-error": "#ffffff",
+                        "secondary-container": "#54a0fe"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xl": "32px",
+                        "base": "8px",
+                        "container-margin": "24px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "sm": "12px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Hanken Grotesk"],
+                        "headline-sm": ["Hanken Grotesk"],
+                        "body-md": ["Work Sans"],
+                        "headline-md-mobile": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "label-md": ["JetBrains Mono"],
+                        "body-lg": ["Work Sans"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-md-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "display-lg": ["40px", { "lineHeight": "48px", "fontWeight": "700" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .ghost-border { border: 1px solid #e2e2e2; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md h-screen w-screen overflow-hidden flex">
+<!-- SideNavBar -->
+<aside class="bg-surface dark:bg-surface-dim h-full w-64 fixed left-0 top-0 border-r border-outline-variant dark:border-outline flex flex-col py-lg px-md z-20" style="background-color: rgb(229, 226, 218);">
+<div class="flex items-center gap-3 mb-xl"><div class="flex items-center gap-3 mb-xl px-2"><div class="w-10 h-10 flex items-center justify-center"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAV5wF3vyQ_3TBRWxWs2v7VGCY91mL5VA38pi1Em-st5_GMS0itGrtFcxBRvDj0ady8fSRR8GuuFGD4ECtWWSnbd9ZvAEWsjupSjcHck8WxHvybHq7pHLCsQYBTI_mGRnlVy8mD0S7Si1gjyjinejNj7X3fWyZnspVkmv-wuE9lrTSDM95zUiXleoZv-KdbAQ0Hkq3sKjGu--lzbBaOsCU3FLTQ309pMC7kEeoS5XHrBli99druLhBmkvkphX-Lk-L0hfc" class="w-full h-full object-contain" alt="Logo"></div><div><h1 class="font-headline-sm text-headline-sm text-on-secondary-fixed font-bold tracking-tight" style="color: #003567;">Seda e Couro</h1><p class="font-label-md text-label-md text-on-primary-fixed-variant uppercase tracking-widest">Sapataria Profissional</p></div></div></div>
+
+<nav class="flex-1 flex flex-col gap-2"><a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer font-body-md text-body-md" href="#" style="color: rgb(93, 64, 55);"><span class="material-symbols-outlined">dashboard</span>Dashboard</a><a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer font-body-md text-body-md" href="#" style="color: rgb(93, 64, 55);"><span class="material-symbols-outlined">search</span>Busca</a><a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer font-body-md text-body-md" href="#" style="color: rgb(93, 64, 55);"><span class="material-symbols-outlined">group</span>Clientes</a><a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer font-body-md text-body-md" href="#" style="color: rgb(93, 64, 55);"><span class="material-symbols-outlined">handyman</span>Ordens de Serviço</a><a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer font-body-md text-body-md" href="#" style="color: rgb(93, 64, 55);"><span class="material-symbols-outlined">payments</span>Financeiro</a><a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-primary shadow-sm transition-colors cursor-pointer font-body-md text-body-md" href="#" style="background-color: rgb(0, 53, 103); color: rgb(255, 255, 255);"><span class="material-symbols-outlined">badge</span>Funcionários</a><a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer font-body-md text-body-md" href="#" style="color: rgb(93, 64, 55);"><span class="material-symbols-outlined">inventory_2</span>Estoque</a></nav>
+<div class="mt-auto space-y-4"><div class="p-4 bg-surface-container-low rounded-xl flex items-center gap-3" style="background-color: transparent; padding-left: 0px; padding-right: 0px;"><div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold" style="background-color: rgb(212, 227, 255); color: rgb(0, 53, 103);">JS</div><div class="flex-1 overflow-hidden"><p class="text-label-md font-bold truncate">João Silva</p><p class="text-label-sm text-on-surface-variant truncate">Gerente</p></div></div><div class="flex flex-col gap-1"><a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer font-body-md text-body-md" href="#"><span class="material-symbols-outlined text-[20px]">settings</span>Configurações</a><a class="flex items-center gap-3 px-4 py-2 rounded-lg text-error hover:bg-error-container transition-colors cursor-pointer font-body-md text-body-md" href="#"><span class="material-symbols-outlined text-[20px]">logout</span>Sair</a></div></div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-64 flex flex-col h-full bg-background relative">
+<!-- TopAppBar -->
+<header class="bg-surface-bright dark:bg-surface-container-low flex justify-between items-center h-16 px-lg w-full border-b border-outline-variant dark:border-outline z-10">
+<div class="flex-1 flex items-center">
+<div class="relative w-96 group focus-within:ring-2 focus-within:ring-secondary rounded-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 font-body-md text-on-surface focus:ring-0 placeholder:text-on-surface-variant transition-all hover:bg-surface-container-highest dark:hover:bg-surface-container-high" placeholder="Buscar pedidos, clientes..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-highest transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-highest transition-all flex items-center">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Canvas -->
+<div class="flex-1 overflow-y-auto p-xl">
+<div class="max-w-3xl mx-auto">
+<div class="mb-lg">
+<a class="inline-flex items-center gap-1 text-on-surface-variant font-label-md text-label-md hover:text-secondary transition-colors mb-2" href="#">
+<span class="material-symbols-outlined text-[16px]">arrow_back</span>
+                        VOLTAR PARA EQUIPE
+                    </a>
+<h2 class="font-headline-md text-headline-md text-primary">Novo Cadastro de Funcionário</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Preencha os dados abaixo para adicionar um novo membro à equipe da oficina.</p>
+</div>
+<!-- Form Card -->
+<div class="bg-surface-container-lowest ghost-border rounded-xl p-xl shadow-sm">
+<form class="space-y-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Nome Completo -->
+<div class="col-span-1 md:col-span-2">
+<label class="block font-label-md text-label-md text-on-surface mb-2 uppercase" for="nome">Nome Completo</label>
+<input class="w-full bg-surface border border-outline-variant rounded-lg py-3 px-4 font-body-md text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all" id="nome" name="nome" placeholder="Ex: João da Silva" type="text">
+</div>
+<!-- CPF -->
+<div class="col-span-1">
+<label class="block font-label-md text-label-md text-on-surface mb-2 uppercase" for="cpf">CPF</label>
+<input class="w-full bg-surface border border-outline-variant rounded-lg py-3 px-4 font-body-md text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all" id="cpf" name="cpf" placeholder="000.000.000-00" type="text">
+</div>
+<!-- Telefone -->
+<div class="col-span-1">
+<label class="block font-label-md text-label-md text-on-surface mb-2 uppercase" for="telefone">Telefone</label>
+<input class="w-full bg-surface border border-outline-variant rounded-lg py-3 px-4 font-body-md text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all" id="telefone" name="telefone" placeholder="(00) 00000-0000" type="text">
+</div>
+<!-- Gênero -->
+<div class="col-span-1">
+<label class="block font-label-md text-label-md text-on-surface mb-2 uppercase" for="genero">Gênero</label>
+<div class="relative">
+<select class="w-full bg-surface border border-outline-variant rounded-lg py-3 px-4 pr-10 font-body-md text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none appearance-none transition-all" id="genero" name="genero">
+<option disabled="" selected="" value="">Selecione</option>
+<option value="masculino">Masculino</option>
+<option value="feminino">Feminino</option>
+<option value="outro">Outro</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+<!-- Cargo -->
+<div class="col-span-1">
+<label class="block font-label-md text-label-md text-on-surface mb-2 uppercase" for="cargo">Cargo</label>
+<div class="relative">
+<select class="w-full bg-surface border border-outline-variant rounded-lg py-3 px-4 pr-10 font-body-md text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary outline-none appearance-none transition-all" id="cargo" name="cargo">
+<option disabled="" selected="" value="">Selecione</option>
+<option value="dono">Dono</option>
+<option value="mestre">Mestre Sapateiro</option>
+<option value="atendente">Atendente</option>
+<option value="gerente">Gerente</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="pt-6 mt-6 border-t border-surface-variant flex justify-end gap-4">
+<button class="px-6 py-2.5 font-body-md text-body-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors" type="button">
+                                Cancelar
+                            </button>
+<button class="px-6 py-2.5 bg-primary text-on-primary font-body-md text-body-md font-semibold rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm" type="submit">
+<span class="material-symbols-outlined text-[20px]">save</span>
+                                Salvar Funcionário
+                            </button>
+</div>
+</form>
+</div>
+</div>
+</div>
+</main>
+
+
+
+
+
+
+
+
+</body></html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html><html lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Seda e Couro - Login</title>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface": "#f9f9ff",
+                      "on-primary-fixed-variant": "#194099",
+                      "surface-tint": "#3759b3",
+                      "on-tertiary": "#ffffff",
+                      "surface-container-low": "#f1f3fe",
+                      "secondary-fixed": "#e6e2db",
+                      "secondary-container": "#e6e2db",
+                      "outline-variant": "#c4c6d4",
+                      "on-secondary": "#ffffff",
+                      "surface-container-highest": "#dfe2ed",
+                      "on-error": "#ffffff",
+                      "inverse-surface": "#2c3038",
+                      "secondary": "#605e59",
+                      "on-primary-container": "#a0b6ff",
+                      "on-secondary-fixed": "#1c1c18",
+                      "on-surface": "#181c23",
+                      "error": "#ba1a1a",
+                      "surface-variant": "#dfe2ed",
+                      "tertiary": "#18325c",
+                      "outline": "#747683",
+                      "surface-bright": "#f9f9ff",
+                      "inverse-on-surface": "#eef0fb",
+                      "primary": "#002c7c",
+                      "on-tertiary-fixed-variant": "#2e4772",
+                      "on-primary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "tertiary-fixed": "#d7e2ff",
+                      "on-background": "#181c23",
+                      "on-primary-fixed": "#00174b",
+                      "tertiary-fixed-dim": "#afc7fa",
+                      "primary-container": "#1d439c",
+                      "on-secondary-fixed-variant": "#484742",
+                      "on-tertiary-fixed": "#001b3f",
+                      "on-tertiary-container": "#a1b9eb",
+                      "surface-container-high": "#e5e8f3",
+                      "surface-dim": "#d7dae4",
+                      "on-surface-variant": "#444652",
+                      "inverse-primary": "#b4c5ff",
+                      "background": "#f9f9ff",
+                      "surface-container": "#ebeef8",
+                      "primary-fixed-dim": "#b4c5ff",
+                      "primary-fixed": "#dbe1ff",
+                      "error-container": "#ffdad6",
+                      "on-error-container": "#93000a",
+                      "secondary-fixed-dim": "#c9c6bf",
+                      "on-secondary-container": "#66645f",
+                      "tertiary-container": "#314974"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "20px",
+                      "container-max": "1200px",
+                      "margin-desktop": "64px",
+                      "unit": "8px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "headline-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "body-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "label-sm": [
+                              "Hanken Grotesk"
+                      ],
+                      "label-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-xl": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-lg-mobile": [
+                              "Hanken Grotesk"
+                      ],
+                      "body-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-md": [
+                              "Hanken Grotesk"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.04em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-xl": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "34px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased min-h-screen flex selection:bg-primary-container selection:text-on-primary-container">
+<div class="flex w-full min-h-screen">
+<div class="hidden md:flex w-1/2 bg-secondary-container items-center justify-center relative overflow-hidden">
+<div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg width=\'100%25\' height=\'100%25\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0,50 Q25,25 50,50 T100,50\' stroke=\'%23002c7c\' fill=\'none\' stroke-width=\'2\'/%3E%3C/svg%3E'); background-size: 100px 100px;"></div>
+<img alt="Seda e Couro Logo" class="w-80 h-auto max-w-full object-contain mix-blend-multiply z-10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHCdUm7ijCSG-y2UVWTBFDc-v1TGLA6xH5v943tL4WUIP41xNj_3kZWLuOTa1dbR99cJ0oF45_SIhxwBURzAyMf9AMySObrcmHIcLkhRSJV-xh8bFodMF-VTF2hEDe_ikQkn5APFFNk9SwnN86gK-TYtQ-mvd21NzwiIWqDUStwCIR8rUiMDFWARxuAvytalPtYbpU1Yw0VKw4AY4JEgm6DnIm2Bd7QP50VNGIwwRftwMoL5a9P7udwxvguoCAynbK7Hg">
+</div>
+<div class="w-full md:w-1/2 flex flex-col justify-center px-margin-mobile md:px-margin-desktop lg:px-24 bg-surface">
+<div class="w-full max-w-md mx-auto">
+<div class="mb-12 text-center md:text-left">
+<h1 class="font-headline-lg text-headline-lg text-primary mb-2">Acesso ao Sistema</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Seda e Couro Gestão Interna</p>
+</div>
+<form action="#" class="flex flex-col gap-6" method="POST">
+<div class="flex flex-col gap-2">
+<label class="font-label-md text-label-md text-on-surface" for="username">Usuário</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline-variant">person</span>
+<input class="w-full bg-surface-container-low border border-primary/20 rounded-DEFAULT pl-12 pr-4 py-3 font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" id="username" name="username" placeholder="Seu nome de usuário" required="" type="text">
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-baseline">
+<label class="font-label-md text-label-md text-on-surface" for="password">Senha</label>
+<a class="font-label-sm text-label-sm text-primary hover:text-primary-container transition-colors" href="#">Esqueci minha senha</a>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline-variant">lock</span>
+<input class="w-full bg-surface-container-low border border-primary/20 rounded-DEFAULT pl-12 pr-4 py-3 font-body-md text-body-md text-on-surface placeholder:text-outline-variant focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-colors" id="password" name="password" placeholder="Sua senha" required="" type="password">
+</div>
+</div>
+<button class="mt-4 w-full bg-primary text-on-primary font-label-md text-label-md py-4 rounded-DEFAULT hover:bg-primary-container hover:text-on-primary-container active:scale-[0.98] transition-all duration-200" type="submit">
+                        Acessar
+                    </button>
+</form>
+<div class="mt-16 text-center border-t border-outline-variant/20 pt-8">
+<p class="font-label-sm text-label-sm text-on-surface-variant flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[16px]">info</span>
+                        Acesso Restrito a Funcionários
+                    </p>
+</div>
+</div>
+</div>
+</div>
+</body></html>

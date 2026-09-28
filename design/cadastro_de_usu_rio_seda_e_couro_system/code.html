@@ -1,0 +1,204 @@
+<!DOCTYPE html><html class="light" lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Seda e Couro - Cadastro</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#f9f9ff",
+                        "secondary-fixed": "#e6e2db",
+                        "on-primary-container": "#a0b6ff",
+                        "surface-bright": "#f9f9ff",
+                        "inverse-primary": "#b4c5ff",
+                        "surface-tint": "#3759b3",
+                        "on-surface-variant": "#444652",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#d7dae4",
+                        "surface-container-high": "#e5e8f3",
+                        "on-primary-fixed-variant": "#194099",
+                        "on-tertiary-container": "#a1b9eb",
+                        "surface": "#f9f9ff",
+                        "on-error": "#ffffff",
+                        "inverse-on-surface": "#eef0fb",
+                        "on-tertiary-fixed": "#001b3f",
+                        "on-primary-fixed": "#00174b",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "primary": "#002c7c",
+                        "inverse-surface": "#2c3038",
+                        "secondary-container": "#e6e2db",
+                        "tertiary": "#18325c",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-highest": "#dfe2ed",
+                        "primary-container": "#1d439c",
+                        "on-secondary": "#ffffff",
+                        "on-surface": "#181c23",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#c4c6d4",
+                        "secondary-fixed-dim": "#c9c6bf",
+                        "surface-variant": "#dfe2ed",
+                        "secondary": "#605e59",
+                        "outline": "#747683",
+                        "surface-container": "#ebeef8",
+                        "on-tertiary-fixed-variant": "#2e4772",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#314974",
+                        "on-secondary-fixed-variant": "#484742",
+                        "on-background": "#181c23",
+                        "on-secondary-container": "#66645f",
+                        "tertiary-fixed-dim": "#afc7fa",
+                        "on-secondary-fixed": "#1c1c18",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#d7e2ff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f1f3fe",
+                        "primary-fixed": "#dbe1ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "margin-mobile": "20px",
+                        "container-max": "1200px",
+                        "margin-desktop": "64px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "label-md": ["Hanken Grotesk"],
+                        "headline-xl": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "34px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .pattern-bg {
+            background-image: radial-gradient(circle at 2px 2px, rgba(0, 44, 124, 0.05) 1px, transparent 0);
+            background-size: 24px 24px;
+        }
+    </style>
+</head>
+<body class="bg-background min-h-screen font-body-md text-on-background antialiased flex flex-col">
+<!-- Suppressed TopAppBar and Footer as this is a transactional Signup screen -->
+<main class="flex-1 flex w-full">
+<div class="flex flex-col md:flex-row w-full h-screen">
+<!-- Left Side: Branding -->
+<div class="hidden md:flex md:w-1/2 bg-surface-container-low pattern-bg flex-col items-center justify-center p-12 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-surface-container-low to-surface-container opacity-50 z-0"></div>
+<div class="relative z-10 max-w-md w-full flex flex-col items-center">
+<img alt="Seda e Couro Logo" class="w-64 h-64 object-contain mb-8 filter drop-shadow-md" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAt6IETFwzPZP_rautknKYrzf4Jg30nIx-uWPbdQvjbgCEADcFBXPkmhYvIt7witaBojySCfeJVUQItTlVe7Leovb3qGj_7zACv1vUIcxNMVrxJEh6c_7jYqQRGp0J_89W9g0gITAOjg8mSNsehINv1kFMtFVLdOocoZ9UyaOIr4A2nYD0W2jPwhq0rfuiNzJwzScqTfipdregtJ6c8hFIubksKydgjO_RKaSkRAwF5-XImgCw9rNVZ1BwSFTvnMuVlddI">
+<h1 class="font-headline-xl text-headline-xl text-primary text-center mb-4">Seda e Couro</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant text-center max-w-sm">Artisanal Excellence. Crafting quality footwear with dedication and precision.</p>
+</div>
+</div>
+<!-- Right Side: Form -->
+<div class="w-full md:w-1/2 bg-surface flex flex-col justify-center px-margin-mobile md:px-margin-desktop py-12 relative overflow-y-auto">
+<div class="max-w-md w-full mx-auto">
+<!-- Mobile Logo (visible only on small screens) -->
+<div class="md:hidden flex flex-col items-center mb-8">
+<img alt="Seda e Couro Logo" class="w-24 h-24 object-contain mb-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAl8pjtvMBxOh5ixbrHBK87kn6jHP3ADo6EljXxEb6poom4zdE0MZxuxE2lZk_fJ7kS8oubGj00j647vAG7ok2aqiRlQ7zGc9MRJE5gmI0XfKKfgMnbEzHEWzA_K8gROxhhNuGMuvO-z_HDiuveHL9NnPyqvy8d1kAOvAdt94zUIqPUgFzT5JkyGqRD_0ZAAakgq2HBJex4EMDzagmLOIgQgr1jOfIUt-jhZU8OhHbrkpOtJlJ4e6OHDiALerHkRZuO6gI">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary">Seda e Couro</h1>
+</div>
+<div class="mb-10 text-center md:text-left">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-2">Criar Conta</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Junte-se a nós para uma experiência artesanal exclusiva.</p>
+</div>
+<form action="#" class="space-y-6" method="POST">
+<!-- Full Name -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="fullName">Nome Completo</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">person</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 border border-primary/20 rounded-DEFAULT bg-secondary-container/20 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors font-body-md text-body-md placeholder-outline-variant" id="fullName" name="fullName" placeholder="João Silva" required="" type="text">
+</div>
+</div>
+<!-- Username -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="username">Usuário</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">alternate_email</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 border border-primary/20 rounded-DEFAULT bg-secondary-container/20 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors font-body-md text-body-md placeholder-outline-variant" id="username" name="username" placeholder="joaosilva123" required="" type="text">
+</div>
+</div>
+<!-- Email -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="email">E-mail</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">mail</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 border border-primary/20 rounded-DEFAULT bg-secondary-container/20 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors font-body-md text-body-md placeholder-outline-variant" id="email" name="email" placeholder="joao@exemplo.com" required="" type="email">
+</div>
+</div>
+<!-- Password -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="password">Senha</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">lock</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 border border-primary/20 rounded-DEFAULT bg-secondary-container/20 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors font-body-md text-body-md placeholder-outline-variant" id="password" name="password" placeholder="••••••••" required="" type="password">
+</div>
+</div>
+<!-- Confirm Password -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="confirmPassword">Confirmar Senha</label>
+<div class="relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-outline">lock_reset</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-3 border border-primary/20 rounded-DEFAULT bg-secondary-container/20 text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors font-body-md text-body-md placeholder-outline-variant" id="confirmPassword" name="confirmPassword" placeholder="••••••••" required="" type="password">
+</div>
+</div>
+<!-- Register Button -->
+<div class="pt-2">
+<button class="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-DEFAULT shadow-sm bg-primary hover:bg-primary/90 text-on-primary font-label-md text-label-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary" type="submit">
+                                Cadastrar
+                            </button>
+</div>
+</form>
+<!-- Login Link -->
+<div class="mt-8 text-center">
+<p class="font-body-md text-body-md text-on-surface-variant">
+                            Já possui uma conta? 
+                            <a class="font-label-md text-label-md text-primary hover:text-primary-container transition-colors underline decoration-primary/30 underline-offset-2" href="#">Entre aqui</a>
+</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

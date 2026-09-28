@@ -1,0 +1,337 @@
+<!DOCTYPE html><html class="light" lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Controle de Estoque - Seda e Couro</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "inverse-primary": "#b4c5ff",
+                "surface-variant": "#dfe2ed",
+                "on-primary-fixed-variant": "#194099",
+                "error": "#ba1a1a",
+                "surface-container": "#ebeef8",
+                "on-error-container": "#93000a",
+                "primary-container": "#1d439c",
+                "on-secondary": "#ffffff",
+                "on-primary": "#ffffff",
+                "on-secondary-container": "#66645f",
+                "primary-fixed-dim": "#b4c5ff",
+                "surface-container-highest": "#dfe2ed",
+                "inverse-surface": "#2c3038",
+                "on-error": "#ffffff",
+                "primary-fixed": "#dbe1ff",
+                "on-tertiary": "#ffffff",
+                "tertiary-fixed-dim": "#afc7fa",
+                "on-surface": "#181c23",
+                "primary": "#002c7c",
+                "inverse-on-surface": "#eef0fb",
+                "surface-container-high": "#e5e8f3",
+                "tertiary-container": "#314974",
+                "error-container": "#ffdad6",
+                "secondary-fixed": "#e6e2db",
+                "surface-tint": "#3759b3",
+                "on-tertiary-fixed-variant": "#2e4772",
+                "on-secondary-fixed": "#1c1c18",
+                "surface-dim": "#d7dae4",
+                "outline-variant": "#c4c6d4",
+                "secondary-container": "#e6e2db",
+                "secondary-fixed-dim": "#c9c6bf",
+                "secondary": "#605e59",
+                "outline": "#747683",
+                "on-tertiary-container": "#a1b9eb",
+                "tertiary": "#18325c",
+                "surface": "#f9f9ff",
+                "on-secondary-fixed-variant": "#484742",
+                "surface-container-low": "#f1f3fe",
+                "tertiary-fixed": "#d7e2ff",
+                "surface-bright": "#f9f9ff",
+                "background": "#f9f9ff",
+                "on-surface-variant": "#444652",
+                "on-primary-fixed": "#00174b",
+                "on-background": "#181c23",
+                "on-tertiary-fixed": "#001b3f",
+                "on-primary-container": "#a0b6ff",
+                "surface-container-lowest": "#ffffff"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "gutter": "24px",
+                "container-max": "1200px",
+                "margin-mobile": "20px",
+                "margin-desktop": "64px",
+                "unit": "8px"
+        },
+        "fontFamily": {
+                "body-md": [
+                        "Hanken Grotesk"
+                ],
+                "headline-lg-mobile": [
+                        "Hanken Grotesk"
+                ],
+                "headline-lg": [
+                        "Hanken Grotesk"
+                ],
+                "label-sm": [
+                        "Hanken Grotesk"
+                ],
+                "label-md": [
+                        "Hanken Grotesk"
+                ],
+                "body-lg": [
+                        "Hanken Grotesk"
+                ],
+                "headline-xl": [
+                        "Hanken Grotesk"
+                ],
+                "headline-md": [
+                        "Hanken Grotesk"
+                ]
+        },
+        "fontSize": {
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "28px",
+                        {
+                                "lineHeight": "34px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-sm": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.04em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "label-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-xl": [
+                        "48px",
+                        {
+                                "lineHeight": "56px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+</head>
+<body class="bg-background text-on-background font-body-md h-screen overflow-hidden flex">
+<!-- SideNavBar -->
+<nav class="h-screen w-64 fixed left-0 top-0 border-r border-outline-variant z-20 flex flex-col py-8 px-4 overflow-y-auto bg-surface-container-low"><div class="mb-8 mt-4 flex items-center gap-3"><div class="flex items-start gap-3 mb-12 px-2"><div class="w-1.5 h-8 bg-primary mt-1"></div><div><h1 class="font-headline-md text-headline-md font-bold text-primary leading-tight">Seda e Couro</h1><p class="font-label-sm text-label-sm text-secondary tracking-[0.2em] uppercase">Sapataria Profissional</p></div></div></div><ul class="flex flex-col gap-1 flex-grow"><li class=""><a class="flex items-center gap-4 px-4 py-3 rounded-lg text-secondary hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">grid_view</span>Dashboard</a></li><li class=""><a class="flex items-center gap-4 px-4 py-3 rounded-lg text-secondary hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">search</span>Busca</a></li><li class=""><a class="flex items-center gap-4 px-4 py-3 rounded-lg text-secondary hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">group</span>Clientes</a></li><li class=""><a class="flex items-center gap-4 px-4 py-3 rounded-lg text-secondary hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">build</span>Ordens de Serviço</a></li><li class=""><a class="flex items-center gap-4 px-4 py-3 rounded-lg text-secondary hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">payments</span>Financeiro</a></li><li class=""><a class="flex items-center gap-4 px-4 py-3 rounded-lg text-secondary hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">badge</span>Funcionários</a></li><li class=""><a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary text-on-primary transition-colors duration-200 font-label-md text-label-md" href="#"><span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">inventory_2</span>Estoque</a></li></ul><div class="mt-auto pt-4"><div class="mb-8 px-2 flex items-center gap-3"><div class="w-12 h-12 rounded-xl bg-[#dbe1ff] flex items-center justify-center text-primary font-bold text-lg">RS</div><div><p class="font-bold text-on-surface leading-tight">Ricardo Silva</p><p class="text-secondary text-sm">Gerente</p></div></div><ul class="flex flex-col gap-1"><li class=""><a class="flex items-center gap-4 px-4 py-2 rounded-lg text-secondary hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">settings</span>Configurações</a></li><li class=""><a class="flex items-center gap-4 px-4 py-2 rounded-lg text-error hover:bg-error/5 transition-colors font-label-md text-label-md" href="#"><span class="material-symbols-outlined">logout</span>Sair</a></li></ul></div></nav>
+<!-- Main Content Area -->
+<div class="ml-64 w-[calc(100%-16rem)] flex flex-col h-screen">
+<!-- TopAppBar -->
+<header class="docked full-width top-0 bg-background flex justify-between items-center h-16 px-margin-desktop z-10 sticky">
+<h2 class="font-headline-md text-headline-md font-bold text-primary">Controle de Estoque</h2>
+<div class="flex items-center gap-4">
+<div class="relative hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container rounded-full border-none focus:ring-2 focus:ring-primary text-body-md font-body-md w-64 text-on-surface" placeholder="Buscar no sistema..." type="text">
+</div>
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-secondary-container/50 transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-secondary-container/50 transition-all">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+</header>
+<!-- Dashboard Canvas -->
+<main class="flex-grow overflow-y-auto p-gutter bg-background">
+<div class="max-w-[1200px] mx-auto flex flex-col gap-gutter">
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-secondary-container border border-primary/20 rounded-xl p-6 flex flex-col gap-2 relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full group-hover:scale-110 transition-transform"></div>
+<span class="material-symbols-outlined text-primary text-3xl mb-2">inventory</span>
+<p class="font-label-md text-label-md text-secondary">Total de Itens</p>
+<p class="font-headline-lg text-headline-lg text-on-surface font-bold">1,248</p>
+</div>
+<div class="bg-error-container border border-error/20 rounded-xl p-6 flex flex-col gap-2 relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 w-24 h-24 bg-error/10 rounded-full group-hover:scale-110 transition-transform"></div>
+<span class="material-symbols-outlined text-error text-3xl mb-2">warning</span>
+<p class="font-label-md text-label-md text-on-error-container">Itens com Estoque Baixo</p>
+<p class="font-headline-lg text-headline-lg text-error font-bold">12</p>
+</div>
+<div class="bg-secondary-container border border-primary/20 rounded-xl p-6 flex flex-col gap-2 relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full group-hover:scale-110 transition-transform"></div>
+<span class="material-symbols-outlined text-primary text-3xl mb-2">account_balance_wallet</span>
+<p class="font-label-md text-label-md text-secondary">Valor Total em Estoque</p>
+<p class="font-headline-lg text-headline-lg text-on-surface font-bold">R$ 45.230,00</p>
+</div>
+</div>
+<!-- Main Content Area: Filters & Table -->
+<div class="bg-surface-container-lowest border border-primary/20 rounded-xl p-6 shadow-sm">
+<!-- Toolbar -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+<div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+<div class="relative w-full sm:w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-secondary-container rounded-lg border border-primary/20 focus:border-primary focus:ring-1 focus:ring-primary text-body-md font-body-md text-on-surface outline-none" placeholder="Buscar item..." type="text">
+</div>
+<div class="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+<button class="px-4 py-1.5 rounded-full bg-tertiary text-on-tertiary font-label-sm text-label-sm whitespace-nowrap">Todos</button>
+<button class="px-4 py-1.5 rounded-full bg-secondary-container text-primary border border-primary/20 font-label-sm text-label-sm whitespace-nowrap hover:bg-primary/5">Couros</button>
+<button class="px-4 py-1.5 rounded-full bg-secondary-container text-primary border border-primary/20 font-label-sm text-label-sm whitespace-nowrap hover:bg-primary/5">Solados</button>
+<button class="px-4 py-1.5 rounded-full bg-secondary-container text-primary border border-primary/20 font-label-sm text-label-sm whitespace-nowrap hover:bg-primary/5">Ferragens</button>
+</div>
+</div>
+<button class="bg-primary text-secondary-fixed font-label-md text-label-md py-2.5 px-6 rounded-lg flex items-center justify-center gap-2 hover:bg-primary-container transition-colors duration-200 whitespace-nowrap w-full md:w-auto">
+<span class="material-symbols-outlined text-lg">add</span>
+                            Adicionar Novo Item
+                        </button>
+</div>
+<!-- Data Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-primary/20 text-secondary font-label-md text-label-md uppercase tracking-wider">
+<th class="py-4 px-4 font-semibold">Item</th>
+<th class="py-4 px-4 font-semibold">Categoria</th>
+<th class="py-4 px-4 font-semibold">Qtd Atual</th>
+<th class="py-4 px-4 font-semibold">Mínimo</th>
+<th class="py-4 px-4 font-semibold">Status</th>
+<th class="py-4 px-4 font-semibold text-right">Ações</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface">
+<tr class="border-b border-surface-variant hover:bg-secondary-container/30 transition-colors">
+<td class="py-4 px-4 flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-secondary-container flex items-center justify-center border border-primary/10">
+<span class="material-symbols-outlined text-tertiary">layers</span>
+</div>
+<span class="font-medium text-primary">Couro Fóssil Caramelo</span>
+</td>
+<td class="py-4 px-4 text-secondary">Couros</td>
+<td class="py-4 px-4">45 m²</td>
+<td class="py-4 px-4 text-secondary">20 m²</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-tertiary-container/10 text-tertiary-container font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container"></span>
+                                            Em Dia
+                                        </span>
+</td>
+<td class="py-4 px-4">
+<div class="flex justify-end gap-2">
+<button class="p-2 text-outline hover:text-primary transition-colors rounded-full hover:bg-primary/5" title="Editar">
+<span class="material-symbols-outlined text-xl">edit</span>
+</button>
+<button class="p-2 text-outline hover:text-primary transition-colors rounded-full hover:bg-primary/5" title="Histórico">
+<span class="material-symbols-outlined text-xl">history</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="border-b border-surface-variant hover:bg-secondary-container/30 transition-colors">
+<td class="py-4 px-4 flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-secondary-container flex items-center justify-center border border-primary/10">
+<span class="material-symbols-outlined text-tertiary">hardware</span>
+</div>
+<span class="font-medium text-primary">Fivela Latão Envelhecido 20mm</span>
+</td>
+<td class="py-4 px-4 text-secondary">Ferragens</td>
+<td class="py-4 px-4 text-error font-semibold">15 un</td>
+<td class="py-4 px-4 text-secondary">50 un</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-error-container text-error font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                                            Crítico
+                                        </span>
+</td>
+<td class="py-4 px-4">
+<div class="flex justify-end gap-2">
+<button class="p-2 text-outline hover:text-primary transition-colors rounded-full hover:bg-primary/5">
+<span class="material-symbols-outlined text-xl">edit</span>
+</button>
+<button class="p-2 text-outline hover:text-primary transition-colors rounded-full hover:bg-primary/5">
+<span class="material-symbols-outlined text-xl">history</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="border-b border-surface-variant hover:bg-secondary-container/30 transition-colors">
+<td class="py-4 px-4 flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-secondary-container flex items-center justify-center border border-primary/10">
+<span class="material-symbols-outlined text-tertiary">water_drop</span>
+</div>
+<span class="font-medium text-primary">Tinta Borda Marrom Café</span>
+</td>
+<td class="py-4 px-4 text-secondary">Tintas</td>
+<td class="py-4 px-4">2.5 L</td>
+<td class="py-4 px-4 text-secondary">1.0 L</td>
+<td class="py-4 px-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-tertiary-container/10 text-tertiary-container font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container"></span>
+                                            Em Dia
+                                        </span>
+</td>
+<td class="py-4 px-4">
+<div class="flex justify-end gap-2">
+<button class="p-2 text-outline hover:text-primary transition-colors rounded-full hover:bg-primary/5">
+<span class="material-symbols-outlined text-xl">edit</span>
+</button>
+<button class="p-2 text-outline hover:text-primary transition-colors rounded-full hover:bg-primary/5">
+<span class="material-symbols-outlined text-xl">history</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

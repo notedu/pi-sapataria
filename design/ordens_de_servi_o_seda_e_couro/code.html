@@ -1,0 +1,426 @@
+<!DOCTYPE html><html lang="pt-BR" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Seda e Couro - Ordens de Serviço</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "tertiary-fixed": "#d7e2ff",
+                "on-primary-fixed-variant": "#194099",
+                "on-tertiary-container": "#a1b9eb",
+                "surface-container-lowest": "#ffffff",
+                "inverse-surface": "#2c3038",
+                "on-surface-variant": "#444652",
+                "on-primary": "#ffffff",
+                "secondary-fixed": "#e6e2db",
+                "inverse-on-surface": "#eef0fb",
+                "secondary": "#605e59",
+                "tertiary-container": "#314974",
+                "surface-dim": "#d7dae4",
+                "on-background": "#181c23",
+                "surface-container": "#ebeef8",
+                "primary": "#002c7c",
+                "surface-container-high": "#e5e8f3",
+                "on-surface": "#181c23",
+                "on-tertiary-fixed-variant": "#2e4772",
+                "on-secondary-fixed-variant": "#484742",
+                "primary-fixed-dim": "#b4c5ff",
+                "surface-container-low": "#f1f3fe",
+                "secondary-container": "#e6e2db",
+                "secondary-fixed-dim": "#c9c6bf",
+                "inverse-primary": "#b4c5ff",
+                "on-secondary-fixed": "#1c1c18",
+                "on-secondary": "#ffffff",
+                "on-secondary-container": "#66645f",
+                "tertiary-fixed-dim": "#afc7fa",
+                "on-error": "#ffffff",
+                "tertiary": "#18325c",
+                "on-primary-container": "#a0b6ff",
+                "primary-fixed": "#dbe1ff",
+                "error": "#ba1a1a",
+                "surface-bright": "#f9f9ff",
+                "surface-container-highest": "#dfe2ed",
+                "error-container": "#ffdad6",
+                "primary-container": "#1d439c",
+                "background": "#f9f9ff",
+                "on-error-container": "#93000a",
+                "surface-tint": "#3759b3",
+                "outline": "#747683",
+                "surface-variant": "#dfe2ed",
+                "on-primary-fixed": "#00174b",
+                "on-tertiary": "#ffffff",
+                "on-tertiary-fixed": "#001b3f",
+                "surface": "#f9f9ff",
+                "outline-variant": "#c4c6d4"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "margin-desktop": "64px",
+                "unit": "8px",
+                "margin-mobile": "20px",
+                "gutter": "24px",
+                "container-max": "1200px"
+        },
+        "fontFamily": {
+                "body-lg": [
+                        "Hanken Grotesk"
+                ],
+                "label-sm": [
+                        "Hanken Grotesk"
+                ],
+                "headline-md": [
+                        "Hanken Grotesk"
+                ],
+                "body-md": [
+                        "Hanken Grotesk"
+                ],
+                "headline-xl": [
+                        "Hanken Grotesk"
+                ],
+                "headline-lg": [
+                        "Hanken Grotesk"
+                ],
+                "label-md": [
+                        "Hanken Grotesk"
+                ],
+                "headline-lg-mobile": [
+                        "Hanken Grotesk"
+                ]
+        },
+        "fontSize": {
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "28px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "label-sm": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.04em",
+                                "fontWeight": "500"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-xl": [
+                        "48px",
+                        {
+                                "lineHeight": "56px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "28px",
+                        {
+                                "lineHeight": "34px",
+                                "fontWeight": "600"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+</head>
+<body class="bg-background text-on-background antialiased flex h-screen overflow-hidden font-body-md">
+<!-- SideNavBar (Hidden on Mobile) -->
+<aside class="hidden md:flex flex-col h-full py-unit gap-2 fixed left-0 top-0 w-64 z-50 bg-secondary-container dark:bg-inverse-surface border-r border-outline-variant/20">
+<div class="mb-gutter flex items-center gap-unit px-unit pt-unit">
+<div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden bg-surface">
+<img alt="Seda e Couro Logo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnMlV5y168H-HxPgIPaBmoyaYp0r4r9G3WqIc5etHQzRsNE4TZY6ZCub80x5YboODVDD9QTDzghsH4_tIxBeRmmUkvE2614tzp658YkvgeAm624p2YBlResEzoa_GtLc90Sotjhrn21UnmzANXRE8VrU1fwH58sxvk4rh4gIxwxXRtaXuB9wZVGcgfJ30A7dA-aNAM9ybq-VjgfrTw7KR6O8lrPO5xlDag6kq5MjsT4ZpceJhMmY7GifzEhXZIejjbsqA">
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Seda e Couro</h1>
+<p class="font-label-md text-label-md text-on-surface-variant">Sapataria Profissional</p>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-1">
+<a class="flex items-center gap-unit px-gutter py-unit mx-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all opacity-100 hover:opacity-80 duration-200" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-unit px-gutter py-unit mx-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all opacity-100 hover:opacity-80 duration-200" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="search">search</span>
+<span class="font-label-md text-label-md">Busca</span>
+</a><a class="flex items-center gap-unit px-gutter py-unit mx-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all opacity-100 hover:opacity-80 duration-200" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="group">group</span>
+<span class="font-label-md text-label-md">Clientes</span>
+</a>
+<a aria-current="page" class="flex items-center gap-unit px-gutter py-unit mx-2 rounded-lg bg-primary text-on-primary transition-all opacity-100 hover:opacity-80 duration-200" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="handyman">handyman</span>
+<span class="font-label-md text-label-md">Ordens de Serviço</span>
+</a>
+<a class="flex items-center gap-unit px-gutter py-unit mx-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all opacity-100 hover:opacity-80 duration-200" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="payments">payments</span>
+<span class="font-label-md text-label-md">Financeiro</span>
+</a><a class="flex items-center gap-unit px-gutter py-unit mx-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all opacity-100 hover:opacity-80 duration-200" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="badge">badge</span>
+<span class="font-label-md text-label-md">Funcionários</span>
+</a><a class="flex items-center gap-unit px-gutter py-unit mx-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all opacity-100 hover:opacity-80 duration-200" href="#">
+<span class="material-symbols-outlined text-[24px]" data-icon="inventory_2">inventory_2</span>
+<span class="font-label-md text-label-md">Estoque</span>
+</a>
+</nav>
+<div class="mt-auto flex flex-col gap-1 pb-unit"><div class="flex items-center gap-unit px-gutter py-unit mx-2 mb-2 border-b border-outline-variant/20 pb-4">
+  <div class="w-10 h-10 rounded-full bg-secondary-container overflow-hidden shrink-0 border border-outline-variant">
+    <img alt="User profile avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkzgSyPvwzDL2Ndk3QD2161hDs5QHdM1yw9RybfbSdWXLZmIoEJaPWQWIrlKNilm7qsPLvgZVU59QWkyLgW3Q2x2EP6ZCwPCqZsa4Qfw4EwTE7Bcq8959ui7QH4b5HfORylPzB4awAbG149ZC7AUZEJjUYZLeKGRhGq6pLvrNDYmqe5vMXod2K7vA_bffjjp78Opdc7V3UO1hTlDnwHutd2QOWaQVy_VOzN_XXlDyCJPuuHiXUlYZHDw">
+  </div>
+  <div class="flex flex-col overflow-hidden"><span class="font-label-md text-label-md text-on-surface truncate">Ricardo Silva</span><span class="font-label-sm text-label-sm text-on-surface-variant truncate">Gerente</span></div>
+</div>
+<a class="flex items-center gap-unit px-gutter py-unit mx-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all opacity-100 hover:opacity-80 duration-200" href="#">
+  <span class="material-symbols-outlined text-[24px]" data-icon="settings">settings</span>
+  <span class="font-label-md text-label-md">Configurações</span>
+</a>
+<a class="flex items-center gap-unit px-gutter py-unit mx-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all opacity-100 hover:opacity-80 duration-200" href="#">
+  <span class="material-symbols-outlined text-[24px]" data-icon="logout">logout</span>
+  <span class="font-label-md text-label-md">Sair</span>
+</a></div>
+</aside>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col md:ml-64 w-full h-full relative">
+<!-- TopNavBar (Visible on Mobile & Web for actions) -->
+<header class="flex justify-between items-center h-16 px-margin-desktop w-full ml-auto sticky top-0 z-40 bg-surface dark:bg-surface-dim border-b border-outline-variant/20">
+<!-- Mobile Brand -->
+<div class="md:hidden flex items-center gap-unit">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Seda e Couro</h1>
+</div>
+<!-- Empty space on desktop left -->
+<div class="hidden md:block"></div>
+<div class="flex items-center gap-gutter">
+<!-- Search -->
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-unit top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]" data-icon="search">search</span>
+<input class="pl-[36px] pr-unit py-2 bg-surface-container-high rounded-full border-none text-body-md focus:ring-2 focus:ring-primary w-64 font-body-md" placeholder="Buscar pedidos..." type="text">
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-unit">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-full active:scale-95 duration-100">
+<span class="material-symbols-outlined text-[24px]" data-icon="notifications">notifications</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-secondary-container overflow-hidden ml-2 cursor-pointer border border-outline-variant">
+<img alt="User profile avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkzgSyPvwzDL2Ndk3QD2161hDs5QHdM1yw9RybfbSdWXLZmIoEJaPWQWIrlKNilm7qsPLvgZVU59QWkyLgW3Q2x2EP6ZCwPCqZsa4Qfw4EwTE7Bcq8959ui7QH4b5HfORylPzB4awAbG149ZC7AUZEJjUYZLeKGRhGq6pLvrNDYmqe5vMXod2K7vA_bffjjp78Opdc7V3UO1hTlDnwHutd2QOWaQVy_VOzN_XXlDyCJPuuHiXUlYZHDw">
+</div>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<main class="flex-1 overflow-y-auto p-margin-mobile md:p-margin-desktop lg:px-[32px]">
+<!-- Header Section -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-gutter mb-gutter">
+<div>
+<h2 class="font-headline-xl text-headline-xl text-on-surface mb-2">Ordens de Serviço</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Gerencie e acompanhe o status de todos os reparos.</p>
+</div>
+<button class="bg-primary text-on-primary px-gutter py-2 rounded-DEFAULT font-label-md text-label-md hover:bg-primary-container hover:text-on-primary-container transition-colors flex items-center gap-unit shrink-0">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+                    Nova Ordem de Serviço
+                </button>
+</div>
+<!-- Filters & Tabs (Bento style container) -->
+<div class="bg-surface-container-lowest p-2 rounded-lg border border-outline-variant mb-gutter flex flex-wrap gap-2 items-center">
+<button class="px-gutter py-2 rounded-full bg-primary text-on-primary font-label-md text-label-md">Todos (24)</button>
+<button class="px-gutter py-2 rounded-full hover:bg-surface-container text-on-surface-variant font-label-md text-label-md transition-colors">Aguardando (5)</button>
+<button class="px-gutter py-2 rounded-full hover:bg-surface-container text-on-surface-variant font-label-md text-label-md transition-colors">Em Reparo (12)</button>
+<button class="px-gutter py-2 rounded-full hover:bg-surface-container text-on-surface-variant font-label-md text-label-md transition-colors">Pronto (7)</button>
+<div class="ml-auto flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container rounded-DEFAULT transition-colors border border-outline-variant">
+<span class="material-symbols-outlined text-[20px]" data-icon="filter_list">filter_list</span>
+</button>
+</div>
+</div>
+<!-- Data Table (Desktop) / Cards (Mobile) -->
+<div class="bg-surface-container-lowest rounded-lg border border-outline-variant overflow-hidden">
+<!-- Desktop Table View -->
+<div class="hidden md:block w-full overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="py-3 px-gutter font-label-md text-label-md text-on-surface-variant uppercase">OS #</th>
+<th class="py-3 px-gutter font-label-md text-label-md text-on-surface-variant uppercase">Cliente</th>
+<th class="py-3 px-gutter font-label-md text-label-md text-on-surface-variant uppercase">Item &amp; Serviço</th>
+<th class="py-3 px-gutter font-label-md text-label-md text-on-surface-variant uppercase">Entrada</th>
+<th class="py-3 px-gutter font-label-md text-label-md text-on-surface-variant uppercase">Valor</th>
+<th class="py-3 px-gutter font-label-md text-label-md text-on-surface-variant uppercase">Status</th>
+<th class="py-3 px-gutter font-label-md text-label-md text-on-surface-variant uppercase text-right">Ação</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-on-surface">
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
+<td class="py-3 px-gutter font-label-md text-primary">#1042</td>
+<td class="py-3 px-gutter">
+<div class="font-medium">Carlos Silva</div>
+<div class="text-on-surface-variant text-sm">(11) 98765-4321</div>
+</td>
+<td class="py-3 px-gutter">
+<div class="font-medium">Bota de Couro Marrom</div>
+<div class="text-on-surface-variant text-sm">Troca de solado completo</div>
+</td>
+<td class="py-3 px-gutter text-on-surface-variant">24 Out, 10:30</td>
+<td class="py-3 px-gutter font-medium">R$ 180,00</td>
+<td class="py-3 px-gutter">
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm">Em Reparo</span>
+</td>
+<td class="py-3 px-gutter text-right">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[24px]" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="border-b border-outline-variant bg-surface-bright hover:bg-surface-container-low transition-colors group">
+<td class="py-3 px-gutter font-label-md text-primary">#1043</td>
+<td class="py-3 px-gutter">
+<div class="font-medium">Ana Ferreira</div>
+<div class="text-on-surface-variant text-sm">(11) 91234-5678</div>
+</td>
+<td class="py-3 px-gutter">
+<div class="font-medium">Sapato Social Preto</div>
+<div class="text-on-surface-variant text-sm">Polimento e hidratação</div>
+</td>
+<td class="py-3 px-gutter text-on-surface-variant">25 Out, 09:15</td>
+<td class="py-3 px-gutter font-medium">R$ 45,00</td>
+<td class="py-3 px-gutter">
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">Aguardando</span>
+</td>
+<td class="py-3 px-gutter text-right">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[24px]" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors group">
+<td class="py-3 px-gutter font-label-md text-primary">#1041</td>
+<td class="py-3 px-gutter">
+<div class="font-medium">Roberto Gomez</div>
+<div class="text-on-surface-variant text-sm">(11) 97777-8888</div>
+</td>
+<td class="py-3 px-gutter">
+<div class="font-medium">Tênis Esportivo</div>
+<div class="text-on-surface-variant text-sm">Costura lateral e lavagem</div>
+</td>
+<td class="py-3 px-gutter text-on-surface-variant">23 Out, 16:45</td>
+<td class="py-3 px-gutter font-medium">R$ 85,00</td>
+<td class="py-3 px-gutter">
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm">Pronto</span>
+</td>
+<td class="py-3 px-gutter text-right">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[24px]" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="border-b border-outline-variant bg-surface-bright hover:bg-surface-container-low transition-colors group opacity-70">
+<td class="py-3 px-gutter font-label-md text-on-surface-variant">#1038</td>
+<td class="py-3 px-gutter">
+<div class="font-medium">Juliana Costa</div>
+<div class="text-on-surface-variant text-sm">(11) 95555-4444</div>
+</td>
+<td class="py-3 px-gutter">
+<div class="font-medium">Bolsa Tiracolo</div>
+<div class="text-on-surface-variant text-sm">Troca de alça e fivela</div>
+</td>
+<td class="py-3 px-gutter text-on-surface-variant">20 Out, 11:20</td>
+<td class="py-3 px-gutter font-medium">R$ 120,00</td>
+<td class="py-3 px-gutter">
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-surface-variant text-on-surface-variant font-label-sm text-label-sm">Entregue</span>
+</td>
+<td class="py-3 px-gutter text-right">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[24px]" data-icon="more_vert">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Mobile Card View -->
+<div class="md:hidden flex flex-col divide-y divide-outline-variant">
+<!-- Card 1 -->
+<div class="p-gutter bg-surface-container-lowest">
+<div class="flex justify-between items-start mb-2">
+<div>
+<span class="font-label-md text-primary block mb-1">#1042</span>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Carlos Silva</h3>
+</div>
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm">Em Reparo</span>
+</div>
+<div class="mb-2">
+<p class="font-body-md text-on-surface font-medium">Bota de Couro Marrom</p>
+<p class="font-body-md text-on-surface-variant text-sm">Troca de solado completo</p>
+</div>
+<div class="flex justify-between items-end mt-2">
+<span class="font-label-md text-on-surface-variant">24 Out</span>
+<span class="font-headline-md text-headline-md text-on-surface">R$ 180,00</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="p-gutter bg-surface-bright">
+<div class="flex justify-between items-start mb-2">
+<div>
+<span class="font-label-md text-primary block mb-1">#1043</span>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Ana Ferreira</h3>
+</div>
+<span class="inline-flex items-center px-2 py-1 rounded-full bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm">Aguardando</span>
+</div>
+<div class="mb-2">
+<p class="font-body-md text-on-surface font-medium">Sapato Social Preto</p>
+<p class="font-body-md text-on-surface-variant text-sm">Polimento e hidratação</p>
+</div>
+<div class="flex justify-between items-end mt-2">
+<span class="font-label-md text-on-surface-variant">25 Out</span>
+<span class="font-headline-md text-headline-md text-on-surface">R$ 45,00</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+
+
+
+
+
+</body></html>
