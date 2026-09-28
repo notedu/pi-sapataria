@@ -1,0 +1,357 @@
+<!DOCTYPE html><html lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Seda e Couro - Perfil do Cliente</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#b4c5ff",
+                        "primary-container": "#1d439c",
+                        "on-secondary-fixed-variant": "#484742",
+                        "on-background": "#181c23",
+                        "surface-container-low": "#f1f3fe",
+                        "surface-container-highest": "#dfe2ed",
+                        "on-surface-variant": "#444652",
+                        "on-tertiary-fixed": "#001b3f",
+                        "outline-variant": "#c4c6d4",
+                        "inverse-surface": "#2c3038",
+                        "tertiary-fixed": "#d7e2ff",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed": "#dbe1ff",
+                        "on-primary-container": "#a0b6ff",
+                        "surface-tint": "#3759b3",
+                        "surface-container-high": "#e5e8f3",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed": "#1c1c18",
+                        "inverse-on-surface": "#eef0fb",
+                        "on-surface": "#181c23",
+                        "tertiary-fixed-dim": "#afc7fa",
+                        "on-primary-fixed-variant": "#194099",
+                        "error": "#ba1a1a",
+                        "surface": "#f9f9ff",
+                        "on-tertiary-fixed-variant": "#2e4772",
+                        "tertiary-container": "#314974",
+                        "surface-dim": "#d7dae4",
+                        "surface-container": "#ebeef8",
+                        "surface-variant": "#dfe2ed",
+                        "tertiary": "#18325c",
+                        "error-container": "#ffdad6",
+                        "surface-container-lowest": "#ffffff",
+                        "outline": "#747683",
+                        "on-error-container": "#93000a",
+                        "secondary": "#605e59",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#a1b9eb",
+                        "inverse-primary": "#b4c5ff",
+                        "on-secondary-container": "#66645f",
+                        "background": "#f9f9ff",
+                        "secondary-fixed": "#e6e2db",
+                        "secondary-fixed-dim": "#c9c6bf",
+                        "on-primary-fixed": "#00174b",
+                        "surface-bright": "#f9f9ff",
+                        "primary": "#002c7c",
+                        "secondary-container": "#e6e2db",
+                        "on-primary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "20px",
+                        "gutter": "24px",
+                        "container-max": "1200px",
+                        "margin-desktop": "64px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-xl": ["Hanken Grotesk"],
+                        "label-md": ["Hanken Grotesk"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "label-sm": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "34px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Additional decorative styles for the handcrafted feel */
+        .handcrafted-wave {
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='4' viewBox='0 0 100 4' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 2C12.5 2 12.5 0 25 0C37.5 0 37.5 4 50 4C62.5 4 62.5 0 75 0C87.5 0 87.5 2 100 2' stroke='%23002c7c' stroke-opacity='0.2'/%3E%3C/svg%3E");
+            background-repeat: repeat-x;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- SideNavBar -->
+<nav class="h-screen w-64 fixed left-0 top-0 bg-[#e6e2db] border-r border-primary/10 flex flex-col py-8 z-20">
+<div class="px-8 mb-10 flex flex-col gap-1">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Seda e Couro</h1>
+<span class="font-label-sm text-label-sm text-on-secondary-container uppercase tracking-widest">Sapataria<br>Profissional</span>
+</div>
+<ul class="flex flex-col flex-1 gap-2 px-4">
+<!-- Dashboard -->
+<li>
+<a class="text-on-secondary-container flex items-center px-4 py-3 rounded-lg hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined mr-4 text-on-secondary-container">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<!-- Busca -->
+<li>
+<a class="text-on-secondary-container flex items-center px-4 py-3 rounded-lg hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined mr-4 text-on-secondary-container">search</span>
+                    Busca
+                </a>
+</li>
+<!-- Clientes (Active) -->
+<li>
+<a class="bg-primary text-on-primary flex items-center px-4 py-3 rounded-lg shadow-sm transition-all duration-200 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined mr-4 text-on-primary" style="font-variation-settings: 'FILL' 1;">group</span>
+                    Clientes
+                </a>
+</li>
+<!-- Ordens de Serviço -->
+<li>
+<a class="text-on-secondary-container flex items-center px-4 py-3 rounded-lg hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined mr-4 text-on-secondary-container">build</span>
+                    Ordens de Serviço
+                </a>
+</li>
+<!-- Financeiro -->
+<li>
+<a class="text-on-secondary-container flex items-center px-4 py-3 rounded-lg hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined mr-4 text-on-secondary-container">payments</span>
+                    Financeiro
+                </a>
+</li>
+<!-- Funcionários -->
+<li>
+<a class="text-on-secondary-container flex items-center px-4 py-3 rounded-lg hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined mr-4 text-on-secondary-container">badge</span>
+                    Funcionários
+                </a>
+</li>
+<!-- Estoque -->
+<li>
+<a class="text-on-secondary-container flex items-center px-4 py-3 rounded-lg hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined mr-4 text-on-secondary-container">inventory_2</span>
+                    Estoque
+                </a>
+</li>
+</ul>
+<!-- Footer Tabs -->
+<div class="mt-auto px-4 pb-4 flex flex-col gap-2">
+<div class="flex items-center gap-3 px-4 py-3 mb-2">
+<div class="w-10 h-10 rounded-xl bg-primary-fixed text-on-primary-fixed flex items-center justify-center font-bold text-label-md">
+                    RS
+                </div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-background">Ricardo Silva</span>
+<span class="font-label-sm text-label-sm text-on-secondary-container">Gerente</span>
+</div>
+</div>
+<ul class="flex flex-col gap-1">
+<li>
+<a class="text-on-secondary-container flex items-center px-4 py-2 rounded-lg hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined mr-4 text-on-secondary-container">settings</span>
+                        Configurações
+                    </a>
+</li>
+<li>
+<a class="text-error flex items-center px-4 py-2 rounded-lg hover:bg-error/10 transition-colors font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined mr-4 text-error">logout</span>
+                        Sair
+                    </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 ml-64 flex flex-col min-h-screen">
+<!-- TopAppBar -->
+<header class="bg-surface border-b border-primary/10 flex justify-between items-center w-full px-gutter h-16 sticky top-0 z-10">
+<!-- Left Side / Breadcrumb placeholder -->
+<div class="flex items-center gap-2 text-on-surface-variant font-label-md text-label-md">
+<span class="hover:text-primary transition-colors cursor-pointer">Clientes</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="text-primary font-bold">Perfil</span>
+</div>
+<!-- Right Actions -->
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-variant">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-full hover:bg-surface-variant">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-primary/20 bg-surface-variant ml-2">
+<img class="w-full h-full object-cover" data-alt="A close up portrait of an elegant shoemaker working in an artisanal studio, warm lighting, fine details, natural textures, capturing a calm, professional atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhdVbH4-3RFTWC9ewQakqDRRZO5LNPf4WOIr9uQy-SKkWLpLRCc97qxnx3zDC9H3jOY3ShJCpLNa41MB9jlPccR32fhhTszH7VjXdC2ccLhpY7_lukubtZ4EvmZ1V6NGvFwekG9WfrwwLKL2_0Sf0hBHNl7RwtliuofmyDrS3W8BCKCSVbXMCm7vpl8va52HhqeRxTyxvUGp1YkLl5bfKXzjEngXA4gG_AHqNku8rsnZ9gWvdHMD0rLw">
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 p-gutter w-full max-w-container-max mx-auto">
+<!-- Page Header & Actions -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-background mb-2">Henrique Costa</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Cliente desde Outubro de 2022</p>
+</div>
+<div class="flex gap-3">
+<button class="px-6 py-2.5 border border-primary/40 text-primary font-label-md text-label-md rounded hover:bg-primary/5 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+                        Editar
+                    </button>
+<button class="px-6 py-2.5 bg-primary text-on-primary font-label-md text-label-md rounded hover:bg-primary/90 transition-colors shadow-sm flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                        Nova O.S.
+                    </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Personal Details Card -->
+<div class="col-span-1 md:col-span-4 bg-secondary-container rounded border border-primary/20 p-6 flex flex-col gap-6 relative overflow-hidden">
+<!-- Subtle overlap decorative element -->
+<div class="absolute -right-4 -top-4 w-16 h-16 bg-primary/5 rounded-full blur-xl"></div>
+<h3 class="font-headline-md text-headline-md text-primary flex items-center gap-2">
+<span class="material-symbols-outlined">id_card</span>
+                        Informações Pessoais
+                    </h3>
+<div class="space-y-4 font-body-md text-body-md text-on-surface">
+<div>
+<span class="block text-on-secondary-variant font-label-sm text-label-sm uppercase mb-1">CPF</span>
+<span class="font-medium text-on-background">123.456.789-00</span>
+</div>
+<div>
+<span class="block text-on-secondary-variant font-label-sm text-label-sm uppercase mb-1">Telefone</span>
+<span class="font-medium text-on-background">(11) 98765-4321</span>
+</div>
+<div>
+<span class="block text-on-secondary-variant font-label-sm text-label-sm uppercase mb-1">Gênero</span>
+<span class="font-medium text-on-background">Masculino</span>
+</div>
+<div>
+<span class="block text-on-secondary-variant font-label-sm text-label-sm uppercase mb-1">Email</span>
+<span class="font-medium text-on-background">henrique.costa@email.com</span>
+</div>
+</div>
+</div>
+<!-- Address Card -->
+<div class="col-span-1 md:col-span-8 bg-surface rounded border border-primary/20 p-6 flex flex-col gap-6">
+<h3 class="font-headline-md text-headline-md text-primary flex items-center gap-2">
+<span class="material-symbols-outlined">location_on</span>
+                        Detalhes do Endereço
+                    </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 font-body-md text-body-md text-on-surface">
+<div class="space-y-4">
+<div>
+<span class="block text-on-surface-variant font-label-sm text-label-sm uppercase mb-1">Rua</span>
+<span class="font-medium">Rua das Flores, 123</span>
+</div>
+<div>
+<span class="block text-on-surface-variant font-label-sm text-label-sm uppercase mb-1">Bairro</span>
+<span class="font-medium">Jardim Botânico</span>
+</div>
+</div>
+<div class="space-y-4">
+<div>
+<span class="block text-on-surface-variant font-label-sm text-label-sm uppercase mb-1">Cidade / Estado</span>
+<span class="font-medium">São Paulo, SP</span>
+</div>
+<div>
+<span class="block text-on-surface-variant font-label-sm text-label-sm uppercase mb-1">CEP</span>
+<span class="font-medium">01234-567</span>
+</div>
+</div>
+</div>
+<!-- Decorative wave line -->
+<div class="w-full h-1 handcrafted-wave mt-auto opacity-50"></div>
+</div>
+<!-- Pending Service Orders (Ordens de Serviço Pendentes) -->
+<div class="col-span-1 md:col-span-12 bg-surface rounded border border-primary/20 overflow-hidden">
+<div class="p-6 border-b border-primary/10 flex justify-between items-center bg-secondary-container/30">
+<h3 class="font-headline-md text-headline-md text-primary flex items-center gap-2">
+<span class="material-symbols-outlined">build_circle</span>
+                            Ordens de Serviço Pendentes
+                        </h3>
+<a class="font-label-md text-label-md text-primary hover:underline flex items-center gap-1" href="#">
+                            Ver Tudo <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+<div class="divide-y divide-primary/10">
+<!-- Order Item 1 -->
+<div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-surface-variant/30 transition-colors">
+<div class="flex items-start gap-4">
+<div class="w-16 h-16 rounded border border-primary/20 p-1 flex-shrink-0 bg-surface">
+<img class="w-full h-full object-cover rounded-sm" data-alt="A highly detailed close-up shot of a classic brown leather oxford shoe being repaired in an artisanal workshop. Rich textures, warm natural lighting, shallow depth of field focusing on the exquisite handcrafted leather stitching, capturing a sense of high-end craftsmanship." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxErL-4A0jNd8yE-1wlljlHevHF02HCmGgbmnZTkOY3rVOodbS_iRYEhhLmV-O_SatQgpS_5jyRBw5Tz7QjgaYxTmKx1O-05I7JbQNWhqL7o7adN5B57vBcHO4aNHmMPRKOmdt8KOvy7XNV-0e9rPYrsjLBY4QvHJ3j4QPPBKsvwb3GI_Q_cb0DbSMCZXLr8ReK2W2TAhB0Ub9bvD0otq3D1aGjf_1XFgXrnY5bQ3ovM0kdnnw2O0Ltw">
+</div>
+<div>
+<span class="inline-block px-2 py-0.5 bg-tertiary-fixed text-primary font-label-sm text-label-sm rounded mb-2">Couro</span>
+<h4 class="font-label-md text-label-md text-on-background mb-1">O.S. #1042 - Resola Completa</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+                                        Data de Entrega: 15/11/2023
+                                    </p>
+</div>
+</div>
+<div class="text-right flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center">
+<span class="font-label-md text-label-md text-on-background">R$ 250,00</span>
+<span class="text-primary font-label-sm text-label-sm mt-1 px-2 py-1 bg-primary/10 rounded-full inline-block">Em Andamento</span>
+</div>
+</div>
+<!-- Order Item 2 -->
+<div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-surface-variant/30 transition-colors">
+<div class="flex items-start gap-4">
+<div class="w-16 h-16 rounded border border-primary/20 p-1 flex-shrink-0 bg-surface">
+<img class="w-full h-full object-cover rounded-sm" data-alt="A beautiful, detailed macro shot of delicate silk lining being fitted into a luxury artisanal shoe. Soft lighting illuminating the rich textures of the fabric and leather. Handcrafted aesthetic, professional environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2dATUGymFKGAKpkOMywJyy7q5hZ-0PXW7II1CfDPQ6W_Wx6HPLc77EwvlSKzIEIclY66S9M4lduQ2rx3BH53GI_k9A2RURI-9ivO5nVvGqkS6ickrsKJpyO_xywGjDELbqMtVWaVamp81enx8_Q5wjNW1HIpo6oTMOoAqznlMCwvZCLYSjmjQ_0E65JLn5oAiMMO2kAmTFUsjYTykWuSaqF0AwO2Bt666ytlteP-OZe5QHfCvn0xdvQ">
+</div>
+<div>
+<span class="inline-block px-2 py-0.5 bg-tertiary-fixed text-primary font-label-sm text-label-sm rounded mb-2">Seda</span>
+<h4 class="font-label-md text-label-md text-on-background mb-1">O.S. #1055 - Troca de Forro</h4>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+                                        Data de Entrega: 22/11/2023
+                                    </p>
+</div>
+</div>
+<div class="text-right flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center">
+<span class="font-label-md text-label-md text-on-background">R$ 180,00</span>
+<span class="text-secondary font-label-sm text-label-sm mt-1 px-2 py-1 bg-surface-variant rounded-full inline-block">Aguardando Material</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

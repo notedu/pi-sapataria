@@ -4,7 +4,7 @@ Sistema web de gestão interna para a sapataria **Seda e Couro**, de Santa Cruz 
 
 Desenvolvido como Projeto Integrado do módulo **Desenvolvimento de Aplicação Web**, do **UNIFEOB**, no 2º semestre de 2026.
 
-> **Em desenvolvimento inicial:** o repositório contém a aplicação de exemplo do React com Vite. O back-end possui login por usuário e senha, sessões no PostgreSQL e rotas de Clientes e Funcionários. Materiais, Produtos, OS, Vendas e Estoques possuem consultas e operações de gravação autenticadas. As telas continuam pendentes.
+> **Em desenvolvimento inicial:** o front-end contém a tela de login em React com Vite, integrada à API. O back-end possui login por usuário e senha, sessões no PostgreSQL e rotas de Clientes e Funcionários. Materiais, Produtos, OS, Vendas e Estoques possuem consultas e operações de gravação autenticadas. A navegação interna oferece páginas provisórias “Em construção”; as funcionalidades dessas telas continuam pendentes.
 
 ## Funcionalidades previstas
 
@@ -40,7 +40,13 @@ npm ci
 npm run dev
 ```
 
-Abra o endereço exibido no terminal, normalmente `http://localhost:5173`. Por enquanto, você verá a tela de exemplo do React com Vite. Não é necessário configurar banco de dados, credenciais ou arquivo `.env` nesta etapa. Para encerrar o servidor, pressione `Ctrl+C`.
+Abra `/login` no endereço exibido no terminal, normalmente `http://localhost:5173/login`. A tela utiliza o tema de `frontend/src/index.css` e o logo local. Para encerrar o servidor, pressione `Ctrl+C`.
+
+Para autenticar, execute também o back-end e use uma conta de teste autorizada já cadastrada. O front-end usa `http://localhost:3333/api/v1` por padrão. Para outro endereço, copie `frontend/.env.example` para `frontend/.env`, ajuste `VITE_API_URL` e reinicie o Vite. Essa variável é pública e não deve conter segredos. O `APP_ORIGIN` do back-end deve corresponder à origem exata do front-end; utilize o mesmo hostname nos dois serviços (por exemplo, `localhost`).
+
+O login obtém CSRF e envia usuário/senha com cookie de sessão. Exibe erros na tela e bloqueia novos envios durante a requisição. Após sucesso confirmado pela API, limpa o formulário e abre `/dashboard`. Recuperação de senha continua pendente. Componentes `Button` e `InputField` centralizam os controles; `src/services/auth.ts` concentra as requisições. A fonte Hanken Grotesk é carregada pelo Google Fonts, com alternativa `sans-serif`.
+
+Verificação inicial do login: lint e build aprovados; testes de navegador com respostas simuladas da API cobriram campos obrigatórios, CSRF, sucesso, bloqueio de envio duplicado e erros. Layout conferido em desktop e celular. Autenticação contra o banco real não foi verificada nesta entrega; nenhuma conta existente foi utilizada.
 
 Outros comandos, executados dentro de `frontend/`:
 
@@ -49,6 +55,16 @@ Outros comandos, executados dentro de `frontend/`:
 | `npm run lint` | Verificar o código com ESLint |
 | `npm run build` | Verificar TypeScript e gerar a aplicação em `frontend/dist/` |
 | `npm run preview` | Visualizar localmente o build, após executar `npm run build` |
+
+## Navegação interna
+
+Após o login, `AppLayout` consulta `/auth/me` em cada mudança de rota e compartilha a estrutura com `Sidebar`. Nome e perfil vêm da API; o perfil é exibido como Administrador ou Funcionário, sem inventar cargo profissional. `src/config/navegacao.ts` reúne os nomes e caminhos usados pelo menu e pelas rotas; `EmConstrucao` recebe o título de cada área.
+
+Dashboard, Busca, Clientes, Ordens de Serviço e Estoque exibem páginas provisórias. Funcionários é exclusivo do Administrador; o acesso direto de funcionário a `/funcionarios` retorna ao Dashboard. Financeiro e Configurações estão desabilitados, sem resolver suas permissões pendentes. Não há indicadores ou operações de negócio nessas páginas.
+
+Sem sessão válida, o acesso interno volta ao login. Falhas de conexão oferecem nova tentativa. “Sair” obtém CSRF e encerra a sessão na API; em caso de falha, mostra o erro sem afirmar que a sessão terminou. O menu se expande no celular e fecha ao navegar. A API continua responsável por validar todas as operações protegidas.
+
+Verificação desta etapa: lint e build aprovados; testes no navegador com API simulada cobriram login→Dashboard, seis áreas, os dois perfis, acesso direto restrito, recarga, sessão inválida, falha de rede com nova tentativa, logout com sucesso/erro e menu móvel. Layout conferido em 1280 × 900 e 390 × 844. Nenhuma conta ou banco real foi utilizado.
 
 ## Executar o back-end
 

@@ -1,0 +1,322 @@
+<!DOCTYPE html><html lang="pt-BR"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Configurações - Seda e Couro</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#eef0fb",
+                        "surface-container-highest": "#dfe2ed",
+                        "surface-dim": "#d7dae4",
+                        "surface": "#f9f9ff",
+                        "on-primary-container": "#a0b6ff",
+                        "tertiary-container": "#314974",
+                        "secondary": "#605e59",
+                        "on-error": "#ffffff",
+                        "primary": "#002c7c",
+                        "surface-container-high": "#e5e8f3",
+                        "on-primary-fixed-variant": "#194099",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed": "#dbe1ff",
+                        "surface-container-low": "#f1f3fe",
+                        "outline": "#747683",
+                        "inverse-surface": "#2c3038",
+                        "on-secondary-container": "#66645f",
+                        "background": "#f9f9ff",
+                        "on-secondary-fixed": "#1c1c18",
+                        "outline-variant": "#c4c6d4",
+                        "on-error-container": "#93000a",
+                        "surface-variant": "#dfe2ed",
+                        "on-tertiary-container": "#a1b9eb",
+                        "on-surface-variant": "#444652",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "secondary-container": "#e6e2db",
+                        "surface-tint": "#3759b3",
+                        "on-primary-fixed": "#00174b",
+                        "secondary-fixed": "#e6e2db",
+                        "surface-bright": "#f9f9ff",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#d7e2ff",
+                        "on-secondary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-background": "#181c23",
+                        "tertiary-fixed-dim": "#afc7fa",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#b4c5ff",
+                        "error-container": "#ffdad6",
+                        "on-surface": "#181c23",
+                        "primary-container": "#1d439c",
+                        "on-tertiary-fixed-variant": "#2e4772",
+                        "surface-container": "#ebeef8",
+                        "on-secondary-fixed-variant": "#484742",
+                        "tertiary": "#18325c",
+                        "on-tertiary-fixed": "#001b3f",
+                        "secondary-fixed-dim": "#c9c6bf"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "margin-mobile": "20px",
+                        "container-max": "1200px",
+                        "margin-desktop": "64px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "label-md": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "headline-xl": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "34px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md h-screen overflow-hidden flex">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col justify-between py-6 h-full h-screen w-64 border-r border-primary/20 bg-secondary-container">
+<div>
+<!-- Brand -->
+<div class="px-6 mb-8 flex items-start gap-3">
+<img alt="Seda e Couro Logo" class="w-8 h-8 object-cover rounded" data-alt="Placeholder image representing the brand aesthetic as requested" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhe0D2_y5LKZaPqv9fk-dfOS4N89QwmLd70M6lInKqsCAojMVJwQ0b9yN7hgwyJ-ZNwoLUsqVeg-GsyzR6hdlmCWJDlO2gzr1L3bWzU9l3NZa_Ihr-v3c82Soyrne5i2gCr8kDO-uRcRqktjn6jSHAE1WMtFpISBeYGMrieFL-iD3xLI5fnmNe5Lck1-aEiEZb7HWRnIQnA0pvur5cs4-QKWTVP3FCGSUfrmgPeFiDDyJ1bjdVLGxjbZofFV5zEB8gfk8">
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Seda e Couro</h1>
+<p class="font-label-sm text-label-sm text-on-secondary-container tracking-widest uppercase">SAPATARIA PROFISSIONAL</p>
+</div>
+</div>
+<!-- Nav Links -->
+<ul class="space-y-1">
+<li>
+<a class="text-on-surface-variant hover:text-primary flex items-center px-4 py-3 mx-2 transition-colors hover:bg-primary/10 rounded-lg scale-98 active:scale-95 duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:text-primary flex items-center px-4 py-3 mx-2 transition-colors hover:bg-primary/10 rounded-lg scale-98 active:scale-95 duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-3">search</span>
+<span class="font-label-md text-label-md">Buscar</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:text-primary flex items-center px-4 py-3 mx-2 transition-colors hover:bg-primary/10 rounded-lg scale-98 active:scale-95 duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-3">group</span>
+<span class="font-label-md text-label-md">Clientes</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:text-primary flex items-center px-4 py-3 mx-2 transition-colors hover:bg-primary/10 rounded-lg scale-98 active:scale-95 duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-3">handyman</span>
+<span class="font-label-md text-label-md">Ordens de Serviço</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:text-primary flex items-center px-4 py-3 mx-2 transition-colors hover:bg-primary/10 rounded-lg scale-98 active:scale-95 duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-3">payments</span>
+<span class="font-label-md text-label-md">Financeiro</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:text-primary flex items-center px-4 py-3 mx-2 transition-colors hover:bg-primary/10 rounded-lg scale-98 active:scale-95 duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-3">badge</span>
+<span class="font-label-md text-label-md">Funcionários</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:text-primary flex items-center px-4 py-3 mx-2 transition-colors hover:bg-primary/10 rounded-lg scale-98 active:scale-95 duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-3">inventory_2</span>
+<span class="font-label-md text-label-md">Estoque</span>
+</a>
+</li>
+</ul>
+</div>
+<!-- Footer / Profile -->
+<div class="px-6 space-y-4">
+<div class="flex items-center gap-3 p-2 bg-primary-fixed/20 rounded-lg border border-primary/10">
+<div class="w-10 h-10 rounded bg-primary-fixed flex items-center justify-center text-primary font-bold">
+                    RS
+                </div>
+<div>
+<p class="font-label-md text-label-md text-on-surface">Ricardo Silva</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Gerente</p>
+</div>
+</div>
+<ul class="space-y-1">
+<li>
+<a class="bg-primary text-on-primary rounded-lg font-bold flex items-center px-4 py-3 mx-2 transition-colors scale-98 active:scale-95 duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+<span class="font-label-md text-label-md">Configurações</span>
+</a>
+</li>
+<li>
+<a class="text-on-surface-variant hover:text-error flex items-center px-4 py-3 mx-2 transition-colors hover:bg-error-container/20 rounded-lg scale-98 active:scale-95 duration-200 cursor-pointer" href="#">
+<span class="material-symbols-outlined mr-3">logout</span>
+<span class="font-label-md text-label-md">Sair</span>
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-screen overflow-y-auto">
+<!-- TopAppBar (Mobile Fallback / Contextual) -->
+<header class="flex md:hidden justify-between items-center px-8 py-4 w-full bg-surface border-b border-primary/10">
+<div class="flex items-center gap-3">
+<img alt="Ricardo Silva, Manager" class="w-8 h-8 rounded-full object-cover border border-primary/20" data-alt="Profile image for Ricardo Silva, Manager, professional headshot in a well-lit artisanal workshop setting, soft lighting, modern minimalist aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsABLGZ57e_joCHtDbiTIxQZFCcXXOuWn8OjDpwjBKkG9FGVhz48myS9Hp48tb9FReMU6wb7huMW0ca_09Isk2jkRAW0vxWswhmTiqc4nSiIShtsqlG7P0By8btmextqxEnsg6CPW4Ct2fp4xkbq2tfksEhCxRsXoB6nH53cyqyVTf1er6pDRp_jH2_lHsrempWlaHt6ewHY5DqqkEOtM8Jo6u14Ys_CxbGD3Ek2NSlWEa_Wgssdtk-g">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Configurações</h1>
+</div>
+<div class="flex gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer opacity-90 hover:opacity-100">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors cursor-pointer opacity-90 hover:opacity-100">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+</div>
+</header>
+<div class="p-6 md:p-12 max-w-[1000px] w-full mx-auto">
+<div class="mb-10 hidden md:block">
+<h1 class="font-headline-xl text-headline-xl text-primary mb-2">Configurações</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Gerencie suas preferências de conta e sistema da sapataria.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Coluna Esquerda: Conta & Sistema -->
+<div class="lg:col-span-2 space-y-8">
+<!-- Conta do Usuário -->
+<section class="bg-secondary-container/20 border border-primary/20 rounded-xl p-6">
+<div class="flex items-center gap-3 mb-6 border-b border-primary/10 pb-4">
+<span class="material-symbols-outlined text-primary text-2xl">person</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Conta do Usuário</h2>
+</div>
+<form class="space-y-5">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1">Nome Completo</label>
+<input class="w-full bg-surface-container-lowest border border-primary/20 rounded-lg px-4 py-2 font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" type="text" value="Ricardo Silva">
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1">E-mail Profissional</label>
+<input class="w-full bg-surface-container-lowest border border-primary/20 rounded-lg px-4 py-2 font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" type="email" value="ricardo@sedaecouro.com.br">
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface-variant mb-1">Alterar Senha</label>
+<div class="flex gap-3">
+<input class="flex-1 bg-surface-container-lowest border border-primary/20 rounded-lg px-4 py-2 font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" placeholder="Nova senha" type="password">
+<button class="bg-primary text-secondary-fixed px-6 py-2 rounded-lg font-label-md text-label-md hover:bg-primary/90 transition-colors" type="button">Atualizar</button>
+</div>
+</div>
+</form>
+</section>
+<!-- Preferências do Sistema -->
+<section class="bg-secondary-container/20 border border-primary/20 rounded-xl p-6">
+<div class="flex items-center gap-3 mb-6 border-b border-primary/10 pb-4">
+<span class="material-symbols-outlined text-primary text-2xl">tune</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Preferências do Sistema</h2>
+</div>
+<div class="space-y-6">
+<div class="flex items-center justify-between">
+<div>
+<p class="font-label-md text-label-md text-on-surface">Idioma</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Selecione o idioma da interface</p>
+</div>
+<select class="bg-surface-container-lowest border border-primary/20 rounded-lg px-4 py-2 font-body-md text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors pr-8">
+<option selected="" value="pt-BR">Português (BR)</option>
+<option value="en-US">English (US)</option>
+<option value="es-ES">Español</option>
+</select>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<p class="font-label-md text-label-md text-on-surface">Notificações</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Receber alertas de novas ordens de serviço</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value="">
+<div class="w-11 h-6 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<p class="font-label-md text-label-md text-on-surface">Modo Escuro</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Aparência do sistema (atualmente apenas Light Mode)</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer opacity-50" title="Recurso desativado na versão atual">
+<input class="sr-only peer" disabled="" type="checkbox" value="">
+<div class="w-11 h-6 bg-surface-container-high peer-focus:outline-none rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+</label>
+</div>
+</div>
+</section>
+</div>
+<!-- Coluna Direita: Dados da Empresa -->
+<div class="lg:col-span-1 space-y-8">
+<section class="bg-primary-container/5 border border-primary/20 rounded-xl p-6 relative overflow-hidden">
+<!-- Decorative element -->
+<div class="absolute -right-10 -top-10 text-primary-fixed/50 transform rotate-12">
+<span class="material-symbols-outlined text-[120px]">store</span>
+</div>
+<div class="relative z-10">
+<div class="flex items-center gap-3 mb-6 border-b border-primary/10 pb-4">
+<span class="material-symbols-outlined text-primary text-2xl">storefront</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">Dados da Sapataria</h2>
+</div>
+<div class="space-y-4">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1 uppercase tracking-wider">Nome da Loja</label>
+<p class="font-body-md text-body-md font-medium text-on-surface">Seda e Couro</p>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1 uppercase tracking-wider">Endereço</label>
+<p class="font-body-md text-body-md text-on-surface">Rua dos Artesãos, 123<br>Bairro das Oficinas<br>São Paulo - SP, 01000-000</p>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-1 uppercase tracking-wider">Contato Oficial</label>
+<p class="font-body-md text-body-md text-on-surface">(11) 98765-4321</p>
+<p class="font-body-md text-body-md text-on-surface text-primary mt-1 hover:underline cursor-pointer">contato@sedaecouro.com.br</p>
+</div>
+<div class="pt-4 mt-2 border-t border-primary/10">
+<button class="w-full border border-primary text-primary py-2 rounded-lg font-label-md text-label-md hover:bg-primary/5 transition-colors">Editar Dados Comerciais</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+</main>
+</body></html>

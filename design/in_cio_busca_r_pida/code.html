@@ -1,0 +1,355 @@
+<!DOCTYPE html><html lang="pt-BR" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Seda e Couro - Busca</title>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary": "#ffffff",
+                      "secondary-container": "#e6e2db",
+                      "on-tertiary-fixed-variant": "#2e4772",
+                      "tertiary-fixed": "#d7e2ff",
+                      "on-surface-variant": "#444652",
+                      "outline": "#747683",
+                      "primary-container": "#1d439c",
+                      "inverse-on-surface": "#eef0fb",
+                      "tertiary-fixed-dim": "#afc7fa",
+                      "inverse-surface": "#2c3038",
+                      "on-primary": "#ffffff",
+                      "error-container": "#ffdad6",
+                      "inverse-primary": "#b4c5ff",
+                      "on-error": "#ffffff",
+                      "on-background": "#181c23",
+                      "tertiary-container": "#314974",
+                      "surface-container-low": "#f1f3fe",
+                      "on-tertiary-fixed": "#001b3f",
+                      "secondary-fixed-dim": "#c9c6bf",
+                      "on-secondary-container": "#66645f",
+                      "on-primary-container": "#a0b6ff",
+                      "on-tertiary-container": "#a1b9eb",
+                      "surface-container-highest": "#dfe2ed",
+                      "background": "#f9f9ff",
+                      "surface": "#f9f9ff",
+                      "surface-dim": "#d7dae4",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-variant": "#dfe2ed",
+                      "on-secondary-fixed": "#1c1c18",
+                      "surface-tint": "#3759b3",
+                      "on-secondary": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "primary-fixed-dim": "#b4c5ff",
+                      "surface-bright": "#f9f9ff",
+                      "primary": "#002c7c",
+                      "error": "#ba1a1a",
+                      "secondary": "#605e59",
+                      "primary-fixed": "#dbe1ff",
+                      "on-primary-fixed-variant": "#194099",
+                      "on-surface": "#181c23",
+                      "surface-container-high": "#e5e8f3",
+                      "on-primary-fixed": "#00174b",
+                      "outline-variant": "#c4c6d4",
+                      "secondary-fixed": "#e6e2db",
+                      "surface-container": "#ebeef8",
+                      "on-secondary-fixed-variant": "#484742",
+                      "tertiary": "#18325c"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-desktop": "64px",
+                      "container-max": "1200px",
+                      "margin-mobile": "20px",
+                      "unit": "8px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "label-sm": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-lg-mobile": [
+                              "Hanken Grotesk"
+                      ],
+                      "body-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "label-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-xl": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "body-lg": [
+                              "Hanken Grotesk"
+                      ]
+              },
+              "fontSize": {
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.04em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "34px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-xl": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col md:flex-row antialiased">
+<!-- SideNavBar (Desktop) -->
+<aside class="bg-secondary-fixed border-r border-outline-variant w-64 fixed left-0 top-0 flex flex-col h-screen py-8 px-4 hidden md:flex z-20">
+  <div class="flex items-center gap-3 mb-10 px-4">
+    <div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-lowest flex items-center justify-center border border-outline-variant">
+      <img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuASdrcqjncM8F7w__cp426LgmUQnE80T0739zhpb5H9HuqJHNjuuxCKaglyTAGHWvJxVu6xRJSBwQxImhgoFN0K-ZAOysUP7a56Ze8_clK2TFnvScjr7t67761l7AAGsTb1QNC7Brbf1zQCnQwLtFB4qJCgUC9D6Cbv9-obRlcl1DdCC0fqWSjumh2l899FIRXXbv0hvmCGjVCPJunnSRM0fIDSbZafQiQXTMGQxqG6lhWO7T3t_ycK9w" alt="Logo">
+    </div>
+    <div>
+      <h1 class="font-headline-md text-headline-md font-bold text-primary leading-tight">Seda e Couro</h1>
+      <p class="font-label-sm text-label-sm text-secondary">Sapataria Profissional</p>
+    </div>
+  </div>
+  <nav class="flex-1 flex flex-col gap-1">
+    <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#">
+      <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+      Dashboard
+    </a><a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-label-md text-label-md bg-primary text-on-primary shadow-sm" href="#">
+      <span class="material-symbols-outlined" data-icon="search">search</span>
+      Busca
+    </a>
+    <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-label-md text-label-md text-secondary hover:bg-primary/5" href="#">
+      <span class="material-symbols-outlined" data-icon="group">group</span>
+      Clientes
+    </a>
+    <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#">
+      <span class="material-symbols-outlined" data-icon="construction">construction</span>
+      Ordens de Serviço
+    </a>
+    <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#">
+      <span class="material-symbols-outlined" data-icon="payments">payments</span>
+      Financeiro
+    </a>
+    <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#">
+      <span class="material-symbols-outlined" data-icon="badge">badge</span>
+      Funcionários
+    </a><a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#">
+      <span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+      Estoque
+    </a>
+  </nav>
+  <div class="mt-auto flex flex-col gap-4">
+    <div class="flex items-center gap-3 px-4 py-3">
+      <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-label-sm">
+        RS
+      </div>
+      <div class="flex flex-col overflow-hidden">
+        <span class="font-label-md text-label-md text-primary font-bold truncate">Ricardo Silva</span>
+        <span class="font-label-sm text-label-sm text-secondary truncate">Gerente</span>
+      </div>
+    </div>
+    <div class="flex flex-col gap-1">
+      <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#">
+        <span class="material-symbols-outlined" data-icon="settings">settings</span>
+        Configurações
+      </a>
+      <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-secondary hover:bg-primary/5 transition-colors font-label-md text-label-md" href="#">
+        <span class="material-symbols-outlined" data-icon="logout">logout</span>
+        Sair
+      </a>
+    </div>
+  </div>
+</aside>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col md:ml-64 relative min-h-screen">
+<!-- TopAppBar -->
+<header class="bg-background docked full-width top-0 z-10 flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4 sticky">
+<div class="md:hidden">
+<h1 class="font-headline-md text-headline-md font-bold text-primary">Seda e Couro</h1>
+</div>
+<!-- Search bar is moved to the center of the page as requested, so it's excluded from top bar -->
+<div class="flex-1 hidden md:block"></div>
+<div class="flex items-center gap-4">
+<button class="text-primary hover:text-primary transition-colors opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-primary hover:text-primary transition-colors opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden bg-secondary-container ml-2 border border-primary/20">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a boutique artisan shoemaker. The person is in a well-lit, modern minimalist studio setting with soft, diffused white lighting. They are looking directly at the camera with a calm, friendly expression. The color palette is subtle, focusing on warm linen tones and deep blue accents to match the branding." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBY_9QzM5o7CxC2joJszAuIae5A3JO3qu_FQVVu5Tx33O8OF-yx8Y93C3cnZdSiVU-b7Tomrt-zD1ZXhBpkMtVR3NsQlopr228YrjQHZ-fQS0mp1qdC3DwistR7keFEFORLTNwKNyZk4Svkp1lyLpuVFmuJAu1K2Tteh-lB4NwX5iIxOCxOhGanDWD-wN7LfR-Yfz2TXqtFBY82KwzqkxU1MNPqvLm-QtDvMbbM-9Kl_9NXpKdz5aSpIQ">
+</div>
+</div>
+</header>
+<!-- Centered Search Area -->
+<main class="flex-1 flex flex-col items-center justify-center px-margin-mobile md:px-margin-desktop py-12 -mt-16">
+<div class="w-full max-w-2xl text-center mb-12">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-4 font-bold">O que você precisa encontrar?</h2>
+<p class="font-body-lg text-body-lg text-secondary">Acesse rapidamente ordens, clientes ou ferramentas do sistema.</p>
+</div>
+<!-- Prominent Search Bar -->
+<div class="w-full max-w-3xl mb-16 relative group">
+<div class="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-primary text-3xl">search</span>
+</div>
+<input class="w-full bg-surface-container-highest border-2 border-primary/20 rounded-xl py-6 pl-16 pr-6 font-body-lg text-body-lg text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all shadow-sm placeholder:text-outline" placeholder="Buscar ordens, clientes ou funções..." type="text">
+<div class="absolute inset-y-0 right-0 pr-4 flex items-center">
+<div class="px-3 py-1 bg-surface-container rounded font-label-sm text-label-sm text-secondary border border-primary/10">⌘ K</div>
+</div>
+</div>
+<!-- Quick Actions / Suggestions -->
+<div class="w-full max-w-4xl">
+<h3 class="font-label-md text-label-md text-secondary mb-6 uppercase tracking-wider text-center">Ações Rápidas</h3>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+<!-- Action Card 1 -->
+<button class="bg-surface border border-primary/20 rounded-xl p-6 flex flex-col items-center justify-center gap-4 hover:bg-surface-container-low hover:border-primary/40 transition-all group group-hover:scale-[1.02]">
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-2xl">add_circle</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface">Nova O.S.</span>
+</button>
+<!-- Action Card 2 -->
+<button class="bg-surface border border-primary/20 rounded-xl p-6 flex flex-col items-center justify-center gap-4 hover:bg-surface-container-low hover:border-primary/40 transition-all group group-hover:scale-[1.02]">
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-2xl">person_add</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface">Cadastrar Cliente</span>
+</button>
+<!-- Action Card 3 -->
+<button class="bg-surface border border-primary/20 rounded-xl p-6 flex flex-col items-center justify-center gap-4 hover:bg-surface-container-low hover:border-primary/40 transition-all group group-hover:scale-[1.02]">
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-2xl">account_balance_wallet</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface">Consultar Financeiro</span>
+</button>
+<!-- Action Card 4 -->
+<button class="bg-surface border border-primary/20 rounded-xl p-6 flex flex-col items-center justify-center gap-4 hover:bg-surface-container-low hover:border-primary/40 transition-all group group-hover:scale-[1.02]">
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-2xl">monitoring</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface">Ver Dashboard</span>
+</button>
+</div>
+</div>
+<!-- Decorative Wavy Line (Brand Anchor) -->
+<div class="mt-24 w-full max-w-md opacity-20 flex justify-center">
+<svg fill="none" height="20" viewBox="0 0 400 20" width="100%" xmlns="http://www.w3.org/2000/svg">
+<path class="text-primary" d="M0 10C20 10 30 2 50 2C70 2 80 18 100 18C120 18 130 2 150 2C170 2 180 18 200 18C220 18 230 2 250 2C270 2 280 18 300 18C320 18 330 2 350 2C370 2 380 18 400 18" stroke="currentColor" stroke-width="2"></path>
+</svg>
+</div>
+</main>
+</div>
+<!-- Bottom Navigation (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface border-t border-primary/10 flex justify-around items-center py-3 px-4 z-20 pb-safe shadow-[0_-4px_20px_rgba(0,44,124,0.05)]">
+<a class="flex flex-col items-center gap-1 text-secondary p-2" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-sm text-[10px]">Início</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-secondary p-2" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-sm text-[10px]">Clientes</span>
+</a>
+<div class="-mt-8">
+<button class="bg-primary text-on-primary w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:bg-primary/90 transition-all active:scale-95">
+<span class="material-symbols-outlined text-3xl">search</span>
+</button>
+</div>
+<a class="flex flex-col items-center gap-1 text-secondary p-2" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-label-sm text-[10px]">O.S.</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-secondary p-2" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-sm text-[10px]">Financ.</span>
+</a>
+</nav>
+<script>
+        // Simple focus interaction for the search bar container
+        const searchInput = document.querySelector('input[type="text"]');
+        const searchContainer = searchInput.parentElement;
+        
+        searchInput.addEventListener('focus', () => {
+            searchContainer.classList.add('scale-[1.01]');
+        });
+        
+        searchInput.addEventListener('blur', () => {
+            searchContainer.classList.remove('scale-[1.01]');
+        });
+    </script>
+
+
+
+
+
+
+
+
+</body></html>

@@ -12,6 +12,10 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Adicionado
 
+- Layout e sidebar reutilizáveis, páginas “Em construção”, identificação do usuário pela API, verificação de sessão na navegação, restrição de Funcionários ao Administrador e logout com CSRF. Financeiro e Configurações permanecem desabilitados.
+
+- Tela de login responsiva baseada no design Seda e Couro, com componentes de campo/botão, integração à API com cookie e CSRF, mensagens de erro e redirecionamento ao Dashboard após autenticação confirmada.
+
 - Cadastros/edição/exclusão de Materiais e Produtos e exclusão de Clientes sem vínculos.
 - Abertura, edição, sequência de estados, cancelamento, consumo e devolução de materiais de OS.
 - Vendas com preço histórico, total calculado no PostgreSQL, baixa atômica e cancelamento com devoluções explícitas.

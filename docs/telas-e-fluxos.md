@@ -2,9 +2,17 @@
 
 [Índice](README.md) · [Modelo de dados](modelo-de-dados.md) · [Contrato da API](api.md)
 
+## Login implementado nesta etapa
+
+A rota `/login` oferece usuário/senha, layout responsivo conforme a referência visual e integração com a API existente, usando cookie e CSRF (RF-001, RF-013, RF-014 e RN-004). Durante o envio, os campos e o botão ficam desabilitados; erros são apresentados na tela. Após a resposta válida de sucesso, o formulário é limpo e a navegação segue para `/dashboard`. Recuperação de senha permanece pendente. Os demais fluxos abaixo preservam seu caráter de planejamento; os contratos atuais da API estão em `api.md`.
+
+## Estrutura interna implementada
+
+`AppLayout` e `Sidebar` são compartilhados pelas rotas internas; `EmConstrucao` é a página provisória reutilizável. O Dashboard mostra saudação e aviso de construção. Busca, Clientes, OS e Estoque também exibem o aviso; Funcionários só é acessível ao Administrador (RN-001). Nome e perfil são consultados em `/auth/me` a cada navegação; sessão inválida volta ao login (RN-004/RN-005). O logout usa cookie e CSRF. Financeiro e Configurações ficam desabilitados, preservando RN-003 como pendente. Esta entrega implementa navegação e estrutura visual, não as funcionalidades dos módulos nem os indicadores de RF-002.
+
 ## Mapa geral
 
-As onze telas e subtelas são **definições do rascunho** (Guia §4; RF-001 a RF-011). Seus objetivos vêm do §5; os detalhes de conteúdo dessa seção e os fluxos do §6 são **sugestões**. A tradução em ações e operações abaixo é **proposta não implementada**, sem novas aprovações de negócio. `frontend/src/App.tsx` ainda é a demonstração React; API e telas de negócio não existem no repositório consultado.
+As onze telas e subtelas são **definições do rascunho** (Guia §4; RF-001 a RF-011). Seus objetivos vêm do §5; os detalhes de conteúdo dessa seção e os fluxos do §6 são **sugestões**. A tradução em ações e operações abaixo é **proposta não implementada**, sem novas aprovações de negócio. Essa descrição histórica não se aplica ao login implementado acima nem às operações de API já registradas no contrato atual.
 
 | Tela e subtelas | Finalidade | Acesso conforme fontes |
 |---|---|---|
