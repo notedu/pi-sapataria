@@ -17,7 +17,7 @@ async function consumir(chave: string, limite: number): Promise<void> {
      RETURNING tentativas`, [chave],
   );
   if (resultado.rows[0]!.tentativas > limite) {
-    throw new ErroHttp(429, 'MUITAS_TENTATIVAS', 'Muitas tentativas de login. Aguarde até 15 minutos e tente novamente.');
+    throw new ErroHttp(429, 'MUITAS_TENTATIVAS', 'Muitas tentativas. Aguarde até 15 minutos e tente novamente.');
   }
 }
 
@@ -29,4 +29,12 @@ export async function limitarTentativas(usuario: string, ip: string): Promise<vo
 
 export async function limparTentativasUsuario(usuario: string): Promise<void> {
   await pool.query('DELETE FROM sapataria.tentativas_login WHERE chave = $1', [chave('usuario', usuario)]);
+}
+
+
+// Contadores separados do login: entrar novamente não libera novas confirmações.
+export async function limitarConfirmacoes(funcionarioId: number, ip: string): Promise<void> {
+  await pool.query('DELETE FROM sapataria.tentativas_login WHERE expira_em <= now()');
+  await consumir(chave('confirmacao-ip', ip), 50);
+  await consumir(chave('confirmacao-administrador', String(funcionarioId)), 10);
 }

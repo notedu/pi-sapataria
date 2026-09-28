@@ -84,7 +84,7 @@ npm run build
 
 Teste também o comportamento alterado no navegador, incluindo situações de erro e diferentes tamanhos de tela, quando aplicável. Ainda não há script de testes automatizados no projeto; lint e build não substituem testes de comportamento. Para alterações apenas de documentação, confira comandos, links e coerência com o código.
 
-Para mudanças no back-end, execute `npm run typecheck` dentro de `backend/` e verifique os fluxos relevantes da API. Não há suíte persistente de testes automatizados neste estágio; as verificações de autenticação foram executadas com PostgreSQL real e rollback. Use somente contas/dados temporários e preserve registros existentes. O README descreve cookie, CSRF e cadastro inicial para testes manuais no Insomnia.
+Para mudanças no back-end, execute `npm run typecheck` dentro de `backend/` e verifique os fluxos relevantes da API. Para alterações em desativação/acesso de Funcionários, execute também a suíte HTTP com PostgreSQL local descartável descrita em [backend/tests/README.md](backend/tests/README.md). As demais verificações de autenticação foram executadas com PostgreSQL real e rollback. Use somente contas/dados temporários e preserve registros existentes. O README descreve cookie, CSRF e cadastro inicial para testes manuais no Insomnia.
 
 Antes de solicitar revisão:
 

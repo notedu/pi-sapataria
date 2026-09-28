@@ -55,7 +55,7 @@ function LayoutComSessao({ caminho }: { caminho: string }) {
   if (carregando) return <main className="flex min-h-dvh items-center justify-center p-6"><p role="status">Verificando sessão…</p></main>
   if (!usuario) return <main className="flex min-h-dvh flex-col items-center justify-center gap-6 p-6"><p role="alert">{erro || 'Sessão indisponível.'}</p><Button onClick={() => { setErro(''); setCarregando(true); setTentativa(valor => valor + 1) }}>Tentar novamente</Button></main>
 
-  const area = areas.find(item => item.caminho === caminho)
+  const area = areas.find(item => item.caminho && (item.caminho === caminho || caminho.startsWith(`${item.caminho}/`)))
   if (area?.administrador && usuario.perfil !== 'administrador') return <Navigate to="/dashboard" replace />
 
   return (

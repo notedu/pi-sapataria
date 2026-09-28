@@ -12,6 +12,10 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Adicionado
 
+- Desativação de Funcionários com diálogo reutilizável, confirmação da senha do Administrador, bloqueio da própria conta e limites de tentativas. Preserva históricos e invalida sessões; a rota de alteração de acesso também exige confirmação ao desativar. Testes HTTP com PostgreSQL descartável.
+
+- Listagem e cadastro de Funcionários com usuário/senha, exclusivos do Administrador, usando a API existente. Componentes reutilizados, seleção de perfil, validação e tratamento de duplicidade e resultado incerto; comunicação de cookie/CSRF compartilhada entre autenticação e cadastros.
+
 - Layout e sidebar reutilizáveis, páginas “Em construção”, identificação do usuário pela API, verificação de sessão na navegação, restrição de Funcionários ao Administrador e logout com CSRF. Financeiro e Configurações permanecem desabilitados.
 
 - Tela de login responsiva baseada no design Seda e Couro, com componentes de campo/botão, integração à API com cookie e CSRF, mensagens de erro e redirecionamento ao Dashboard após autenticação confirmada.

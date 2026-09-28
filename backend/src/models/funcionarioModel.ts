@@ -1,5 +1,6 @@
 import type { PoolClient } from 'pg';
 import { pool } from '../config/db';
+import { emTransacao } from '../config/transacao';
 import { ErroHttp } from '../utils/validacao';
 
 export type Perfil = 'administrador' | 'funcionario';
@@ -54,14 +55,48 @@ export async function criar(dados: NovoFuncionario, banco: Pick<PoolClient, 'que
   )).rows[0]!;
 }
 
-export async function alterarAcesso(id: number, perfil: Perfil, ativo: boolean): Promise<Funcionario | undefined> {
-  // Alterações de acesso invalidam sessões antigas, mesmo após uma reativação.
-  return (await pool.query<Funcionario>(
-    `UPDATE sapataria.funcionarios
-     SET versao_acesso = versao_acesso + CASE WHEN perfil <> $2 OR ativo <> $3 THEN 1 ELSE 0 END,
-         perfil = $2, ativo = $3
-     WHERE id = $1 RETURNING ${colunas}`, [id, perfil, ativo],
-  )).rows[0];
+export interface AutorizacaoAcesso {
+  funcionarioId: number;
+  versao: number;
+  expiraEm: number;
+  confirmarSenha?: (hash: string) => Promise<void>;
+}
+
+export async function alterarAcesso(
+  id: number, perfil: Perfil | undefined, ativo: boolean, autorizacao: AutorizacaoAcesso,
+): Promise<Funcionario> {
+  if (!ativo && id === autorizacao.funcionarioId) {
+    throw new ErroHttp(403, 'AUTODESATIVACAO_PROIBIDA', 'Você não pode desativar sua própria conta.');
+  }
+  return emTransacao(async (client) => {
+    // Ordem comum evita deadlock entre dois administradores. Os bloqueios impedem
+    // autorizações obsoletas e preservam a versão usada para invalidar sessões.
+    const pessoas = (await client.query<Credencial>(
+      `SELECT ${colunas}, senha_protegida, versao_acesso FROM sapataria.funcionarios
+       WHERE id = ANY($1::integer[]) ORDER BY id FOR UPDATE`, [[autorizacao.funcionarioId, id]],
+    )).rows;
+    const autor = pessoas.find(pessoa => pessoa.id === autorizacao.funcionarioId);
+    if (!autor?.ativo || autor.versao_acesso !== autorizacao.versao || autorizacao.expiraEm <= Date.now()) {
+      throw new ErroHttp(401, 'NAO_AUTENTICADO', 'Faça login novamente.');
+    }
+    if (autor.perfil !== 'administrador') {
+      throw new ErroHttp(403, 'ACESSO_NEGADO', 'Este recurso é exclusivo do administrador.');
+    }
+    const alvo = pessoas.find(pessoa => pessoa.id === id);
+    if (!alvo) throw new ErroHttp(404, 'FUNCIONARIO_NAO_ENCONTRADO', 'Funcionário não encontrado.');
+    if (!ativo) {
+      if (!autorizacao.confirmarSenha) {
+        throw new ErroHttp(400, 'CONFIRMACAO_OBRIGATORIA', 'Confirme a operação com sua senha.');
+      }
+      await autorizacao.confirmarSenha(autor.senha_protegida);
+    }
+    return (await client.query<Funcionario>(
+      `UPDATE sapataria.funcionarios
+       SET versao_acesso = versao_acesso + CASE WHEN perfil <> $2 OR ativo <> $3 THEN 1 ELSE 0 END,
+           perfil = $2, ativo = $3
+       WHERE id = $1 RETURNING ${colunas}`, [id, perfil ?? alvo.perfil, ativo],
+    )).rows[0]!;
+  });
 }
 
 export async function criarPrimeiroAdministrador(dados: NovoFuncionario): Promise<Funcionario> {

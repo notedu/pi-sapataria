@@ -4,7 +4,7 @@ Sistema web de gestão interna para a sapataria **Seda e Couro**, de Santa Cruz 
 
 Desenvolvido como Projeto Integrado do módulo **Desenvolvimento de Aplicação Web**, do **UNIFEOB**, no 2º semestre de 2026.
 
-> **Em desenvolvimento inicial:** o front-end contém a tela de login em React com Vite, integrada à API. O back-end possui login por usuário e senha, sessões no PostgreSQL e rotas de Clientes e Funcionários. Materiais, Produtos, OS, Vendas e Estoques possuem consultas e operações de gravação autenticadas. A navegação interna oferece páginas provisórias “Em construção”; as funcionalidades dessas telas continuam pendentes.
+> **Em desenvolvimento inicial:** o front-end contém a tela de login em React com Vite, integrada à API. O back-end possui login por usuário e senha, sessões no PostgreSQL e rotas de Clientes e Funcionários. Materiais, Produtos, OS, Vendas e Estoques possuem consultas e operações de gravação autenticadas. Funcionários possui listagem e cadastro com credenciais no front-end, exclusivos do Administrador. As demais áreas internas oferecem páginas provisórias “Em construção”.
 
 ## Funcionalidades previstas
 
@@ -44,7 +44,7 @@ Abra `/login` no endereço exibido no terminal, normalmente `http://localhost:51
 
 Para autenticar, execute também o back-end e use uma conta de teste autorizada já cadastrada. O front-end usa `http://localhost:3333/api/v1` por padrão. Para outro endereço, copie `frontend/.env.example` para `frontend/.env`, ajuste `VITE_API_URL` e reinicie o Vite. Essa variável é pública e não deve conter segredos. O `APP_ORIGIN` do back-end deve corresponder à origem exata do front-end; utilize o mesmo hostname nos dois serviços (por exemplo, `localhost`).
 
-O login obtém CSRF e envia usuário/senha com cookie de sessão. Exibe erros na tela e bloqueia novos envios durante a requisição. Após sucesso confirmado pela API, limpa o formulário e abre `/dashboard`. Recuperação de senha continua pendente. Componentes `Button` e `InputField` centralizam os controles; `src/services/auth.ts` concentra as requisições. A fonte Hanken Grotesk é carregada pelo Google Fonts, com alternativa `sans-serif`.
+O login obtém CSRF e envia usuário/senha com cookie de sessão. Exibe erros na tela e bloqueia novos envios durante a requisição. Após sucesso confirmado pela API, limpa o formulário e abre `/dashboard`. Recuperação de senha continua pendente. Componentes `Button` e `InputField` centralizam os controles; `src/services/auth.ts` concentra a autenticação e reutiliza `src/services/api.ts` para requisições com cookie e CSRF. A fonte Hanken Grotesk é carregada pelo Google Fonts, com alternativa `sans-serif`.
 
 Verificação inicial do login: lint e build aprovados; testes de navegador com respostas simuladas da API cobriram campos obrigatórios, CSRF, sucesso, bloqueio de envio duplicado e erros. Layout conferido em desktop e celular. Autenticação contra o banco real não foi verificada nesta entrega; nenhuma conta existente foi utilizada.
 
@@ -60,11 +60,29 @@ Outros comandos, executados dentro de `frontend/`:
 
 Após o login, `AppLayout` consulta `/auth/me` em cada mudança de rota e compartilha a estrutura com `Sidebar`. Nome e perfil vêm da API; o perfil é exibido como Administrador ou Funcionário, sem inventar cargo profissional. `src/config/navegacao.ts` reúne os nomes e caminhos usados pelo menu e pelas rotas; `EmConstrucao` recebe o título de cada área.
 
-Dashboard, Busca, Clientes, Ordens de Serviço e Estoque exibem páginas provisórias. Funcionários é exclusivo do Administrador; o acesso direto de funcionário a `/funcionarios` retorna ao Dashboard. Financeiro e Configurações estão desabilitados, sem resolver suas permissões pendentes. Não há indicadores ou operações de negócio nessas páginas.
+Dashboard, Busca, Clientes, Ordens de Serviço e Estoque exibem páginas provisórias. Funcionários é exclusivo do Administrador; o acesso direto de funcionário a `/funcionarios` retorna ao Dashboard. Financeiro e Configurações estão desabilitados, sem resolver suas permissões pendentes. Não há indicadores ou operações de negócio nas páginas provisórias.
 
 Sem sessão válida, o acesso interno volta ao login. Falhas de conexão oferecem nova tentativa. “Sair” obtém CSRF e encerra a sessão na API; em caso de falha, mostra o erro sem afirmar que a sessão terminou. O menu se expande no celular e fecha ao navegar. A API continua responsável por validar todas as operações protegidas.
 
 Verificação desta etapa: lint e build aprovados; testes no navegador com API simulada cobriram login→Dashboard, seis áreas, os dois perfis, acesso direto restrito, recarga, sessão inválida, falha de rede com nova tentativa, logout com sucesso/erro e menu móvel. Layout conferido em 1280 × 900 e 390 × 844. Nenhuma conta ou banco real foi utilizado.
+
+## Tela de Funcionários
+
+Como Administrador, abra Funcionários → Novo funcionário. Preencha nome, usuário, e-mail, perfil (sem seleção padrão), senha de 15 a 128 caracteres e confirmação. O cadastro usa `POST /api/v1/funcionarios`, com cookie e CSRF; a API cria a conta ativa, normaliza o usuário e armazena somente o hash da senha. A confirmação fica apenas na interface. A nova conta usa o usuário e a senha escolhidos no login.
+
+`/funcionarios` lista nome, usuário, e-mail, perfil e situação. `/funcionarios/novo` cadastra; ambas são exclusivas do Administrador, inclusive por acesso direto. `AppLayout`, `Sidebar`, `Button` e `InputField` são reutilizados, com o novo `SelectField` para seleção de perfil. Campos de CPF, telefone, gênero e cargo do protótipo não foram acrescentados ao contrato aprovado.
+
+O sucesso retorna à lista com confirmação. Se a atualização da lista falhar, a nova tentativa repete apenas a consulta. Se o resultado do cadastro ficar incerto por falha de rede/resposta, o formulário bloqueia o reenvio e orienta consultar a lista. Usuário duplicado recebe mensagem própria. Senhas não são persistidas no armazenamento do navegador nem exibidas na listagem.
+
+Verificação: lint e build aprovados; testes no navegador com API simulada e dados fictícios cobriram cadastro, validação, duplicidade, envio duplo, falhas, lista vazia, restrições por perfil e responsividade. A gravação e o login da conta criada contra o banco real não foram executados nesta entrega. Nenhuma conta existente ou estrutura do banco foi alterada. Edição, reativação e alteração de perfil ainda não têm interface nesta etapa.
+
+### Desativar funcionário
+
+Na lista de Funcionários, o Administrador pode escolher **Desativar** em outra conta e confirmar com sua própria senha. A conta atual não pode ser desativada. O funcionário permanece na lista como Inativo e mantém seus históricos; suas sessões deixam de valer na próxima requisição. Não há exclusão física nem reativação pela interface nesta etapa.
+
+`Dialog` e `ConfirmarSenhaDialog` são reutilizáveis e usam `Button`/`InputField`. A senha é limpa após cada tentativa e não é armazenada. Falha de rede com resultado incerto bloqueia repetição e oferece atualizar a lista. A API exige confirmação tanto no novo `POST /funcionarios/:id/desativar` quanto no `PUT /funcionarios/:id/acesso` quando `ativo=false` (campo `senha_admin`). Clientes da API devem acompanhar essa mudança de contrato.
+
+Verificação da desativação: typecheck, lint/build e testes de navegador; 33 verificações HTTP com PostgreSQL local descartável, incluindo senha, CSRF, limites, própria conta, rota anterior, preservação de histórico, invalidação de sessões e concorrência entre Administradores. Nenhuma migração ou alteração no banco existente. Instruções da suíte em [backend/tests/README.md](backend/tests/README.md).
 
 ## Executar o back-end
 
@@ -151,7 +169,7 @@ Exemplo fictício de cadastro (substitua a senha; não há conta criada com esse
 }
 ```
 
-Todos esses campos são obrigatórios; `ativo` pode ser omitido e começa como `true`. O usuário é único, mesmo com diferenças de maiúsculas/minúsculas; e-mail não é identificador de login nem tem unicidade exigida. Para alterar acesso, envie `{"perfil":"funcionario","ativo":false}`. A mudança invalida as sessões anteriores; reativar exige novo login. Alterar o próprio acesso também invalida a própria sessão: confirme que outro administrador poderá gerenciar a equipe antes de retirar seu acesso.
+Todos esses campos são obrigatórios; `ativo` pode ser omitido e começa como `true`. O usuário é único, mesmo com diferenças de maiúsculas/minúsculas; e-mail não é identificador de login nem tem unicidade exigida. Para desativar pela alteração de acesso, envie `{"perfil":"funcionario","ativo":false,"senha_admin":"sua senha"}`. A própria desativação é proibida. A mudança invalida as sessões anteriores; reativar exige novo login. Alterar o próprio perfil também invalida a própria sessão.
 
 Senhas recebem hash scrypt com salt individual e nunca são devolvidas. A sessão tem limite absoluto de 8 horas. Há limite de 10 tentativas por usuário e 50 por IP a cada janela de 15 minutos; um login correto limpa o contador do usuário, mas não o do IP. A mensagem de credenciais inválidas é igual para usuário inexistente, senha incorreta e conta inativa. Recuperação/troca de senha, exclusão e a tela de login ficam para etapas posteriores.
 

@@ -16,7 +16,7 @@ export default function Sidebar({ usuario, onSair, saindo }: { usuario: Usuario;
           {areas.filter(area => !area.administrador || usuario.perfil === 'administrador').map(area => (
             <li key={area.titulo}>
               {area.caminho ? (
-                <NavLink end to={area.caminho} className={({ isActive }) => `flex items-center gap-3 rounded-xl px-4 py-3 text-label-md focus-visible:outline-2 focus-visible:outline-primary ${isActive ? 'bg-primary text-on-primary' : 'text-on-secondary-fixed hover:bg-primary/5'}`}>
+                <NavLink to={area.caminho} className={({ isActive }) => `flex items-center gap-3 rounded-xl px-4 py-3 text-label-md focus-visible:outline-2 focus-visible:outline-primary ${isActive ? 'bg-primary text-on-primary' : 'text-on-secondary-fixed hover:bg-primary/5'}`}>
                   <Icon name={area.icone} />{area.titulo}
                 </NavLink>
               ) : <div aria-disabled="true" className="flex items-center gap-3 px-4 py-3 text-on-secondary-fixed-variant"><Icon name={area.icone} /><span className="text-label-md">{area.titulo}<span className="block text-label-sm">Em construção</span></span></div>}
