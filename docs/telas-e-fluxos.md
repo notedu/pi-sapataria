@@ -8,7 +8,7 @@ A rota `/login` oferece usuário/senha, layout responsivo conforme a referência
 
 ## Estrutura interna implementada
 
-`AppLayout` e `Sidebar` são compartilhados pelas rotas internas; `EmConstrucao` é a página provisória reutilizável. O Dashboard mostra saudação e aviso de construção. Busca, Clientes, OS e Estoque também exibem o aviso; Funcionários só é acessível ao Administrador (RN-001). Nome e perfil são consultados em `/auth/me` a cada navegação; sessão inválida volta ao login (RN-004/RN-005). O logout usa cookie e CSRF. Financeiro e Configurações ficam desabilitados, preservando RN-003 como pendente. Esta entrega implementa navegação e estrutura visual, não as funcionalidades dos módulos nem os indicadores de RF-002.
+`AppLayout` e `Sidebar` são compartilhados pelas rotas internas; `EmConstrucao` é a página provisória reutilizável. O Dashboard mostra saudação e aviso de construção. Busca, Clientes, OS e Estoque também exibem o aviso; Funcionários só é acessível ao Administrador (RN-001). Nome e perfil são consultados em `/auth/me` a cada navegação; sessão inválida volta ao login (RN-004/RN-005). O logout usa cookie e CSRF. Financeiro e Configurações ficam desabilitados, preservando RN-003 como pendente. Os módulos provisórios e os indicadores de RF-002 permanecem pendentes; a implementação de Funcionários está descrita abaixo.
 
 ## Mapa geral
 
@@ -84,10 +84,13 @@ Cadastro: nome, telefone, email, endereco, observacoes
 
 ### Funcionários — administrar acessos
 
-- **Objetivo/origem:** gerenciar acesso, **restrito ao administrador**; Guia §5.5, RN-001/RF-019.
-- **Informações:** `nome`, `email`, `perfil`, `ativo` conforme modelo; busca sugerida, critério pendente. Nunca mostrar `senha_protegida` nem senha existente. Criação da credencial ainda depende da autenticação.
-- **Fluxo/API:** abrir lista → [A07](api.md#a07) → cadastrar com [A08](api.md#a08) ou consultar perfil com [A21](api.md#a21); ajustar acesso por [A22](api.md#a22) após confirmar políticas. Retornar/atualizar lista.
-- **Pendências:** dados, perfis, efeito de desativação sobre acesso iniciado e autoria histórica (PD-N01/PD-N02/PD-N03/PD-N09). Não há exclusão de funcionário nem editor genérico de todos os dados aprovado por esta proposta.
+- **Implementado na interface:** listagem em `/funcionarios` e cadastro em `/funcionarios/novo`, exclusivos do Administrador (RN-001; atendimento parcial de RF-005/RF-019).
+- **Dados:** lista com nome, usuário, e-mail, perfil e situação. Cadastro exige nome, usuário, e-mail, senha de 15–128 caracteres e escolha de perfil. Confirmação de senha é validação local, sem envio à API; conta inicia ativa conforme contrato. CPF, telefone, gênero e cargo ilustrados no protótipo não integram esta entrega.
+- **Fluxo/API:** A07 para listar; A08 para cadastrar com cookie e CSRF. Sucesso retorna à lista com confirmação. Se a lista falhar após sucesso, repetir somente GET. Se o POST tiver resultado incerto, consultar a lista antes de repetir. Usuário duplicado, sessão expirada e acesso negado são tratados.
+- **Componentes:** layout, menu, botão, campo de texto e seleção reutilizáveis. Restrição de acesso cobre também a URL de cadastro; a API continua sendo a autoridade de permissões.
+- **Desativação implementada:** botão na lista abre diálogo reutilizável de confirmação com senha do Administrador. A própria conta tem botão desabilitado com explicação; a API também recusa autodesativação. Sucesso atualiza a linha para Inativo sem remover o histórico. Senha é limpa após cada tentativa/fechamento. Erros de senha, CSRF e limite são exibidos; resultado incerto exige atualizar a lista antes de repetir.
+- **Ainda pendente na interface:** perfil individual, edição, reativação e alteração de perfil. A21/A22 já existem na API. Não há exclusão de funcionário nem recuperação de senha nesta etapa.
+- **Verificação:** interface no navegador com API simulada; desativação também verificada por HTTP com PostgreSQL local descartável, dados fictícios, sessões e concorrência. Nenhum banco existente foi alterado.
 
 ### OS — abrir, acompanhar e registrar materiais
 

@@ -21,7 +21,8 @@ O contrato combina como front-end e back-end trocam pedidos e respostas. **Clien
 | A07 | Funcionários | `GET /funcionarios` | Listar/buscar funcionários | Administrador — RN-001 | Implementado |
 | A08 | Funcionários | `POST /funcionarios` | Cadastrar funcionário | Administrador — RN-001 | Implementado |
 | A21 | Funcionários | `GET /funcionarios/{id}` | Consultar perfil de funcionário | Administrador — RN-001 | Implementado |
-| A22 | Funcionários | `PUT /funcionarios/{id}/acesso` | Definir perfil e estado de acesso | Administrador — RN-001 | Implementado |
+| A22 | Funcionários | `PUT /funcionarios/{id}/acesso` | Definir perfil e estado de acesso; desativação exige senha própria | Administrador — RN-001 | Implementado |
+| — | Funcionários | `POST /funcionarios/{id}/desativar` | Desativar preservando perfil e histórico, com senha própria | Administrador — RN-001/RN-020 | Implementado |
 | A09 | OS | `GET /ordens-servico` | Listar OS | Ambos os perfis autenticados | Implementado — consulta |
 | A10 | OS | `POST /ordens-servico` | Abrir OS | Ambos os perfis autenticados, com CSRF | Implementado |
 | A11 | OS | `GET /ordens-servico/{id}` | Consultar detalhes da OS | Ambos os perfis autenticados | Implementado — consulta |
@@ -71,7 +72,7 @@ O código atual contém a demonstração React e o servidor Express com a rota d
 
 Confirmado pelo Integrante 1: Clientes permite os perfis administrador e funcionario autenticados. Funcionários é exclusivo do administrador (RN-001). A API confere o estado ativo e a versão de acesso no banco em cada requisição protegida; editar ativo/perfil invalida sessões anteriores. Ambos os perfis podem cadastrar, editar, excluir, cancelar e corrigir estoque nas operações documentadas. Funcionários permanece exclusivo do administrador.
 
-Autenticação por cookie `sapataria.sid`, HttpOnly, SameSite=Lax, Secure em produção; sessões no PostgreSQL com duração absoluta de 8h. Nas requisições POST/PUT/DELETE, envie `X-CSRF-Token` associado ao mesmo cookie. Sem login retorna `401`; perfil insuficiente ou CSRF inválido retorna `403`. Nunca envie senha em rotas diferentes de login/cadastro.
+Autenticação por cookie `sapataria.sid`, HttpOnly, SameSite=Lax, Secure em produção; sessões no PostgreSQL com duração absoluta de 8h. Nas requisições POST/PUT/DELETE, envie `X-CSRF-Token` associado ao mesmo cookie. Sem login retorna `401`; perfil insuficiente ou CSRF inválido retorna `403`. Senhas são enviadas apenas no login, cadastro e na confirmação administrativa de desativação descrita abaixo. `senha_admin` é a senha da conta autenticada e nunca deve ser registrada em logs ou devolvida.
 
 <a id="padroes"></a>
 O servidor usa HOST=127.0.0.1 por padrão. A origem de front-end permitida em CORS é APP_ORIGIN; o front-end deve enviar cookies (`credentials: include`).
@@ -167,7 +168,25 @@ Implementado. Apenas administrador. `200`, `{"dados": funcionario}`. ID inválid
 <a id="a22"></a>
 ### A22 — PUT /funcionarios/{id}/acesso
 
-Implementado. Apenas administrador, com CSRF. Envie ambos: `{"perfil":"funcionario","ativo":false}`. Retorna `200`, `{"dados": funcionario}`. Mudança de perfil ou ativo invalida as sessões anteriores, inclusive a própria se o administrador alterar seu acesso. Reativar não restaura sessões antigas. ID inválido/dados inválidos: `400`; não encontrado: `404`. Não exclui pessoas nem históricos.
+Implementado. Apenas Administrador, com cookie e CSRF. `perfil` e `ativo` continuam obrigatórios. Quando `ativo=false`, também é obrigatório `senha_admin` com a senha do Administrador conectado: `{"perfil":"funcionario","ativo":false,"senha_admin":"senha do administrador"}`. Não é possível desativar a própria conta. Alteração de perfil/reativação com `ativo=true` mantém o contrato anterior, sem confirmação adicional; a interface dessas operações permanece pendente.
+
+Retorna `200`, `{"dados": funcionario}` sem senha/hash. Mudança de perfil ou ativo incrementa a versão de acesso: sessões anteriores deixam de valer na próxima requisição protegida, mesmo após reativação. A regra de desativação abaixo é compartilhada com esta rota, impedindo contorno por chamadas diretas.
+
+### POST /funcionarios/{id}/desativar — confirmação administrativa
+
+Corpo: `{"senha_admin":"senha do administrador conectado"}`. Preserva o perfil atual e os históricos; somente altera `ativo` para false e incrementa `versao_acesso` se houver mudança. Repetir a operação sobre uma conta já inativa, com confirmação válida, retorna o estado atual sem incrementar novamente. Não existe exclusão física.
+
+- `200`: `{"dados": funcionario}` inativo, sem segredos.
+- `400`: ID/corpo inválido ou `CONFIRMACAO_OBRIGATORIA` para senha ausente/vazia ou maior que 128 caracteres.
+- `401`: sessão ausente, expirada ou invalidada.
+- `403`: `ACESSO_NEGADO`, `CSRF_INVALIDO`, `AUTODESATIVACAO_PROIBIDA` ou `SENHA_CONFIRMACAO_INVALIDA`. Senha incorreta não encerra a sessão do Administrador e não altera o alvo.
+- `404`: funcionário inexistente.
+- `429`: mais de 10 confirmações por Administrador ou 50 por IP em 15 minutos. Contadores no PostgreSQL são separados dos de login, incluem sucessos e não são zerados por novo login.
+- `503`: capacidade de verificação de senha ocupada.
+
+A autorização é conferida novamente dentro da transação, com bloqueios dos registros do autor e do alvo em ordem de ID. Uma mudança concorrente de acesso do autor impede o uso da autorização anterior. As senhas são verificadas contra o hash do autor autenticado, sem aceitar sua identidade no corpo.
+
+**Impacto de compatibilidade:** clientes que usam A22 para desativar devem passar `senha_admin`; chamadas antigas sem esse campo passam a receber `400`. Não houve alteração de estrutura do banco.
 
 <a id="a09"></a>
 ### A09 — GET /ordens-servico

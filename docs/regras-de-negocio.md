@@ -274,6 +274,8 @@ Estas confirmações substituem as pendências correspondentes das sugestões or
 
 ### RN-020
 
+**Confirmação do Integrante 1 em 28/09/2026 — implementada:** desativação de outro funcionário exige a senha do Administrador autenticado; não pode desativar a própria conta. A regra vale na interface e em todas as rotas de desativação, incluindo a alteração de acesso existente. Preserva cadastro, perfil (na ação dedicada) e histórico, invalida sessões anteriores e mantém o funcionário visível como inativo. Senha incorreta não altera a conta. A confirmação tem limites de 10 tentativas por Administrador e 50 por IP em 15 minutos, separados do login, incluindo sucessos. Não é exclusão física nem uma implementação de recuperação/troca de senha.
+
 **Atualização aprovada:** Exclusão sem vínculos e com saldo zero para estoques confirmada e implementada. Funcionários são desativados; OS/vendas canceladas.
 
 **Remoção ou desativação por entidade.**
