@@ -3,16 +3,23 @@ import { pool } from '../config/db';
 export interface DadosCliente {
   nome: string;
   telefone: string;
-  endereco: string;
+  cpf: string;
+  cep: string;
+  numero: string;
   email: string | null;
   observacoes: string | null;
 }
 
-export interface Cliente extends DadosCliente {
+export interface Cliente extends Omit<DadosCliente, "cpf" | "cep" | "numero"> {
   id: number;
+  cpf: string | null;
+  cep: string | null;
+  numero: string | null;
+  endereco: string | null;
+  criado_em: string | null;
 }
 
-const colunas = 'id, nome, telefone, endereco, email, observacoes';
+const colunas = 'id, nome, telefone, cpf, cep, numero, endereco, email, observacoes, criado_em';
 
 export async function listarClientes(): Promise<Cliente[]> {
   const resultado = await pool.query<Cliente>(
@@ -31,9 +38,9 @@ export async function buscarCliente(id: number): Promise<Cliente | undefined> {
 export async function criarCliente(dados: DadosCliente): Promise<Cliente> {
   // Os valores são enviados separadamente do SQL para evitar injeção de SQL.
   const resultado = await pool.query<Cliente>(
-    `INSERT INTO sapataria.clientes (nome, telefone, endereco, email, observacoes)
-     VALUES ($1, $2, $3, $4, $5) RETURNING ${colunas}`,
-    [dados.nome, dados.telefone, dados.endereco, dados.email, dados.observacoes],
+    `INSERT INTO sapataria.clientes (nome, telefone, cpf, cep, numero, email, observacoes)
+     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING ${colunas}`,
+    [dados.nome, dados.telefone, dados.cpf, dados.cep, dados.numero, dados.email, dados.observacoes],
   );
   return resultado.rows[0]!;
 }
@@ -41,9 +48,9 @@ export async function criarCliente(dados: DadosCliente): Promise<Cliente> {
 export async function atualizarCliente(id: number, dados: DadosCliente): Promise<Cliente | undefined> {
   const resultado = await pool.query<Cliente>(
     `UPDATE sapataria.clientes
-     SET nome = $1, telefone = $2, endereco = $3, email = $4, observacoes = $5
-     WHERE id = $6 RETURNING ${colunas}`,
-    [dados.nome, dados.telefone, dados.endereco, dados.email, dados.observacoes, id],
+     SET nome = $1, telefone = $2, cpf = $3, cep = $4, numero = $5, email = $6, observacoes = $7
+     WHERE id = $8 RETURNING ${colunas}`,
+    [dados.nome, dados.telefone, dados.cpf, dados.cep, dados.numero, dados.email, dados.observacoes, id],
   );
   return resultado.rows[0];
 }

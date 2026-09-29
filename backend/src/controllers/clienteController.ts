@@ -1,16 +1,18 @@
 import type { Request, Response } from 'express';
 import * as clienteModel from '../models/clienteModel';
+import { listar as listarOrdens } from '../models/ordemServicoModel';
+import { cpfValido } from '../utils/cpf';
 import type { DadosCliente } from '../models/clienteModel';
 
-function validarDados(corpo: unknown): DadosCliente {
+export function validarDados(corpo: unknown): DadosCliente {
   if (!corpo || typeof corpo !== 'object' || Array.isArray(corpo)) {
     throw new Error('O corpo deve conter um objeto JSON.');
   }
 
   const dados = corpo as Record<string, unknown>;
-  const campos = ['nome', 'telefone', 'endereco', 'email', 'observacoes'];
+  const campos = ['nome', 'telefone', 'cpf', 'cep', 'numero', 'email', 'observacoes'];
   if (Object.keys(dados).some((campo) => !campos.includes(campo))) {
-    throw new Error('Envie somente nome, telefone, endereco, email e observacoes.');
+    throw new Error('Envie somente nome, telefone, cpf, cep, numero, email e observacoes.');
   }
 
   function texto(campo: string, obrigatorio: boolean): string | null {
@@ -26,10 +28,15 @@ function validarDados(corpo: unknown): DadosCliente {
   const cliente: DadosCliente = {
     nome: texto('nome', true)!,
     telefone: texto('telefone', true)!,
-    endereco: texto('endereco', true)!,
+    cpf: texto('cpf', true)!,
+    cep: texto('cep', true)!,
+    numero: texto('numero', true)!,
     email: texto('email', false),
     observacoes: texto('observacoes', false),
   };
+  if (!/^\d{11}$/.test(cliente.telefone)) throw new Error('Informe um telefone com 11 dígitos.');
+  if (!cpfValido(cliente.cpf)) throw new Error('Informe um CPF válido.');
+  if (!/^\d{8}$/.test(cliente.cep)) throw new Error('Informe um CEP com 8 dígitos.');
   if (cliente.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cliente.email)) {
     throw new Error('Informe um e-mail em formato válido.');
   }
@@ -96,4 +103,11 @@ export async function excluir(request: Request, response: Response): Promise<voi
   if (id === undefined) return;
   if (!await clienteModel.excluirCliente(id)) return naoEncontrado(response);
   response.status(204).end();
+}
+
+export async function ordens(request: Request, response: Response): Promise<void> {
+  const id = lerId(request, response);
+  if (id === undefined) return;
+  if (!await clienteModel.buscarCliente(id)) return naoEncontrado(response);
+  response.json({ dados: await listarOrdens(id) });
 }

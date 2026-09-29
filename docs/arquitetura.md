@@ -14,6 +14,8 @@ Materiais, Produtos, OS, Vendas e Movimentações possuem Models, Controllers e 
 
 Configuração de produção: HTTPS, APP_ORIGIN exata, NODE_ENV=production, HOST e proxies confiáveis conforme a infraestrutura. Recuperação/troca de senha e telas ainda não implementadas. Contratos e exemplos atuais estão em `api.md` e no README raiz.
 
+Clientes agora possui formulário e perfil em React, reutilizando os campos, botões e layout. `EnderecoPorCep` compartilha a consulta pública ViaCEP (somente CEP, sem cookies) entre as duas telas; detalhes do endereço não são persistidos. A API valida os dados independentemente das máscaras e usa o modelo de OS para consultar o histórico por cliente. Migração `clientes-perfil.sql` preparada; ainda não aplicada ao banco existente. Decisão do Integrante 1 em 29/09/2026 substitui a antiga pendência de provedor de CEP nas seções históricas abaixo.
+
 ## 1. Objetivo e situação do documento
 
 Este documento explica as partes do sistema, suas responsabilidades e a comunicação prevista, distinguindo o planejamento da implementação encontrada no repositório. Sua criação não aprova sugestões nem resolve decisões pendentes.

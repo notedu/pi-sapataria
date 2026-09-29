@@ -17,3 +17,15 @@ A suíte configura suas próprias variáveis de conexão/sessão antes de import
 Cobertura: ausência de sessão, perfil insuficiente, CSRF, senha ausente/incorreta/do alvo, bloqueio da própria conta nas duas rotas, IDs inválidos/inexistentes, corpo inválido, sucesso, preservação do histórico, versão de acesso, sessões invalidadas após reativação, limite de tentativas independente do login e dois Administradores tentando desativar um ao outro simultaneamente. A segunda operação concorrente deve detectar a sessão invalidada.
 
 Essa suíte não valida a configuração de um banco remoto ou de produção. A interface também precisa ser verificada no navegador.
+
+## Clientes: migração e perfil
+
+`clientes.cjs` exige uma instância PostgreSQL local descartável com TLS, banco `sapataria_clientes_teste`, papéis `anon`/`authenticated` (usados no SQL inicial de Clientes) e ausência do schema `sapataria`. Não use credenciais do banco existente.
+
+```bash
+TEST_DATABASE_URL='postgresql://usuario@127.0.0.1:55441/sapataria_clientes_teste' \
+TEST_DATABASE_CA_FILE='/caminho/certificado-local.crt' \
+node --require tsx/cjs tests/clientes.cjs
+```
+
+A suíte aplica os scripts, cria dados fictícios e remove apenas o schema que ela própria criou. Cobre 29 verificações de migração/legado, obrigatoriedade, CPF, telefone, CEP, sessão/CSRF, ambos os perfis, consultas, edição, OS filtradas e exclusão bloqueada por histórico. Não testa o ViaCEP externo. Em caso de interrupção, recrie a instância descartável.

@@ -8,7 +8,7 @@ A rota `/login` oferece usuário/senha, layout responsivo conforme a referência
 
 ## Estrutura interna implementada
 
-`AppLayout` e `Sidebar` são compartilhados pelas rotas internas; `EmConstrucao` é a página provisória reutilizável. O Dashboard mostra saudação e aviso de construção. Busca, Clientes, OS e Estoque também exibem o aviso; Funcionários só é acessível ao Administrador (RN-001). Nome e perfil são consultados em `/auth/me` a cada navegação; sessão inválida volta ao login (RN-004/RN-005). O logout usa cookie e CSRF. Financeiro e Configurações ficam desabilitados, preservando RN-003 como pendente. Os módulos provisórios e os indicadores de RF-002 permanecem pendentes; a implementação de Funcionários está descrita abaixo.
+`AppLayout` e `Sidebar` são compartilhados pelas rotas internas; `EmConstrucao` é a página provisória reutilizável. O Dashboard mostra saudação e aviso de construção. Busca, OS e Estoque também exibem o aviso; Funcionários só é acessível ao Administrador (RN-001). Nome e perfil são consultados em `/auth/me` a cada navegação; sessão inválida volta ao login (RN-004/RN-005). O logout usa cookie e CSRF. Financeiro e Configurações ficam desabilitados, preservando RN-003 como pendente. Os módulos provisórios e os indicadores de RF-002 permanecem pendentes; a implementação de Funcionários está descrita abaixo.
 
 ## Mapa geral
 
@@ -18,7 +18,7 @@ As onze telas e subtelas são **definições do rascunho** (Guia §4; RF-001 a R
 |---|---|---|
 | Login | Identificar quem utiliza o sistema | Entrada para todos é sugestão do Guia §4; política pendente. |
 | Dashboard | Resumo operacional | Administrador/funcionário sugeridos, não aprovados. |
-| Clientes: página e perfil do cliente | Organizar dados e consultas | Administrador/funcionário sugeridos. |
+| Clientes: página e perfil do cliente | Organizar dados e consultas | Administrador e funcionário autenticados — RN-002. |
 | OS: página e detalhes | Registrar e acompanhar reparos | Administrador/funcionário sugeridos. |
 | Funcionários: página e perfil de funcionário | Gerenciar quem acessa | **Somente administrador — definido, RN-001.** |
 | Vendas independentes: cadastro e histórico | Registrar produtos vendidos sem criar OS | Administrador/funcionário sugeridos. |
@@ -67,20 +67,17 @@ Todas as sequências abaixo são **propostas**, salvo objetivos e restrições e
 - **Fluxo/API:** entrar na tela → [A26](api.md#a26) → consultar resumo ou seguir atalho para a área correspondente. Atalho não cria registro nem exige outra API própria.
 - **Pendências:** conteúdo exato, significado dos estados, período do dia e alertas (PD-N04/PD-N06/PD-N08). Não inventar números para indicador indisponível.
 
-### Clientes — cadastrar, consultar e editar
+### Clientes — listagem, cadastro e perfil implementados
 
-- **Objetivo/origem:** manter dados organizados; Guia §5.3, RF-003/RF-017. Formulário: `nome`, `telefone`, `email`, `endereco`, `observacoes`; `id` vem da API. Colunas iniciais propostas: nome, telefone, e-mail; busca por nome/telefone é sugestão.
-- **Cadastro/lista:** abrir Clientes → [A03](api.md#a03) → Novo cliente → preencher → validar → [A04](api.md#a04) → confirmar `201` → consultar lista novamente. Reconhecer registro pelo `id`, sem prometer posição na lista.
-- **Perfil/edição:** selecionar cliente → [A05](api.md#a05); editar dados permitidos → [A06](api.md#a06). Histórico de OS usa [A09](api.md#a09) com `cliente_id`; compras dependem do vínculo ainda ausente no modelo e de [A19](api.md#a19). Do histórico de OS pode-se abrir seus detalhes, se autorizado.
-- **Pendências:** campos, obrigatoriedade, formatos e edição (PD-N03); permissões (PD-N01); vínculo das compras. Busca/edição/histórico ampliam a visão documental anterior, sem se tornarem requisitos aprovados.
-
-```text
-Menu | Clientes                       [Novo cliente]
-     | Nome | Telefone | E-mail
-     | Resultado, aviso de lista vazia ou erro
-Cadastro: nome, telefone, email, endereco, observacoes
-[Salvar] [Cancelar preenchimento]
-```
+- **Escopo:** `/clientes` mantém nome, telefone e e-mail; a ação com lupa abre `/clientes/:id`, com nome como texto comum. `/clientes/novo` cadastra. Ambos os perfis autenticados (RN-002; RF-003/RF-017).
+- **Campos:** nome, CPF, telefone, CEP e número obrigatórios; e-mail e observações opcionais. Máscaras na interface; CPF validado, telefone com 11 dígitos e CEP com 8. ViaCEP mostra rua/bairro/cidade/UF, sem gravar esses detalhes. Consulta com erro permite tentar novamente e não impede salvar CEP/número.
+- **Exclusão no perfil:** Button e Dialog reutilizados para confirmação. DELETE com CSRF; sucesso retorna à lista com aviso. HTTP 409 informa vínculo com OS e preserva o perfil; 404 informa ausência; 401 retorna ao login. Resultado incerto bloqueia nova tentativa até consultar a lista. RN-002/RN-020.
+- **Edição:** `/clientes/:id/editar` carrega os sete campos de A06 e reutiliza FormularioCliente do cadastro. Salvar envia PUT com CSRF e retorna ao perfil atualizado; cancelar não envia alterações. Opcionais vazios viram null. Legados precisam completar os obrigatórios. Erros preservam o formulário; resultado incerto bloqueia reenvio e orienta conferir o perfil.
+- **Perfil:** cabeçalho com Editar e data, cartão pessoal em tom secundário, endereço ao lado no desktop, OS em linhas compactas e observações próprias. Responsivo, com tema de index.css e CartaoInformacoes reutilizado. Todas as OS continuam visíveis. Informações pessoais, endereço, data de cadastro e OS filtradas pela API. Ausência de OS é diferente de erro. Cliente antigo preserva endereço legado e data desconhecida.
+- **Fluxo:** preencher → validar → cadastrar com cookie/CSRF → retornar à lista com confirmação → abrir perfil. Resultado incerto bloqueia reenvio e orienta consultar a lista.
+- **Reutilização:** AppLayout, Sidebar, Button (tamanhos padrão/compacto/ícone), Icon, InputField, TextareaField, FormularioCliente e serviço HTTP/CSRF; EnderecoPorCep atende cadastro e perfil.
+- **Pendências:** aplicar migração `clientes-perfil.sql` ao banco existente; busca continua sem interface. Histórico de compras continua fora do escopo.
+- **Verificação:** na etapa de base, typecheck e 29 verificações HTTP/PostgreSQL local. Na revisão visual/edição, lint/build e navegador com API/ViaCEP simulados: campos preenchidos, PUT/CSRF, opcionais apagados, cancelamento, validações, resultado incerto, legado, dois perfis e layouts desktop/celular; cadastro e exclusão conferidos novamente. Banco existente não alterado.
 
 ### Funcionários — administrar acessos
 
@@ -164,3 +161,7 @@ Nenhum teste de aplicação foi executado nesta entrega documental. Após aprova
 - Impedir ações sem permissão na API, mesmo com acesso direto ao endereço; não devolver credenciais.
 - Verificar alterações de estado, movimentos e valores somente contra regras aprovadas; testar falha de uma gravação relacionada sem deixar efeitos parciais ou saldo negativo.
 - Conferir os estados comuns, navegação e uso em tela estreita, sem afirmar atendida uma pendência ainda aberta.
+
+### Avisos temporários compartilhados
+
+Clientes (cadastro, edição, exclusão e aviso de cadastro ausente) e Funcionários (cadastro/desativação) usam `Alerta`. O componente usa cores semânticas verdes do tema, anúncio acessível com `role="status"` e barra que diminui da direita para a esquerda durante cinco segundos; ao terminar, remove o aviso e limpa seu estado. Uma mensagem nova reinicia a contagem. Erros e mensagens de carregamento mantêm seus comportamentos existentes.

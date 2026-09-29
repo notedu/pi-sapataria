@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useOutletContext } from 'react-router-dom'
 import ConfirmarSenhaDialog from '../components/ConfirmarSenhaDialog'
 import type { Usuario } from '../services/auth'
+import Alerta from '../components/Alerta'
 import Button from '../components/Button'
 import { ErroApi } from '../services/api'
 import { desativarFuncionario, listarFuncionarios } from '../services/funcionarios'
@@ -56,8 +57,8 @@ export default function Funcionarios() {
         <div><h1 className="text-headline-lg">Funcionários</h1><p className="mt-2 text-on-surface-variant">Gerencie as contas de acesso da equipe.</p></div>
         <Link to="/funcionarios/novo" className="rounded-default bg-primary px-6 py-4 text-label-md text-on-primary hover:bg-primary-container focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">Novo funcionário</Link>
       </header>
-      {sucesso && <p role="status" className="mb-6 rounded-default bg-primary-fixed p-4 text-on-primary-fixed">{sucesso}</p>}
-      {state?.cadastroConcluido && <p role="status" className="mb-6 rounded-default border border-primary/20 bg-primary-fixed p-4 text-on-primary-fixed">Funcionário cadastrado com sucesso. A conta já pode acessar o sistema.</p>}
+      {sucesso && <Alerta className="mb-6" mensagem={sucesso} onFechar={() => setSucesso('')} />}
+      {state?.cadastroConcluido && <Alerta className="mb-6" mensagem="Funcionário cadastrado com sucesso. A conta já pode acessar o sistema." onFechar={() => navigate('/funcionarios', { replace: true, state: { ...state, cadastroConcluido: undefined } })} />}
       {carregando ? <p role="status">Carregando funcionários…</p> : erro ? (
         <div className="space-y-4"><p role="alert" className="rounded-default bg-error-container p-4 text-on-error-container">{erro}</p><Button onClick={() => { setErro(''); setCarregando(true); setTentativa(valor => valor + 1) }}>Tentar novamente</Button></div>
       ) : lista.length === 0 ? <p className="rounded-lg border border-outline-variant p-8">Nenhum funcionário cadastrado.</p> : (

@@ -71,7 +71,7 @@ Classificação de todos os registros: **Sugestão**. Situação da definição:
 | <a id="rf-023"></a>RF-023 | Perfil com dados do usuário conectado e alteração de senha. Critério proposto: disponibilizar ambas as operações. | Guia §5.9 | RF-009; campos e política de senha em PD-N02 e PD-N03. |
 | <a id="rf-024"></a>RF-024 | Configuração com dados da empresa, tipos de serviço, formas de pagamento, categorias de produtos/materiais e parâmetros financeiros. Critério proposto: disponibilizar esses ajustes. | Guia §5.10 | RF-010; efeito no imposto em RN-016; não define valores ou opções aceitas. |
 | <a id="rf-025"></a>RF-025 | Financeiro com totais do mês ou ano, gráficos de evolução e indicadores detalhados com filtro por período. Critério proposto: disponibilizar essas visualizações. | Guia §5.11 | RF-011; definições dos indicadores em RN-014 a RN-017; PD-N06. |
-| <a id="rf-026"></a>RF-026 | Obter endereço por API pública de CEP, validar CEP e tratar indisponibilidade da API. Critério proposto: realizar consulta e tratar falha; ViaCEP é exemplo, não escolha aprovada. | Guia §8.1 | RF-014; adoção e contrato em PD-R10. |
+| <a id="rf-026"></a>RF-026 | Obter endereço por API pública de CEP, validar CEP e tratar indisponibilidade da API. Critério proposto: realizar consulta e tratar falha; ViaCEP aprovado pelo Integrante 1 em 29/09/2026 e implementado no cadastro/perfil; mensagens de erro e nova tentativa, sem impedir salvar CEP/número. | Guia §8.1 | RF-014; adoção e contrato em PD-R10. |
 | <a id="rf-027"></a>RF-027 | Importar clientes e estoques de CSV, se houver planilhas, verificando colunas, duplicados e conversão de tipos. Critério proposto: executar os tratamentos; regras concretas não definidas. | Guia §8.1 | RF-014; PD-R10; não pressupõe existência de planilhas. |
 
 ## Requisitos não funcionais e restrições técnicas
@@ -128,10 +128,14 @@ Todos os registros abaixo têm classificação **Pendência** e situação **Pen
 | <a id="pd-r07"></a>PD-R07 | Definir códigos da paleta da Seda e Couro. | Guia §§11.6 e 17; uso de variáveis do Tailwind é **Sugestão**. |
 | <a id="pd-r08"></a>PD-R08 | Definir parâmetros de disponibilidade, desempenho, usabilidade e backup, caso sejam necessários para detalhar os critérios; aprovar os recursos sugeridos. | Guia §14 não fixa SLA, tempo de resposta, limite de cliques, tamanho de página, frequência ou retenção de backup. Não se presume que uma meta numérica seja exigência do guia. |
 | <a id="pd-r09"></a>PD-R09 | Revisar e aprovar contratos da API, arquitetura, organização de pastas e modelo de dados sugeridos. | Guia §§7.2–7.3, 9.2–9.4, 10 e 11.4. Campos e relações de domínio: PD-N03. |
-| <a id="pd-r10"></a>PD-R10 | Decidir adoção da consulta de CEP e da importação; confirmar existência de planilhas, provedor, colunas, formatos, tratamento de duplicados e falhas. | Guia §8.1: **Sugestão**; não há contrato detalhado. |
+| <a id="pd-r10"></a>PD-R10 | Consulta de CEP via ViaCEP aprovada em 29/09/2026; pendente adoção da importação; confirmar existência de planilhas, provedor, colunas, formatos, tratamento de duplicados e falhas. | Guia §8.1: **Sugestão**; não há contrato detalhado. |
 | <a id="pd-r11"></a>PD-R11 | Definir líder, papéis, ferramenta e cronograma, datas e frequência de reuniões. | Guia §§13.3 e 17; obrigação de organização acadêmica, escolhas ainda pendentes. |
 | <a id="pd-r12"></a>PD-R12 | Confirmar anuência escrita e situação cadastral do beneficiário. | Guia §§2.3 e 17. Pendência de comprovação, sem afirmar ausência de consentimento fora das fontes. |
 | <a id="pd-r13"></a>PD-R13 | Confirmar calendário e forma de anexar repositório e demais entregas no Classroom. | Guia §§2.1, 2.5 e 17. |
 | <a id="pd-r14"></a>PD-R14 | Confirmar com o orientador se há um ou dois vídeos e definir o tema de Formação para a Vida. | Guia §§2.7 e 17 reconhecem a ambiguidade. |
 | <a id="pd-r15"></a>PD-R15 | Escolher o(s) ODS do projeto. | Guia §§2.8 e 17; opções exemplificadas não foram aprovadas. |
 | <a id="pd-r16"></a>PD-R16 | Definir domínio e hospedagem paga se houver uso real após o PI. | Guia §§12.5 e 17: **Definição da equipe condicional**, sem nome de domínio escolhido. GitHub Pages no §12.6 permanece demonstração complementar **sugerida**, não substituição da nuvem. |
+
+### Evolução de Clientes — 29/09/2026
+
+Aprovado pelo Integrante 1: CPF obrigatório com validação, telefone de 11 dígitos, endereço por CEP/número, consulta ViaCEP e perfil com data e OS. Implementado no código para RF-003/RF-017/RF-026, mantendo RN-002. Migração preparada e testada localmente, não aplicada ao banco existente. Edição visual implementada em `/clientes/:id/editar`, com formulário compartilhado e A06. Busca e histórico de compras de RF-017 continuam fora desta entrega.

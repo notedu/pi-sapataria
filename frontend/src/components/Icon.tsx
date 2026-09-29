@@ -1,4 +1,8 @@
 const caminhos = {
+  editar: 'm15 4 5 5 M4 16 16 4a2 2 0 0 1 4 4L8 20H4z',
+  endereco: 'M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0 M12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6',
+  calendario: 'M5 5h14v16H5z M8 3v4 M16 3v4 M5 10h14',
+  observacoes: 'M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5',
   dashboard: 'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
   busca: 'M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14 M15 15l6 6',
   clientes: 'M9 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6 M3 21v-4a6 6 0 0 1 12 0v4 M17 4a3 3 0 0 1 0 6 M18 13a5 5 0 0 1 3 4v4',
