@@ -2,14 +2,18 @@ import { NavLink } from 'react-router-dom'
 import type { Usuario } from '../services/auth'
 import { areas } from '../config/navegacao'
 import Icon from './Icon'
+import logo from '../assets/logo-sapataria.png'
 
 export default function Sidebar({ usuario, onSair, saindo }: { usuario: Usuario; onSair: () => void; saindo: boolean }) {
   const iniciais = usuario.nome.trim().split(/\s+/).slice(0, 2).map(parte => parte[0]).join('').toUpperCase()
   return (
     <aside className="flex h-full flex-col bg-secondary-container p-4">
-      <div className="mb-10 px-4 pt-4">
-        <div className="flex items-center gap-3 text-primary"><span className="rounded-full bg-surface p-2"><Icon name="dashboard" /></span><span className="text-headline-md">Seda e Couro</span></div>
-        <p className="mt-2 text-label-sm text-on-secondary-fixed-variant">Sapataria Profissional</p>
+      <div className="mb-10 flex items-center gap-2 pt-2">
+        <img src={logo} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover mix-blend-multiply" />
+        <div className="min-w-0">
+          <p className="whitespace-nowrap text-body-lg font-bold text-primary">Seda e Couro</p>
+          <p className="text-label-sm text-on-secondary-fixed-variant">Sapataria Profissional</p>
+        </div>
       </div>
       <nav aria-label="Navegação principal" className="flex-1">
         <ul className="space-y-2">
@@ -30,7 +34,7 @@ export default function Sidebar({ usuario, onSair, saindo }: { usuario: Usuario;
           <div className="min-w-0"><p className="break-words text-label-md text-primary">{usuario.nome}</p><p className="text-label-sm text-on-secondary-fixed-variant">{usuario.perfil === 'administrador' ? 'Administrador' : 'Funcionário'}</p></div>
         </div>
         <div aria-disabled="true" className="flex items-center gap-3 px-4 py-3 text-on-secondary-fixed-variant"><Icon name="configuracoes" /><span className="text-label-md">Configurações<span className="block text-label-sm">Em construção</span></span></div>
-        <button type="button" onClick={onSair} disabled={saindo} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-label-md hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60"><Icon name="sair" />{saindo ? 'Saindo…' : 'Sair'}</button>
+        <button type="button" onClick={onSair} disabled={saindo} className="text-error flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-label-md hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60"><Icon name="sair" />{saindo ? 'Saindo…' : 'Sair'}</button>
       </div>
     </aside>
   )

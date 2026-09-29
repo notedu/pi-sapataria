@@ -74,20 +74,25 @@ O script `backend/src/database/funcionarios.sql` cria apenas essa etapa. Altera�
 
 ## Cliente
 
-**Tabela:** `sapataria.clientes`. Campos e obrigatoriedade confirmados pelo Integrante 1 nesta conversa. Tabela criada e colunas conferidas no Supabase; operações da API verificadas com o banco real e rollback dos dados temporários.
+**Tabela:** `sapataria.clientes`. Evolução aprovada pelo Integrante 1 em 29/09/2026: CPF obrigatório, telefone de 11 dígitos, CEP e número no lugar do endereço livre, data de cadastro e perfil com OS. Código implementado; migração `backend/src/database/clientes-perfil.sql` preparada e testada apenas em PostgreSQL local descartável, **não aplicada ao banco existente**.
 
 | Campo | Tipo PostgreSQL / JSON | Obrigatoriedade |
 |---|---|---|
-| `id` | `integer` / número inteiro | Gerado pelo banco; chave primária; somente leitura na API |
+| `id` | `integer` / número | Gerado pelo banco |
 | `nome` | `text` / string | Obrigatório |
-| `telefone` | `text` / string | Obrigatório |
-| `endereco` | `text` / string | Obrigatório |
-| `email` | `text` / string ou null | Opcional |
-| `observacoes` | `text` / string ou null | Opcional |
+| `telefone` | `text` / string | Obrigatório, 11 dígitos |
+| `cpf` | `text` / string | Obrigatório, 11 dígitos e verificação dos dígitos na API |
+| `cep` | `text` / string | Obrigatório, 8 dígitos |
+| `numero` | `text` / string | Obrigatório; aceita identificação como `123A` ou `S/N` |
+| `criado_em` | `timestamptz` / string ISO | Automático para novos registros; somente leitura |
+| `endereco` | `text` / string ou null | Preservado apenas como dado legado |
+| `email`, `observacoes` | `text` / string ou null | Opcionais |
 
-A API remove espaços nas extremidades e rejeita campos obrigatórios vazios. Campos opcionais omitidos, nulos ou em branco são armazenados como `NULL`. O e-mail informado deve ter formato básico `usuario@dominio.extensao`; isso não comprova que a caixa existe. Telefone permanece texto, sem máscara obrigatória. Nome, telefone e e-mail não têm regra de unicidade.
+CPF, telefone e CEP são persistidos sem pontuação. A interface aplica máscaras. Não foi acrescentada unicidade de CPF ou contatos. A validação de CPF verifica o cálculo, sem consultar sua situação cadastral. E-mail mantém validação básica; opcionais vazios viram `NULL`.
 
-No `PUT`, os cinco campos de negócio são editáveis; todos os obrigatórios devem ser enviados e os opcionais ausentes ficam nulos. Não há exclusão, CPF, novos vínculos nem criação de dados fictícios nesta etapa. Referências: RF-003/RF-017.
+A migração preserva CPF/CEP/número/data ausentes dos registros antigos, sem inventar valores nem converter endereço livre automaticamente. Restrições `CHECK ... NOT VALID` não revalidam linhas antigas, mas exigem os campos nas novas inserções e atualizações. A API também exige todos os campos obrigatórios no PUT. A data antiga permanece desconhecida, mesmo após edição. O script não remove o endereço legado nem altera vínculos de OS.
+
+Somente CEP e número são gravados como novo endereço. Rua, bairro, cidade e UF são consultados no ViaCEP pela interface; campos ausentes na resposta são apresentados como não informados. Falha da consulta não impede salvar os dados informados e não equivale a validação da existência do CEP pela API. RF-003/RF-017/RF-026.
 
 <a id="pendencias-que-afetam-o-cadastro-e-a-listagem"></a>
 ### Pendências de Clientes

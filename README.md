@@ -4,7 +4,7 @@ Sistema web de gestão interna para a sapataria **Seda e Couro**, de Santa Cruz 
 
 Desenvolvido como Projeto Integrado do módulo **Desenvolvimento de Aplicação Web**, do **UNIFEOB**, no 2º semestre de 2026.
 
-> **Em desenvolvimento inicial:** o front-end contém a tela de login em React com Vite, integrada à API. O back-end possui login por usuário e senha, sessões no PostgreSQL e rotas de Clientes e Funcionários. Materiais, Produtos, OS, Vendas e Estoques possuem consultas e operações de gravação autenticadas. Funcionários possui listagem e cadastro com credenciais no front-end, exclusivos do Administrador. As demais áreas internas oferecem páginas provisórias “Em construção”.
+> **Em desenvolvimento inicial:** o front-end contém a tela de login em React com Vite, integrada à API. O back-end possui login por usuário e senha, sessões no PostgreSQL e rotas de Clientes e Funcionários. Materiais, Produtos, OS, Vendas e Estoques possuem consultas e operações de gravação autenticadas. Funcionários possui listagem e cadastro com credenciais no front-end, exclusivos do Administrador. Clientes possui listagem e cadastro para ambos os perfis. As demais áreas internas oferecem páginas provisórias “Em construção”.
 
 ## Funcionalidades previstas
 
@@ -60,7 +60,7 @@ Outros comandos, executados dentro de `frontend/`:
 
 Após o login, `AppLayout` consulta `/auth/me` em cada mudança de rota e compartilha a estrutura com `Sidebar`. Nome e perfil vêm da API; o perfil é exibido como Administrador ou Funcionário, sem inventar cargo profissional. `src/config/navegacao.ts` reúne os nomes e caminhos usados pelo menu e pelas rotas; `EmConstrucao` recebe o título de cada área.
 
-Dashboard, Busca, Clientes, Ordens de Serviço e Estoque exibem páginas provisórias. Funcionários é exclusivo do Administrador; o acesso direto de funcionário a `/funcionarios` retorna ao Dashboard. Financeiro e Configurações estão desabilitados, sem resolver suas permissões pendentes. Não há indicadores ou operações de negócio nas páginas provisórias.
+Dashboard, Busca, Ordens de Serviço e Estoque exibem páginas provisórias. Funcionários é exclusivo do Administrador; o acesso direto de funcionário a `/funcionarios` retorna ao Dashboard. Financeiro e Configurações estão desabilitados, sem resolver suas permissões pendentes. Não há indicadores ou operações de negócio nas páginas provisórias.
 
 Sem sessão válida, o acesso interno volta ao login. Falhas de conexão oferecem nova tentativa. “Sair” obtém CSRF e encerra a sessão na API; em caso de falha, mostra o erro sem afirmar que a sessão terminou. O menu se expande no celular e fecha ao navegar. A API continua responsável por validar todas as operações protegidas.
 
@@ -188,6 +188,18 @@ Senhas recebem hash scrypt com salt individual e nunca são devolvidas. A sessã
 
 O código de login e as tabelas acompanham a aplicação. Em produção, configure `NODE_ENV=production`, `APP_ORIGIN` com a origem HTTPS exata do front-end e os dados TLS do novo PostgreSQL. O cookie passa a exigir HTTPS. Ajuste `HOST` conforme a implantação. Se houver proxy/load balancer, configure `TRUST_PROXY` somente com seus endereços ou redes confiáveis; isso determina a identificação de HTTPS e do IP do cliente. Com SameSite=Lax, mantenha front-end e API no mesmo site (por exemplo, subdomínios do mesmo domínio ou proxy para `/api`). Não foi feito deploy nem teste na AWS.
 
+## Clientes — interface
+
+Acesse **Clientes → Novo cliente**, como Administrador ou Funcionário. Nome, CPF, telefone, CEP e número são obrigatórios; e-mail e observações permanecem opcionais. CPF, telefone e CEP têm máscaras e são enviados sem pontuação. O telefone exige 11 dígitos. O ViaCEP mostra rua, bairro, cidade e estado; indisponibilidade permite nova tentativa e não impede salvar CEP/número.
+
+A listagem mantém nome, telefone e e-mail. Clique na lupa em Ações para abrir `/clientes/:id`: informações pessoais, endereço, data de cadastro e OS vinculadas. Falha de consulta e ausência de OS têm mensagens distintas. Registros antigos preservam o endereço e mostram dados desconhecidos como não informados.
+
+As páginas reutilizam `AppLayout`, `Sidebar`, `Button`, `InputField`, `TextareaField` e o serviço HTTP/CSRF. `EnderecoPorCep` compartilha consulta e apresentação entre cadastro e perfil; `FormularioCliente` compartilha campos/validações entre cadastro e edição. `CartaoInformacoes` organiza o novo perfil inspirado na referência visual, usando o tema existente. O perfil permite excluir com confirmação, cookie/CSRF e retorno à lista. Clientes com OS vinculadas são preservados (RN-020); resultado incerto orienta consultar a lista antes de repetir. O botão Editar abre `/clientes/:id/editar`, com campos preenchidos e formulário compartilhado com o cadastro. Permite editar nome, CPF, telefone, CEP, número, e-mail e observações, enviando PUT com CSRF e retornando ao perfil. Cancelar não grava alterações. Cadastro mantém proteção contra envio duplicado e resultado incerto.
+
+**Antes de executar o novo código com um banco existente:** conferir os registros e aplicar uma vez `backend/src/database/clientes-perfil.sql`, após os scripts anteriores. A migração está preparada, **não foi aplicada ao banco existente**. Não preenche CPF nem data fictícios. Registros antigos podem continuar sem os novos campos; uma edição exige completar os obrigatórios. Para instalação nova, executar também esse script após `clientes.sql`.
+
+Verificado: lint/build/typecheck, 29 verificações HTTP com PostgreSQL local descartável e navegador com API/ViaCEP simulados, incluindo máscaras, validações, perfis, OS, legado, erros e responsividade. A integração com ViaCEP real e o banco remoto não foram exercitados nesta entrega.
+
 ## Clientes — desenvolvimento local
 
 Por padrão, o servidor escuta somente nesta máquina (`127.0.0.1`). Clientes exige login e permite os perfis administrador e funcionario. Nas operações POST/PUT, envie também o cabeçalho `X-CSRF-Token` recebido após o login. No Insomnia, use `http://localhost:3333/api/v1/clientes` (ou a porta definida no `.env`).
@@ -197,6 +209,7 @@ Por padrão, o servidor escuta somente nesta máquina (`127.0.0.1`). Clientes ex
 | `POST /api/v1/clientes` | Cadastrar |
 | `GET /api/v1/clientes` | Listar |
 | `GET /api/v1/clientes/:id` | Consultar um cliente |
+| `GET /api/v1/clientes/:id/ordens-servico` | Consultar suas OS |
 | `PUT /api/v1/clientes/:id` | Editar |
 
 Exemplo fictício para POST/PUT, com `Content-Type: application/json`:
@@ -205,7 +218,9 @@ Exemplo fictício para POST/PUT, com `Content-Type: application/json`:
 {
   "nome": "Cliente de exemplo",
   "telefone": "00000000000",
-  "endereco": "Rua Fictícia, 10"
+  "cpf": "52998224725",
+  "cep": "01001000",
+  "numero": "10"
 }
 ```
 

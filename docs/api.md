@@ -127,9 +127,10 @@ Retorna `200`, `{"dados": funcionario}` sem senha/hash/versão técnica. Sem ses
 <a id="a04"></a>
 ### A04 — POST /clientes
 
-- **Entrada:** objeto JSON com `nome`, `telefone` e `endereco` obrigatórios; `email` e `observacoes` opcionais. Não aceita `id` nem campos desconhecidos.
-- **Validação:** campos são textos; obrigatórios não podem ser vazios. Espaços nas extremidades são removidos; opcionais omitidos, nulos ou em branco tornam-se `null`. E-mail informado exige formato básico válido. Sem unicidade de contatos nem máscara obrigatória de telefone.
-- **Sucesso:** `201`, `{"dados": cliente}` com id gerado pelo banco. RF-003/RF-017.
+- **Entrada:** `nome`, `telefone`, `cpf`, `cep` e `numero` obrigatórios; `email` e `observacoes` opcionais. Não aceita `id`, `criado_em`, `endereco` ou campos desconhecidos.
+- **Validação:** textos não vazios; telefone e CPF com 11 dígitos, CEP com 8, sem pontuação. CPF exige dígitos verificadores válidos e rejeita sequência repetida. Número é texto (ex.: `123A`, `S/N`). E-mail exige formato básico. Sem unicidade nova.
+- **Sucesso:** `201`, `{"dados": cliente}` com data e id gerados pelo banco. Campos retornados: id, nome, telefone, cpf, cep, numero, endereco legado, email, observacoes e criado_em. CPF/CEP/número/data podem ser nulos em registros anteriores à migração.
+- **Dependência:** aplicar `clientes-perfil.sql` antes de usar o novo contrato. Script preparado, não aplicado ao banco existente. RF-003/RF-017.
 
 <a id="a05"></a>
 ### A05 — GET /clientes/{id}
@@ -140,13 +141,17 @@ Retorna `200`, `{"dados": funcionario}` sem senha/hash/versão técnica. Sem ses
 <a id="a06"></a>
 ### A06 — PUT /clientes/{id}
 
-- **Entrada:** id no caminho e todos os campos obrigatórios de A04. Os cinco campos de negócio são editáveis. Opcionais ausentes ficam nulos; o id não pode ser alterado.
+- **Entrada:** id no caminho e todos os campos obrigatórios de A04. Os sete campos de negócio são editáveis; endereço legado e data não são recebidos. Opcionais ausentes ficam nulos; o id não pode ser alterado.
 - **Sucesso:** `200`, `{"dados": cliente}` atualizado. Id inválido ou corpo inválido: `400`; inexistente: `404`. RF-017.
 - Não exclui registros nem altera OS ou histórico.
 
 **Erros implementados em Clientes:** `400` para dados/JSON inválidos, `404` para cliente inexistente, `413` para corpo acima do limite do Express e `500` para falha interna, com `{"erro":{"codigo":"...","mensagem":"..."}}`. Detalhes do banco não são devolvidos.
 
-**Verificação:** checagem TypeScript e 18 cenários HTTP com banco simulado passaram. Após configurar `DATABASE_CA_CERT`, a conexão TLS foi validada, a tabela aplicada e as operações verificadas por HTTP com o Supabase real em uma transação revertida. Nenhum registro de teste permaneceu.
+### GET /clientes/{id}/ordens-servico
+
+Exige sessão dos dois perfis. Retorna `200`, `{"dados": [OS]}`, filtrando `cliente_id` na consulta SQL e reutilizando o modelo de OS. Cliente sem OS retorna lista vazia; inexistente retorna `404`; id inválido, `400`. Não modifica OS nem estoque.
+
+**Verificação da evolução de Clientes:** typecheck e 29 verificações HTTP/PostgreSQL local descartável, incluindo sessão, CSRF, campos inválidos, migração, preservação de legado, edição e histórico filtrado. Sem alteração no banco existente.
 
 <a id="a07"></a>
 ### A07 — GET /funcionarios
@@ -342,7 +347,7 @@ Os dados são fictícios. Substitua os IDs por cadastros existentes e use cookie
 **Cliente — POST /clientes:**
 
 ```json
-{"nome":"Clara Almeida","telefone":"11900000000","email":"clara@example.com","endereco":"Rua das Flores, 10"}
+{"nome":"Clara Almeida","telefone":"11900000000","email":"clara@example.com","cpf":"52998224725","cep":"01001000","numero":"10"}
 ```
 
 **Material — POST /materiais:**
@@ -383,6 +388,6 @@ Os dados são fictícios. Substitua os IDs por cadastros existentes e use cookie
 
 ## Lacunas locais e evolução
 
-Cliente–Venda e OS–Venda e um eventual catálogo de serviços continuam pendentes. O serviço atual é texto; a origem das movimentações já está vinculada ao item de venda, uso ou movimento revertido. Não simular histórico de compras nem baixar estoque duas vezes para preencher essas lacunas. Configuração/indicadores dependem dos respectivos esquemas e fórmulas (PD-N06), não de tabelas por tela. CEP/CSV continuam sugestões em RF-026/RF-027; adoção, fonte e contrato permanecem PD-R10, sem novas rotas presumidas.
+Cliente–Venda e OS–Venda e um eventual catálogo de serviços continuam pendentes. O serviço atual é texto; a origem das movimentações já está vinculada ao item de venda, uso ou movimento revertido. Não simular histórico de compras nem baixar estoque duas vezes para preencher essas lacunas. Configuração/indicadores dependem dos respectivos esquemas e fórmulas (PD-N06), não de tabelas por tela. Consulta de CEP via ViaCEP aprovada e implementada no front-end em RF-026. CSV continua sugestão em RF-027/PD-R10.
 
 As operações documentadas permitem integrar as telas ao back-end. O planejamento de interface permanece em [Telas e fluxos](telas-e-fluxos.md#etapas).

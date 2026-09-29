@@ -35,6 +35,10 @@
   --color-on-tertiary: #ffffff;
   --color-tertiary-container: #314974;
   --color-on-tertiary-container: #a1b9eb;
+  /* Avisos de sucesso: cores semânticas compartilhadas entre os módulos. */
+  --color-success: #237a3b;
+  --color-success-container: #e0f3e4;
+  --color-on-success-container: #154b27;
   --color-error: #ba1a1a;
   --color-on-error: #ffffff;
   --color-error-container: #ffdad6;
@@ -128,4 +132,18 @@
 
 button {
   cursor: pointer;
+}
+
+@keyframes alerta-contagem {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+
+.alerta-progresso {
+  transform-origin: left;
+  animation: alerta-contagem 5s linear forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alerta-progresso { animation-timing-function: steps(5, end); }
 }

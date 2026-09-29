@@ -64,12 +64,12 @@ export function possuiToken(dados: unknown): dados is { csrfToken: string } {
   return objeto(dados) && typeof dados.csrfToken === 'string' && /^[a-f0-9]{64}$/.test(dados.csrfToken)
 }
 
-export async function enviarComCsrf(caminho: string, dados?: unknown): Promise<unknown> {
+export async function enviarComCsrf(caminho: string, dados?: unknown, metodo: 'POST' | 'DELETE' | 'PUT' = 'POST'): Promise<unknown> {
   const sessao = await requisitar('/auth/csrf')
   if (!possuiToken(sessao)) throw new Error('Não foi possível preparar uma sessão segura. Tente novamente.')
-  // Token e cookie pertencem à mesma sessão. Nunca repete o POST automaticamente.
+  // Token e cookie pertencem à mesma sessão. Nunca repete a alteração automaticamente.
   return requisitar(caminho, {
-    method: 'POST',
+    method: metodo,
     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': sessao.csrfToken },
     ...(dados === undefined ? {} : { body: JSON.stringify(dados) }),
   })

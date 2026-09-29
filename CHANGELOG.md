@@ -12,6 +12,16 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Adicionado
 
+- Componente Alerta compartilhado por Clientes e Funcionários: avisos verdes com barra regressiva e fechamento automático após cinco segundos; cores semânticas no tema.
+
+- Perfil de Clientes reorganizado conforme referência visual, com cartões responsivos, observações e OS compactas; ação de lupa na lista. Edição dos sete campos integrada à API existente, usando formulário compartilhado com cadastro e tokens do tema.
+
+- Botão de exclusão no perfil do cliente, com confirmação reutilizando Dialog, CSRF e tratamento de vínculos com OS e resultado incerto.
+
+- Clientes com CPF obrigatório validado, máscaras de telefone/CPF/CEP, consulta ViaCEP reutilizável, perfil com data e histórico de OS. Migração preserva cadastros antigos e está preparada, sem aplicação no banco existente. Testes HTTP/PostgreSQL local e navegador.
+
+- Listagem e cadastro de Clientes na interface para Administrador e Funcionário, integrados à API existente, com validações, mensagens de erro e bloqueio de reenvio em resultado incerto. Componente TextareaField reutilizável.
+
 - Desativação de Funcionários com diálogo reutilizável, confirmação da senha do Administrador, bloqueio da própria conta e limites de tentativas. Preserva históricos e invalida sessões; a rota de alteração de acesso também exige confirmação ao desativar. Testes HTTP com PostgreSQL descartável.
 
 - Listagem e cadastro de Funcionários com usuário/senha, exclusivos do Administrador, usando a API existente. Componentes reutilizados, seleção de perfil, validação e tratamento de duplicidade e resultado incerto; comunicação de cookie/CSRF compartilhada entre autenticação e cadastros.
