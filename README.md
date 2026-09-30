@@ -66,23 +66,19 @@ Sem sessão válida, o acesso interno volta ao login. Falhas de conexão oferece
 
 Verificação desta etapa: lint e build aprovados; testes no navegador com API simulada cobriram login→Dashboard, seis áreas, os dois perfis, acesso direto restrito, recarga, sessão inválida, falha de rede com nova tentativa, logout com sucesso/erro e menu móvel. Layout conferido em 1280 × 900 e 390 × 844. Nenhuma conta ou banco real foi utilizado.
 
-## Tela de Funcionários
+## Funcionários — cadastro, perfil e edição
 
-Como Administrador, abra Funcionários → Novo funcionário. Preencha nome, usuário, e-mail, perfil (sem seleção padrão), senha de 15 a 128 caracteres e confirmação. O cadastro usa `POST /api/v1/funcionarios`, com cookie e CSRF; a API cria a conta ativa, normaliza o usuário e armazena somente o hash da senha. A confirmação fica apenas na interface. A nova conta usa o usuário e a senha escolhidos no login.
+Como Administrador, abra **Funcionários → Novo funcionário**. Informe nome, CPF válido, telefone de 11 dígitos, e-mail, usuário, perfil, senha de 15–128 caracteres e confirmação. CPF/telefone usam máscaras e são enviados sem pontuação. A conta começa ativa; somente o hash da senha é gravado.
 
-`/funcionarios` lista nome, usuário, e-mail, perfil e situação. `/funcionarios/novo` cadastra; ambas são exclusivas do Administrador, inclusive por acesso direto. `AppLayout`, `Sidebar`, `Button` e `InputField` são reutilizados, com o novo `SelectField` para seleção de perfil. Campos de CPF, telefone, gênero e cargo do protótipo não foram acrescentados ao contrato aprovado.
+A lupa na lista abre `/funcionarios/:id`, com identificação, dados pessoais, informações de acesso e OS por responsável. **Meu perfil**, na sidebar, abre `/meu-perfil` para qualquer conta: Funcionário comum só consulta a si mesmo; Administrador consulta os demais e pode editar.
 
-O sucesso retorna à lista com confirmação. Se a atualização da lista falhar, a nova tentativa repete apenas a consulta. Se o resultado do cadastro ficar incerto por falha de rede/resposta, o formulário bloqueia o reenvio e orienta consultar a lista. Usuário duplicado recebe mensagem própria. Senhas não são persistidas no armazenamento do navegador nem exibidas na listagem.
+**Editar perfil** abre `/funcionarios/:id/editar` para alterar nome, e-mail, CPF e telefone. Cadastro e edição reutilizam `FormularioFuncionario`. Salvar exige a senha do Administrador conectado, validada pela API; usuário, senha de login, perfil e situação não são alterados nessa edição. Resultado incerto bloqueia reenvio até conferir o perfil. Senhas não são guardadas no navegador.
 
-Verificação: lint e build aprovados; testes no navegador com API simulada e dados fictícios cobriram cadastro, validação, duplicidade, envio duplo, falhas, lista vazia, restrições por perfil e responsividade. A gravação e o login da conta criada contra o banco real não foram executados nesta entrega. Nenhuma conta existente ou estrutura do banco foi alterada. Edição, reativação e alteração de perfil ainda não têm interface nesta etapa.
+**Desativar funcionário** fica no perfil, com confirmação da senha própria; bloqueia desativar a própria conta e mantém as proteções/históricos existentes. A conta desativada permanece consultável pelo Administrador, mas perde o acesso. Sem reativação na interface.
 
-### Desativar funcionário
+**Banco:** antes de usar o código atualizado, conferir/aplicar uma vez `backend/src/database/funcionarios-perfil.sql`, após `funcionarios.sql`. Preparado e testado em banco local descartável; **não aplicado ao banco existente**. Os registros antigos mantêm CPF/telefone desconhecidos e continuam desativáveis. Edição pessoal exige preencher os campos. O comando `npm run criar:admin` também passou a solicitá-los. Não há upload de foto; o avatar usa iniciais.
 
-Na lista de Funcionários, o Administrador pode escolher **Desativar** em outra conta e confirmar com sua própria senha. A conta atual não pode ser desativada. O funcionário permanece na lista como Inativo e mantém seus históricos; suas sessões deixam de valer na próxima requisição. Não há exclusão física nem reativação pela interface nesta etapa.
-
-`Dialog` e `ConfirmarSenhaDialog` são reutilizáveis e usam `Button`/`InputField`. A senha é limpa após cada tentativa e não é armazenada. Falha de rede com resultado incerto bloqueia repetição e oferece atualizar a lista. A API exige confirmação tanto no novo `POST /funcionarios/:id/desativar` quanto no `PUT /funcionarios/:id/acesso` quando `ativo=false` (campo `senha_admin`). Clientes da API devem acompanhar essa mudança de contrato.
-
-Verificação da desativação: typecheck, lint/build e testes de navegador; 33 verificações HTTP com PostgreSQL local descartável, incluindo senha, CSRF, limites, própria conta, rota anterior, preservação de histórico, invalidação de sessões e concorrência entre Administradores. Nenhuma migração ou alteração no banco existente. Instruções da suíte em [backend/tests/README.md](backend/tests/README.md).
+Verificado: lint/build/typecheck; 52 verificações HTTP de perfil/edição, 33 de desativação e 29 de Clientes em PostgreSQL local descartável, incluindo permissões, senha, CSRF, migração/legado, histórico, sessões e concorrência. Navegador com API simulada: cadastro, perfil, edição com senha, cancelamento, resultado incerto, ambos os perfis e responsividade. Esses testes foram executados durante o desenvolvimento; os scripts de `backend/tests` foram posteriormente removidos a pedido da equipe. Nenhuma conta real foi modificada.
 
 ## Executar o back-end
 
@@ -134,7 +130,7 @@ Dentro de `backend/`, execute:
 npm run criar:admin
 ```
 
-Informe seu nome, usuário, e-mail e senha. A senha não aparece no terminal; precisa ter entre 15 e 128 caracteres. O comando só permite o cadastro inicial enquanto não houver funcionários; os próximos são cadastrados pelo administrador autenticado. Nenhuma conta padrão ou fictícia foi criada.
+Informe seu nome, usuário, e-mail, CPF, telefone e senha. A senha não aparece no terminal; precisa ter entre 15 e 128 caracteres. O comando só permite o cadastro inicial enquanto não houver funcionários; os próximos são cadastrados pelo administrador autenticado. Nenhuma conta padrão ou fictícia foi criada.
 
 ### Testar no Insomnia
 
@@ -163,6 +159,8 @@ Exemplo fictício de cadastro (substitua a senha; não há conta criada com esse
 {
   "nome": "Carlos Lima",
   "usuario": "carlos.lima",
+  "cpf": "52998224725",
+  "telefone": "11999999999",
   "email": "carlos@example.invalid",
   "senha": "Uma frase de exemplo 2026",
   "perfil": "funcionario"

@@ -33,8 +33,8 @@ export async function requisitar(caminho: string, opcoes: RequestInit = {}): Pro
     const codigo = typeof erro?.codigo === 'string' ? erro.codigo : undefined
     const mensagensPorCodigo: Record<string, string> = {
       AUTODESATIVACAO_PROIBIDA: 'Você não pode desativar sua própria conta.',
-      SENHA_CONFIRMACAO_INVALIDA: 'Sua senha está incorreta. A desativação não foi realizada.',
-      CONFIRMACAO_OBRIGATORIA: 'Informe sua senha para confirmar a desativação.',
+      SENHA_CONFIRMACAO_INVALIDA: 'Sua senha está incorreta. A operação não foi realizada.',
+      CONFIRMACAO_OBRIGATORIA: 'Informe sua senha para confirmar a operação.',
       FUNCIONARIO_NAO_ENCONTRADO: 'Funcionário não encontrado. Atualize a lista.',
     }
     const mensagens: Record<number, string> = {

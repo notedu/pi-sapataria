@@ -20,7 +20,9 @@ O contrato combina como front-end e back-end trocam pedidos e respostas. **Clien
 | A06 | Clientes | `PUT /clientes/{id}` | Alterar dados cadastrais | Administrador e funcionario autenticados | Implementado e verificado localmente |
 | A07 | Funcionários | `GET /funcionarios` | Listar/buscar funcionários | Administrador — RN-001 | Implementado |
 | A08 | Funcionários | `POST /funcionarios` | Cadastrar funcionário | Administrador — RN-001 | Implementado |
-| A21 | Funcionários | `GET /funcionarios/{id}` | Consultar perfil de funcionário | Administrador — RN-001 | Implementado |
+| A21 | Funcionários | `GET /funcionarios/{id}` | Consultar perfil | Administrador ou o próprio Funcionário — RN-001/RN-006 | Implementado |
+| — | Funcionários | `PUT /funcionarios/{id}` | Editar dados pessoais com senha própria | Administrador | Implementado |
+| — | Funcionários | `GET /funcionarios/{id}/ordens-servico` | Consultar OS sob sua responsabilidade | Administrador ou o próprio Funcionário | Implementado |
 | A22 | Funcionários | `PUT /funcionarios/{id}/acesso` | Definir perfil e estado de acesso; desativação exige senha própria | Administrador — RN-001 | Implementado |
 | — | Funcionários | `POST /funcionarios/{id}/desativar` | Desativar preservando perfil e histórico, com senha própria | Administrador — RN-001/RN-020 | Implementado |
 | A09 | OS | `GET /ordens-servico` | Listar OS | Ambos os perfis autenticados | Implementado — consulta |
@@ -70,7 +72,7 @@ O código atual contém a demonstração React e o servidor Express com a rota d
 <a id="permissoes"></a>
 ## Permissões
 
-Confirmado pelo Integrante 1: Clientes permite os perfis administrador e funcionario autenticados. Funcionários é exclusivo do administrador (RN-001). A API confere o estado ativo e a versão de acesso no banco em cada requisição protegida; editar ativo/perfil invalida sessões anteriores. Ambos os perfis podem cadastrar, editar, excluir, cancelar e corrigir estoque nas operações documentadas. Funcionários permanece exclusivo do administrador.
+Confirmado pelo Integrante 1: Clientes permite os perfis administrador e funcionario autenticados. Funcionários é exclusivo do administrador (RN-001). A API confere o estado ativo e a versão de acesso no banco em cada requisição protegida; editar ativo/perfil invalida sessões anteriores. Ambos os perfis podem cadastrar, editar, excluir, cancelar e corrigir estoque nas operações documentadas. A gestão de Funcionários permanece exclusiva do Administrador; consulta individual e suas OS também permitem o próprio Funcionário, conforme decisão de 30/09/2026.
 
 Autenticação por cookie `sapataria.sid`, HttpOnly, SameSite=Lax, Secure em produção; sessões no PostgreSQL com duração absoluta de 8h. Nas requisições POST/PUT/DELETE, envie `X-CSRF-Token` associado ao mesmo cookie. Sem login retorna `401`; perfil insuficiente ou CSRF inválido retorna `403`. Senhas são enviadas apenas no login, cadastro e na confirmação administrativa de desativação descrita abaixo. `senha_admin` é a senha da conta autenticada e nunca deve ser registrada em logs ou devolvida.
 
@@ -156,19 +158,31 @@ Exige sessão dos dois perfis. Retorna `200`, `{"dados": [OS]}`, filtrando `clie
 <a id="a07"></a>
 ### A07 — GET /funcionarios
 
-Implementado. Apenas administrador. `200`, `{"dados": [...]}` com id, nome, usuario, email, perfil e ativo; sem filtro/paginação nesta etapa.
+Implementado. Apenas administrador. `200`, `{"dados": [...]}` com id, nome, usuario, email, perfil, ativo, cpf e telefone; sem filtro/paginação nesta etapa.
 
 <a id="a08"></a>
 ### A08 — POST /funcionarios
 
-Implementado. Apenas administrador, com CSRF. Campos obrigatórios: nome, usuario, email, senha (15–128 caracteres), perfil. `ativo` é booleano opcional na entrada, com padrão true; null não é aceito. Perfil: administrador ou funcionario, sem padrão. Campo desconhecido ou `senha_protegida` na entrada é rejeitado. E-mail exige formato básico; a senha não é modificada.
+Implementado. Apenas administrador, com CSRF. Campos obrigatórios: nome, usuario, email, cpf, telefone, senha (15–128 caracteres), perfil. CPF: 11 dígitos sem pontuação, validação dos dígitos verificadores e rejeição de repetidos. Telefone: 11 dígitos sem pontuação. CPF/telefone não têm unicidade nova. Ambos podem ser nulos nas respostas de registros antigos. `ativo` é booleano opcional na entrada, com padrão true; null não é aceito. Perfil: administrador ou funcionario, sem padrão. Campo desconhecido ou `senha_protegida` na entrada é rejeitado. E-mail exige formato básico; a senha não é modificada.
 
-Retorna `201`, `{"dados": funcionario}` sem senha. Usuário duplicado (incluindo diferença de caixa): `409`; entrada inválida: `400`. Primeiro administrador: comando local `npm run criar:admin`, sem conta pública/padrão.
+Retorna `201`, `{"dados": funcionario}` sem senha. Usuário duplicado (incluindo diferença de caixa): `409`; entrada inválida: `400`. Primeiro administrador: comando local `npm run criar:admin`, que também exige CPF/telefone, sem conta pública/padrão.
 
 <a id="a21"></a>
 ### A21 — GET /funcionarios/{id}
 
-Implementado. Apenas administrador. `200`, `{"dados": funcionario}`. ID inválido: `400`; não encontrado: `404`.
+Implementado. Administrador consulta qualquer funcionário; Funcionário comum consulta somente seu próprio id. Outro id retorna `403` antes da busca. `200`, `{"dados": funcionario}` com cpf/telefone (nulos nos legados), sem senha/hash. ID inválido: `400`; não encontrado para consulta autorizada: `404`.
+
+### PUT /funcionarios/{id} — dados pessoais
+
+Apenas Administrador, sessão e CSRF. Corpo completo: `{"nome":"Pessoa Fictícia","email":"pessoa@example.com","cpf":"52998224725","telefone":"11999999999","senha_admin":"senha do Administrador conectado"}`. A senha é sempre do autor, inclusive quando edita outra pessoa. Não permite alterar usuário, senha de login, perfil, ativo ou enviar campos extras. Valida os mesmos quatro campos pessoais do cadastro. Legados precisam completá-los.
+
+Retorna `200`, `{"dados": funcionario}`. Não muda id, vínculos, credenciais nem versão de acesso. Confirmação incorreta: `403/SENHA_CONFIRMACAO_INVALIDA`, sem alterar o registro. Ausente/vazia ou acima de 128 caracteres: `400/CONFIRMACAO_OBRIGATORIA`. Sessão inválida: `401`; inexistente: `404`; limite: `429`. Autor e alvo são bloqueados em ordem de id, com nova checagem de sessão/perfil sob bloqueio; uma desativação concorrente do autor impede a edição.
+
+### GET /funcionarios/{id}/ordens-servico
+
+Mesma permissão de A21, conferida antes de consultar. Retorna `200`, `{"dados":[OS]}`, filtradas por `responsavel_id`, ordenadas por id. Sem vínculo retorna lista vazia; outro perfil sem permissão retorna `403`; funcionário inexistente para consulta autorizada retorna `404`. Não altera OS.
+
+**Migração necessária:** aplicar `funcionarios-perfil.sql` uma única vez após `funcionarios.sql`, antes de iniciar o código atualizado. Preparada e testada apenas localmente, não aplicada ao banco existente.
 
 <a id="a22"></a>
 ### A22 — PUT /funcionarios/{id}/acesso
@@ -186,7 +200,7 @@ Corpo: `{"senha_admin":"senha do administrador conectado"}`. Preserva o perfil a
 - `401`: sessão ausente, expirada ou invalidada.
 - `403`: `ACESSO_NEGADO`, `CSRF_INVALIDO`, `AUTODESATIVACAO_PROIBIDA` ou `SENHA_CONFIRMACAO_INVALIDA`. Senha incorreta não encerra a sessão do Administrador e não altera o alvo.
 - `404`: funcionário inexistente.
-- `429`: mais de 10 confirmações por Administrador ou 50 por IP em 15 minutos. Contadores no PostgreSQL são separados dos de login, incluem sucessos e não são zerados por novo login.
+- `429`: mais de 10 confirmações por Administrador ou 50 por IP em 15 minutos. Contadores compartilhados com a confirmação da edição pessoal no PostgreSQL são separados dos de login, incluem sucessos e não são zerados por novo login.
 - `503`: capacidade de verificação de senha ocupada.
 
 A autorização é conferida novamente dentro da transação, com bloqueios dos registros do autor e do alvo em ordem de ID. Uma mudança concorrente de acesso do autor impede o uso da autorização anterior. As senhas são verificadas contra o hash do autor autenticado, sem aceitar sua identidade no corpo.
@@ -287,7 +301,7 @@ Exemplo de sequência no Insomnia: login → cadastrar produto → registrar ent
 <a id="a24"></a>
 ### A24 — PUT /perfil
 
-- **Entrada:** Somente campos pessoais de Funcionário aprovados para autoedição; lista/obrigatoriedade em PD-N03. Não concede alteração de perfil/ativo por inferência.
+- **Situação atual (30/09/2026):** esta rota proposta não foi criada. A edição aprovada usa `PUT /funcionarios/{id}`, exclusiva do Administrador com senha própria e quatro campos pessoais. Funcionário comum tem somente consulta, via A21. Não autoriza autoedição por esse perfil.
 - **Sucesso:** 200; dados atualizados, sem senha_protegida.
 - **Erros, efeitos e origem:** E. Sem alteração de credencial por este comando. Guia §5.9; RN-006; PD-N01/PD-N03.
 
