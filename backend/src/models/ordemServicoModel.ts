@@ -22,10 +22,10 @@ export interface OrdemServico {
 
 const colunas = `id, cliente_id, responsavel_id, descricao_calcado, servico, valor, to_char(data_entrada, 'YYYY-MM-DD') AS data_entrada, to_char(prazo_entrega, 'YYYY-MM-DD') AS prazo_entrega, status, forma_pagamento, observacoes`;
 
-export async function listar(clienteId?: number): Promise<OrdemServico[]> {
+export async function listar(clienteId?: number, responsavelId?: number): Promise<OrdemServico[]> {
   const resultado = await pool.query<OrdemServico>(
-    `SELECT ${colunas} FROM sapataria.ordens_servico ${clienteId === undefined ? '' : 'WHERE cliente_id = $1'} ORDER BY id`,
-    clienteId === undefined ? [] : [clienteId],
+    `SELECT ${colunas} FROM sapataria.ordens_servico ${clienteId !== undefined ? 'WHERE cliente_id = $1' : responsavelId !== undefined ? 'WHERE responsavel_id = $1' : ''} ORDER BY id`,
+    clienteId !== undefined ? [clienteId] : responsavelId !== undefined ? [responsavelId] : [],
   );
   return resultado.rows;
 }

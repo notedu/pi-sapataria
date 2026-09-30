@@ -17,7 +17,7 @@ Critérios de sugestões são propostos e condicionados à aprovação. Quando f
 ### Decisões confirmadas e implementadas nesta etapa — acesso
 
 - Login individual por **usuário e senha**, sem diferenciação de maiúsculas/minúsculas no usuário; e-mail obrigatório apenas para contato. Usuário único, perfis administrador/funcionario sem perfil padrão e ativo=true por padrão.
-- Apenas administrador acessa cadastro/listagem/consulta/alteração de acesso de Funcionários (RN-001). Os dois perfis autenticados podem operar Clientes, Materiais, Produtos, OS, Vendas e Movimentações, incluindo exclusões permitidas, cancelamentos e correções.
+- Apenas Administrador acessa cadastro/listagem/edição/alteração de acesso de Funcionários (RN-001). Consulta individual e suas OS também são permitidas ao próprio Funcionário (RN-006). Os dois perfis autenticados podem operar Clientes, Materiais, Produtos, OS, Vendas e Movimentações, incluindo exclusões permitidas, cancelamentos e correções.
 - Senha com 15–128 caracteres, armazenada como hash scrypt; sessão PostgreSQL com duração absoluta de 8h. Login inválido não revela se a pessoa existe ou está inativa. Limite de 10 tentativas por usuário e 50 por IP em 15min.
 - Desativação e mudança de perfil invalidam sessões anteriores, verificadas em cada requisição. Reativação exige novo login. O logout encerra a sessão utilizada.
 - Operações que alteram dados exigem token CSRF ligado ao cookie de sessão. Primeiro administrador criado apenas por comando local quando não há funcionários; nenhum cadastro público ou conta padrão.
@@ -108,6 +108,8 @@ Estas confirmações substituem as pendências correspondentes das sugestões or
 - **Requisito relacionado:** [RF-012](requisitos.md#rf-012).
 
 ### RN-006
+
+**Decisão do Integrante 1 em 30/09/2026 — implementada no código:** Funcionário comum consulta somente o próprio perfil e suas OS; Administrador consulta todos. Edição pessoal (nome, e-mail, CPF e telefone), inclusive a própria, é exclusiva do Administrador e exige confirmação com sua senha. Não autoriza troca de usuário/senha ou mudança de permissões nessa operação. Limites de confirmação compartilhados com desativação: 10/Administrador e 50/IP em 15 minutos, incluindo sucessos, separados do login. CPF/telefone são obrigatórios em novos cadastros e na edição pessoal, preservando valores desconhecidos dos legados. Foto ficou fora do escopo por decisão explícita. Estas decisões atualizam as pendências históricas abaixo.
 
 **Gerenciamento dos próprios dados.**
 
@@ -293,9 +295,9 @@ A situação de cada registro abaixo indica o que foi resolvido e o que permanec
 
 | ID | Decisão necessária | Origem e regras relacionadas |
 |---|---|---|
-| <a id="pd-n01"></a>PD-N01 | Resolvido: ambos os perfis operam Clientes/OS/Vendas/Estoques, incluindo exclusões, cancelamentos e correções permitidos; Funcionários exclusivo do administrador. Pendente: Configuração e Financeiro. | Guia §§3, 4, 5.5, 9.3 e 17; RN-001, RN-002, RN-003 e RN-007. “Todas as telas” do administrador é sugestão em tensão com acessos explicitamente pendentes. |
+| <a id="pd-n01"></a>PD-N01 | Resolvido: ambos os perfis operam Clientes/OS/Vendas/Estoques, incluindo exclusões, cancelamentos e correções permitidos; Gestão de Funcionários exclusiva do Administrador; consulta individual também permitida ao próprio Funcionário. Pendente: Configuração e Financeiro. | Guia §§3, 4, 5.5, 9.3 e 17; RN-001, RN-002, RN-003 e RN-007. “Todas as telas” do administrador é sugestão em tensão com acessos explicitamente pendentes. |
 | <a id="pd-n02"></a>PD-N02 | Resolvido nesta etapa: usuário e senha, sessões de 8h, limites de tentativas e invalidação na alteração de acesso. Pendente: política e fluxo de alteração/recuperação de senha. | Guia §§5.1, 5.5 e 5.9; RN-004. Mecanismo técnico de armazenamento de senha em [PD-R04](requisitos.md#pd-r04). |
-| <a id="pd-n03"></a>PD-N03 | Resolvidos campos/obrigatoriedade e operações dos nove cadastros conforme modelo/API. Pendentes: vínculos Cliente–Venda e OS–Venda, autoedição de perfil e cadastros auxiliares. | Guia §5 (validação exigida, detalhes sugeridos), §§5.3–5.4, 5.9, 10 e 17; RN-006 e RN-010. Listar um campo não o torna obrigatório. |
+| <a id="pd-n03"></a>PD-N03 | Resolvidos campos/obrigatoriedade e operações dos nove cadastros conforme modelo/API. Pendentes: vínculos Cliente–Venda e OS–Venda, autoedição por Funcionário comum não autorizada nesta etapa; demais cadastros auxiliares pendentes. | Guia §5 (validação exigida, detalhes sugeridos), §§5.3–5.4, 5.9, 10 e 17; RN-006 e RN-010. Listar um campo não o torna obrigatório. |
 | <a id="pd-n04"></a>PD-N04 | Resolvidos estados, transições, edição e cancelamento da OS. Prazo permanece opcional, sem cálculo automático; catálogo de serviços não definido. | Guia §§6.1 e 17; RN-010. O guia define apenas significados sugeridos, não transições ou duração. |
 | <a id="pd-n05"></a>PD-N05 | Formas aceitas resolvidas: PIX, crédito, débito, dinheiro. Pagamento opcional em OS, obrigatório em venda. Situações financeiras adicionais permanecem pendentes. | Guia §§5.4, 5.6, 6.1–6.2 e 17; RN-009 a RN-011. Não há política documentada de parcelamento ou pagamento parcial. |
 | <a id="pd-n06"></a>PD-N06 | Aprovar critérios de faturamento e períodos, apuração de materiais, fórmula de lucro, custos incluídos e regra/parâmetro do imposto. | Guia §§5.11, 6.1, 6.3 e 17; RN-012 e RN-014 a RN-017. Definições atuais são sugestões; lucro e imposto são pendências explícitas. |

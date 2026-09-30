@@ -1,3 +1,5 @@
+import { listarOrdens } from './ordensServico'
+import type { OrdemResumo } from './ordensServico'
 import { ErroApi, enviarComCsrf, objeto, requisitar, ResultadoIncerto } from './api'
 
 export type DadosCliente = {
@@ -44,14 +46,9 @@ export async function buscarCliente(id: string): Promise<Cliente> {
   return resposta.dados
 }
 
-export type OrdemCliente = { id: number; servico: string; status: string; valor: string; data_entrada: string; prazo_entrega: string | null }
-export async function listarOrdensCliente(id: string): Promise<OrdemCliente[]> {
-  const resposta = await requisitar(`/clientes/${encodeURIComponent(id)}/ordens-servico`)
-  if (!objeto(resposta) || !Array.isArray(resposta.dados) || !resposta.dados.every((os: unknown) =>
-    objeto(os) && Number.isInteger(os.id) && typeof os.servico === 'string' && typeof os.status === 'string'
-      && typeof os.valor === 'string' && typeof os.data_entrada === 'string'
-      && (os.prazo_entrega === null || typeof os.prazo_entrega === 'string'))) throw new Error('Não foi possível interpretar as ordens de serviço.')
-  return resposta.dados as OrdemCliente[]
+export type { OrdemResumo as OrdemCliente } from './ordensServico'
+export async function listarOrdensCliente(id: string): Promise<OrdemResumo[]> {
+  return listarOrdens(`/clientes/${encodeURIComponent(id)}/ordens-servico`)
 }
 
 export async function excluirCliente(id: number): Promise<void> {

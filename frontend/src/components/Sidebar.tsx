@@ -29,10 +29,10 @@ export default function Sidebar({ usuario, onSair, saindo }: { usuario: Usuario;
         </ul>
       </nav>
       <div className="mt-10">
-        <div className="mb-6 flex items-center gap-3 px-4">
+        <NavLink to="/meu-perfil" aria-label={`Meu perfil: ${usuario.nome}`} title="Meu perfil" className={({ isActive }) => `mb-6 flex items-center gap-3 rounded-xl px-4 py-3 hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-primary ${isActive ? 'bg-primary/5' : ''}`}>
           <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-label-md text-on-primary">{iniciais}</span>
           <div className="min-w-0"><p className="break-words text-label-md text-primary">{usuario.nome}</p><p className="text-label-sm text-on-secondary-fixed-variant">{usuario.perfil === 'administrador' ? 'Administrador' : 'Funcionário'}</p></div>
-        </div>
+        </NavLink>
         <div aria-disabled="true" className="flex items-center gap-3 px-4 py-3 text-on-secondary-fixed-variant"><Icon name="configuracoes" /><span className="text-label-md">Configurações<span className="block text-label-sm">Em construção</span></span></div>
         <button type="button" onClick={onSair} disabled={saindo} className="text-error flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-label-md hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60"><Icon name="sair" />{saindo ? 'Saindo…' : 'Sair'}</button>
       </div>

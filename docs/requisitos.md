@@ -22,7 +22,7 @@ RF-017/RF-018/RF-020/RF-021/RF-022: cadastros e operações aprovadas disponíve
 
 ## Atualização de implementação — autenticação e Funcionários
 
-RF-001/RF-015: login individual por usuário e senha e logout implementados na API, com sessões PostgreSQL de 8h; tela de login pendente. RF-005/RF-019 e RN-001: cadastro, listagem, consulta e alteração de perfil/ativo exclusivos do administrador. RNF-005: hash scrypt, consultas parametrizadas, cookies de sessão, CSRF e limite de tentativas verificados; não representa conclusão da segurança de módulos ainda não implementados. RF-003/RF-017: Clientes agora exige login dos dois perfis. Contratos atuais em `api.md`.
+RF-001/RF-015: login individual por usuário e senha e logout implementados na API, com sessões PostgreSQL de 8h; tela de login pendente. RF-005/RF-019 e RN-001: cadastro, listagem, edição e alteração de perfil/ativo exclusivos do Administrador; consulta individual também permitida ao próprio Funcionário (decisão de 30/09/2026). RNF-005: hash scrypt, consultas parametrizadas, cookies de sessão, CSRF e limite de tentativas verificados; não representa conclusão da segurança de módulos ainda não implementados. RF-003/RF-017: Clientes agora exige login dos dois perfis. Contratos atuais em `api.md`.
 
 RF-004/RF-006/RF-007/RF-008: estrutura e consultas autenticadas implementadas para OS, Vendas, Materiais e Produtos, com itens/usos relacionados e Movimentações. RNF-004/RN-019: integridade referencial, obrigatoriedade, estoque não negativo e vínculo exclusivo verificados. Isso não conclui os fluxos de gravação, consumo, venda, financeiro ou telas. As permissões desta etapa se limitam à leitura por ambos os perfis autenticados.
 
@@ -139,3 +139,7 @@ Todos os registros abaixo têm classificação **Pendência** e situação **Pen
 ### Evolução de Clientes — 29/09/2026
 
 Aprovado pelo Integrante 1: CPF obrigatório com validação, telefone de 11 dígitos, endereço por CEP/número, consulta ViaCEP e perfil com data e OS. Implementado no código para RF-003/RF-017/RF-026, mantendo RN-002. Migração preparada e testada localmente, não aplicada ao banco existente. Edição visual implementada em `/clientes/:id/editar`, com formulário compartilhado e A06. Busca e histórico de compras de RF-017 continuam fora desta entrega.
+
+### Evolução de Funcionários — 30/09/2026
+
+RF-005/RF-019 e RN-001/RN-006/RN-020: perfil individual com lupa na lista, Meu perfil para ambos os perfis, OS por responsável, edição dos quatro campos pessoais com senha do Administrador, desativação movida ao perfil e novo formulário compartilhado com cadastro. CPF/telefone obrigatórios em novos cadastros; legado preservado. Migração preparada, não aplicada ao banco existente. Upload de foto adiado explicitamente; busca, reativação e alteração de permissões continuam sem interface nesta etapa.

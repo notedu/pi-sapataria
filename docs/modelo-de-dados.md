@@ -61,6 +61,8 @@ Cada movimentação aponta **para um Material ou um Produto, nunca ambos**, conf
 | `nome` | `text` | Obrigatório |
 | `usuario` | `text` | Obrigatório; único pelo índice `lower(usuario)`; API remove espaços externos e salva em minúsculas |
 | `email` | `text` | Obrigatório como contato; não é login; sem unicidade exigida |
+| `cpf` | `text` | 11 dígitos; obrigatório no novo cadastro/edição pessoal; nulo permitido em legado; API valida dígitos verificadores |
+| `telefone` | `text` | 11 dígitos; obrigatório no novo cadastro/edição pessoal; nulo permitido em legado |
 | `senha_protegida` | `text` | Obrigatório; hash scrypt com salt; nunca devolvido pela API |
 | `perfil` | `text` | Obrigatório; administrador ou funcionario; sem padrão |
 | `ativo` | `boolean` | Obrigatório no banco; padrão true |
@@ -70,7 +72,11 @@ A API recebe `senha` (15–128 caracteres), não `senha_protegida`. A senha não
 
 **Tabelas técnicas:** `sessoes` (`sid`, `sess`, `expire`) armazena identificadores e estado de sessão conforme connect-pg-simple; `tentativas_login` (`chave`, `tentativas`, `expira_em`) controla tentativas por usuário/IP com chaves derivadas por HMAC, sem senha. Sessões contêm ID do funcionário, versão de acesso, expiração e token CSRF, não dados da credencial. Limite absoluto de 8h; mudança de acesso exige novo login. Essas tabelas não representam novas entidades de negócio.
 
-O script `backend/src/database/funcionarios.sql` cria apenas essa etapa. Alterações futuras em tabelas existentes deverão ser registradas em novos scripts; `CREATE TABLE IF NOT EXISTS` não atualiza colunas antigas.
+**Evolução aprovada pelo Integrante 1 em 30/09/2026:** CPF e telefone obrigatórios no cadastro e na edição pessoal; sem unicidade nova. `funcionarios-perfil.sql` acrescenta colunas nulas aos registros antigos, restrições de formato e gatilho de obrigatoriedade apenas para INSERT/UPDATE dos campos pessoais. Assim, alterar acesso/desativar legados continua possível sem inventar CPF/telefone. Edição de nome, email, cpf e telefone exige senha do Administrador conectado. Funcionário comum pode apenas consultar seu próprio perfil e suas OS. Foto adiada explicitamente.
+
+Migração preparada e verificada em PostgreSQL local descartável, **não aplicada ao banco existente**. Instalações novas também precisam executar esse script após `funcionarios.sql`. O bootstrap do primeiro Administrador foi atualizado para solicitar os novos campos.
+
+O script `backend/src/database/funcionarios.sql` cria apenas a etapa original. Alterações futuras em tabelas existentes deverão ser registradas em novos scripts; `CREATE TABLE IF NOT EXISTS` não atualiza colunas antigas.
 
 ## Cliente
 

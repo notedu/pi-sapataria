@@ -11,20 +11,22 @@ export interface Funcionario {
   email: string;
   perfil: Perfil;
   ativo: boolean;
+  cpf: string | null;
+  telefone: string | null;
 }
 export interface Credencial extends Funcionario {
   senha_protegida: string;
   versao_acesso: number;
 }
 export interface NovoFuncionario {
-  nome: string; usuario: string; email: string; perfil: Perfil; ativo: boolean; senha_protegida: string;
+  nome: string; cpf: string; telefone: string; usuario: string; email: string; perfil: Perfil; ativo: boolean; senha_protegida: string;
 }
 
-const colunas = 'id, nome, usuario, email, perfil, ativo';
+const colunas = 'id, nome, usuario, email, perfil, ativo, cpf, telefone';
 
 export function dadosPublicos(funcionario: Funcionario): Funcionario {
-  const { id, nome, usuario, email, perfil, ativo } = funcionario;
-  return { id, nome, usuario, email, perfil, ativo };
+  const { id, nome, usuario, email, perfil, ativo, cpf, telefone } = funcionario;
+  return { id, nome, usuario, email, perfil, ativo, cpf, telefone };
 }
 
 export async function listar(): Promise<Funcionario[]> {
@@ -49,9 +51,9 @@ export async function buscarCredencial(usuario: string): Promise<Credencial | un
 
 export async function criar(dados: NovoFuncionario, banco: Pick<PoolClient, 'query'> = pool): Promise<Funcionario> {
   return (await banco.query<Funcionario>(
-    `INSERT INTO sapataria.funcionarios (nome, usuario, email, senha_protegida, perfil, ativo)
-     VALUES ($1, $2, $3, $4, $5, $6) RETURNING ${colunas}`,
-    [dados.nome, dados.usuario, dados.email, dados.senha_protegida, dados.perfil, dados.ativo],
+    `INSERT INTO sapataria.funcionarios (nome, usuario, email, senha_protegida, perfil, ativo, cpf, telefone)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING ${colunas}`,
+    [dados.nome, dados.usuario, dados.email, dados.senha_protegida, dados.perfil, dados.ativo, dados.cpf, dados.telefone],
   )).rows[0]!;
 }
 
@@ -62,6 +64,40 @@ export interface AutorizacaoAcesso {
   confirmarSenha?: (hash: string) => Promise<void>;
 }
 
+// Tanto a edição quanto a desativação revalidam o autor sob o mesmo bloqueio.
+async function bloquearPessoas(client: PoolClient, id: number, autorizacao: AutorizacaoAcesso) {
+  // Ordem comum evita deadlock entre dois administradores. Os bloqueios impedem
+  // autorizações obsoletas e preservam a versão usada para invalidar sessões.
+  const pessoas = (await client.query<Credencial>(
+    `SELECT ${colunas}, senha_protegida, versao_acesso FROM sapataria.funcionarios
+     WHERE id = ANY($1::integer[]) ORDER BY id FOR UPDATE`, [[autorizacao.funcionarioId, id]],
+  )).rows;
+  const autor = pessoas.find(pessoa => pessoa.id === autorizacao.funcionarioId);
+  if (!autor?.ativo || autor.versao_acesso !== autorizacao.versao || autorizacao.expiraEm <= Date.now()) {
+    throw new ErroHttp(401, 'NAO_AUTENTICADO', 'Faça login novamente.');
+  }
+  if (autor.perfil !== 'administrador') {
+    throw new ErroHttp(403, 'ACESSO_NEGADO', 'Este recurso é exclusivo do administrador.');
+  }
+  const alvo = pessoas.find(pessoa => pessoa.id === id);
+  if (!alvo) throw new ErroHttp(404, 'FUNCIONARIO_NAO_ENCONTRADO', 'Funcionário não encontrado.');
+  return { alvo, autor };
+}
+
+export type DadosPessoais = { nome: string; email: string; cpf: string; telefone: string };
+
+export async function editarDados(id: number, dados: DadosPessoais, autorizacao: AutorizacaoAcesso): Promise<Funcionario> {
+  return emTransacao(async client => {
+    const { autor } = await bloquearPessoas(client, id, autorizacao);
+    if (!autorizacao.confirmarSenha) throw new ErroHttp(400, 'CONFIRMACAO_OBRIGATORIA', 'Confirme a operação com sua senha.');
+    await autorizacao.confirmarSenha(autor.senha_protegida);
+    return (await client.query<Funcionario>(
+      `UPDATE sapataria.funcionarios SET nome=$1, email=$2, cpf=$3, telefone=$4 WHERE id=$5 RETURNING ${colunas}`,
+      [dados.nome, dados.email, dados.cpf, dados.telefone, id],
+    )).rows[0]!;
+  });
+}
+
 export async function alterarAcesso(
   id: number, perfil: Perfil | undefined, ativo: boolean, autorizacao: AutorizacaoAcesso,
 ): Promise<Funcionario> {
@@ -69,21 +105,7 @@ export async function alterarAcesso(
     throw new ErroHttp(403, 'AUTODESATIVACAO_PROIBIDA', 'Você não pode desativar sua própria conta.');
   }
   return emTransacao(async (client) => {
-    // Ordem comum evita deadlock entre dois administradores. Os bloqueios impedem
-    // autorizações obsoletas e preservam a versão usada para invalidar sessões.
-    const pessoas = (await client.query<Credencial>(
-      `SELECT ${colunas}, senha_protegida, versao_acesso FROM sapataria.funcionarios
-       WHERE id = ANY($1::integer[]) ORDER BY id FOR UPDATE`, [[autorizacao.funcionarioId, id]],
-    )).rows;
-    const autor = pessoas.find(pessoa => pessoa.id === autorizacao.funcionarioId);
-    if (!autor?.ativo || autor.versao_acesso !== autorizacao.versao || autorizacao.expiraEm <= Date.now()) {
-      throw new ErroHttp(401, 'NAO_AUTENTICADO', 'Faça login novamente.');
-    }
-    if (autor.perfil !== 'administrador') {
-      throw new ErroHttp(403, 'ACESSO_NEGADO', 'Este recurso é exclusivo do administrador.');
-    }
-    const alvo = pessoas.find(pessoa => pessoa.id === id);
-    if (!alvo) throw new ErroHttp(404, 'FUNCIONARIO_NAO_ENCONTRADO', 'Funcionário não encontrado.');
+    const { alvo, autor } = await bloquearPessoas(client, id, autorizacao);
     if (!ativo) {
       if (!autorizacao.confirmarSenha) {
         throw new ErroHttp(400, 'CONFIRMACAO_OBRIGATORIA', 'Confirme a operação com sua senha.');

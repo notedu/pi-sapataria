@@ -12,6 +12,8 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Adicionado
 
+- Funcionários: perfil com lupa, Meu perfil para ambos os perfis, edição pessoal com senha do Administrador, CPF/telefone obrigatórios e desativação no perfil. Formulário e confirmação reutilizáveis. Migração preparada, sem aplicação no banco existente; foto adiada.
+
 - Componente Alerta compartilhado por Clientes e Funcionários: avisos verdes com barra regressiva e fechamento automático após cinco segundos; cores semânticas no tema.
 
 - Perfil de Clientes reorganizado conforme referência visual, com cartões responsivos, observações e OS compactas; ação de lupa na lista. Edição dos sete campos integrada à API existente, usando formulário compartilhado com cadastro e tokens do tema.

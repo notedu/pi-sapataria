@@ -31,12 +31,14 @@ async function executar(): Promise<void> {
     const nome = await perguntar('Nome: ');
     const usuario = await perguntar('Usuário de login: ');
     const email = await perguntar('E-mail de contato: ');
+    const cpf = await perguntar('CPF (11 números, sem pontuação): ');
+    const telefone = await perguntar('Telefone com DDD (11 números): ');
     const senha = await lerSenha('Senha (15 a 128 caracteres; não será exibida): ');
     const confirmacao = await lerSenha('Repita a senha: ');
     if (senha !== confirmacao) throw new Error('As senhas não coincidem. Nenhuma conta foi criada.');
-    const dados = validarCadastro({ nome, usuario, email, senha, perfil: 'administrador' });
+    const dados = validarCadastro({ nome, usuario, email, cpf, telefone, senha, perfil: 'administrador' });
     const funcionario = await criarPrimeiroAdministrador({
-      nome: dados.nome, usuario: dados.usuario, email: dados.email,
+      nome: dados.nome, cpf: dados.cpf, telefone: dados.telefone, usuario: dados.usuario, email: dados.email,
       perfil: dados.perfil, ativo: dados.ativo, senha_protegida: await protegerSenha(senha),
     });
     console.log(`Administrador criado: ${funcionario.usuario}. Faça login pela API.`);

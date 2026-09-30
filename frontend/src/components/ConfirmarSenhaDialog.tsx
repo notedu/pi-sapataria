@@ -12,9 +12,11 @@ type Props = {
   onConfirmar: (senha: string) => Promise<void>
   onCancelar: () => void
   onRevisar: () => void
+  variante?: 'primary' | 'danger'
+  textoRevisar?: string
 }
 
-export default function ConfirmarSenhaDialog({ titulo, descricao, acao, onConfirmar, onCancelar, onRevisar }: Props) {
+export default function ConfirmarSenhaDialog({ titulo, descricao, acao, onConfirmar, onCancelar, onRevisar, variante = 'danger', textoRevisar = 'Fechar e atualizar lista' }: Props) {
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
   const [incerto, setIncerto] = useState(false)
@@ -49,8 +51,8 @@ export default function ConfirmarSenhaDialog({ titulo, descricao, acao, onConfir
         <InputField id={id} name="senha_admin" label="Sua senha de Administrador" type="password" autoComplete="current-password" required autoFocus disabled={enviando || incerto} />
         {erro && <p id={`${id}-erro`} role="alert" className="mt-4 rounded-default bg-error-container p-4 text-on-error-container">{erro}</p>}
         <div className="mt-6 flex flex-wrap justify-end gap-3">
-          <Button variant="secondary" disabled={enviando} onClick={incerto ? onRevisar : onCancelar}>{incerto ? 'Fechar e atualizar lista' : 'Cancelar'}</Button>
-          <Button variant="danger" type="submit" disabled={enviando || incerto}>{enviando ? 'Confirmando…' : acao}</Button>
+          <Button variant="secondary" disabled={enviando} onClick={incerto ? onRevisar : onCancelar}>{incerto ? textoRevisar : 'Cancelar'}</Button>
+          <Button variant={variante} type="submit" disabled={enviando || incerto}>{enviando ? 'Confirmando…' : acao}</Button>
         </div>
       </form>
     </Dialog>

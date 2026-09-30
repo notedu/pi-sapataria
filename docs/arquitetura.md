@@ -8,13 +8,15 @@ A base Express usa `server.ts`, `src/routes`, `src/controllers`, `src/models` e 
 
 A autenticação é da aplicação Node.js: scrypt para senhas, express-session para cookie e connect-pg-simple para sessões no mesmo PostgreSQL. `SESSION_SECRET` assina cookies; `DATABASE_URL`/`DATABASE_CA_CERT` configuram o banco. O Supabase hospeda o PostgreSQL temporariamente, sem uso de Supabase Auth; as tabelas e a lógica de login podem acompanhar a aplicação para AWS. Não houve implantação na AWS.
 
-A sessão guarda somente identidade, versão de acesso, expiração e token CSRF. A API consulta perfil/ativo atuais e exige novo login quando a versão muda. Clientes exige sessão; Funcionários exige administrador. Bootstrap do primeiro administrador é local e transacional, pelo comando `npm run criar:admin`. A futura interface usa cookies com `credentials: include` e `X-CSRF-Token` em alterações.
+A sessão guarda somente identidade, versão de acesso, expiração e token CSRF. A API consulta perfil/ativo atuais e exige novo login quando a versão muda. Clientes exige sessão; a gestão de Funcionários exige Administrador, e a consulta individual também permite o próprio Funcionário. Bootstrap do primeiro administrador é local e transacional, pelo comando `npm run criar:admin`. A futura interface usa cookies com `credentials: include` e `X-CSRF-Token` em alterações.
 
 Materiais, Produtos, OS, Vendas e Movimentações possuem Models, Controllers e Routes de consulta e gravação. `config/transacao.ts` mantém as operações relacionadas na mesma conexão. `models/estoqueModel.ts` concentra saldo, movimentação e reversão, reutilizados por venda e consumo. Bloqueios de linha e ordem comum de produtos protegem operações concorrentes. Itens e usos pertencem aos comandos de Venda/OS; não possuem CRUD genérico. Não há baixa automática por inserir diretamente uma linha via SQL.
 
 Configuração de produção: HTTPS, APP_ORIGIN exata, NODE_ENV=production, HOST e proxies confiáveis conforme a infraestrutura. Recuperação/troca de senha e telas ainda não implementadas. Contratos e exemplos atuais estão em `api.md` e no README raiz.
 
 Clientes agora possui formulário e perfil em React, reutilizando os campos, botões e layout. `EnderecoPorCep` compartilha a consulta pública ViaCEP (somente CEP, sem cookies) entre as duas telas; detalhes do endereço não são persistidos. A API valida os dados independentemente das máscaras e usa o modelo de OS para consultar o histórico por cliente. Migração `clientes-perfil.sql` preparada; ainda não aplicada ao banco existente. Decisão do Integrante 1 em 29/09/2026 substitui a antiga pendência de provedor de CEP nas seções históricas abaixo.
+
+Funcionários: `funcionarios-perfil.sql` prepara CPF/telefone. `funcionarioRoutes` aplica permissão administrativa a cada operação de gestão; consultas individuais conferem Administrador ou próprio id. Edição e desativação compartilham confirmação, limites e bloqueio/revalidação do autor na transação. `FormularioFuncionario` é compartilhado entre cadastro/edição; confirmação usa o diálogo existente. Nenhum serviço de fotos foi adicionado. Migração não aplicada ao banco existente.
 
 ## 1. Objetivo e situação do documento
 

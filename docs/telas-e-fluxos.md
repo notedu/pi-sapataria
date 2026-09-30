@@ -24,7 +24,7 @@ As onze telas e subtelas são **definições do rascunho** (Guia §4; RF-001 a R
 | Vendas independentes: cadastro e histórico | Registrar produtos vendidos sem criar OS | Administrador/funcionário sugeridos. |
 | Estoque de materiais | Controlar insumos consumidos | Administrador/funcionário sugeridos. |
 | Estoque de produtos | Controlar itens para venda | Administrador/funcionário sugeridos. |
-| Perfil do usuário | Gerenciar os próprios dados | Objetivo próprio definido em RN-006; acesso e edição detalhados pendentes. |
+| Perfil do usuário | Consultar o próprio perfil | Ambos consultam a si mesmos; edição pessoal exclusiva do Administrador com senha própria — RN-006, decisão de 30/09/2026. |
 | Configuração | Ajustar funcionamento e cadastros auxiliares | **Pendente — RN-003.** |
 | Financeiro: Dashboard financeiro e Faturamento, Lucro, Imposto, Materiais | Consultar indicadores | **Pendente — RN-003.** |
 
@@ -79,15 +79,17 @@ Todas as sequências abaixo são **propostas**, salvo objetivos e restrições e
 - **Pendências:** aplicar migração `clientes-perfil.sql` ao banco existente; busca continua sem interface. Histórico de compras continua fora do escopo.
 - **Verificação:** na etapa de base, typecheck e 29 verificações HTTP/PostgreSQL local. Na revisão visual/edição, lint/build e navegador com API/ViaCEP simulados: campos preenchidos, PUT/CSRF, opcionais apagados, cancelamento, validações, resultado incerto, legado, dois perfis e layouts desktop/celular; cadastro e exclusão conferidos novamente. Banco existente não alterado.
 
-### Funcionários — administrar acessos
+### Funcionários — cadastro, perfil e edição
 
-- **Implementado na interface:** listagem em `/funcionarios` e cadastro em `/funcionarios/novo`, exclusivos do Administrador (RN-001; atendimento parcial de RF-005/RF-019).
-- **Dados:** lista com nome, usuário, e-mail, perfil e situação. Cadastro exige nome, usuário, e-mail, senha de 15–128 caracteres e escolha de perfil. Confirmação de senha é validação local, sem envio à API; conta inicia ativa conforme contrato. CPF, telefone, gênero e cargo ilustrados no protótipo não integram esta entrega.
-- **Fluxo/API:** A07 para listar; A08 para cadastrar com cookie e CSRF. Sucesso retorna à lista com confirmação. Se a lista falhar após sucesso, repetir somente GET. Se o POST tiver resultado incerto, consultar a lista antes de repetir. Usuário duplicado, sessão expirada e acesso negado são tratados.
-- **Componentes:** layout, menu, botão, campo de texto e seleção reutilizáveis. Restrição de acesso cobre também a URL de cadastro; a API continua sendo a autoridade de permissões.
-- **Desativação implementada:** botão na lista abre diálogo reutilizável de confirmação com senha do Administrador. A própria conta tem botão desabilitado com explicação; a API também recusa autodesativação. Sucesso atualiza a linha para Inativo sem remover o histórico. Senha é limpa após cada tentativa/fechamento. Erros de senha, CSRF e limite são exibidos; resultado incerto exige atualizar a lista antes de repetir.
-- **Ainda pendente na interface:** perfil individual, edição, reativação e alteração de perfil. A21/A22 já existem na API. Não há exclusão de funcionário nem recuperação de senha nesta etapa.
-- **Verificação:** interface no navegador com API simulada; desativação também verificada por HTTP com PostgreSQL local descartável, dados fictícios, sessões e concorrência. Nenhum banco existente foi alterado.
+- `/funcionarios` lista contas e oferece lupa para `/funcionarios/:id`; gestão exclusiva do Administrador. Desativação foi movida da lista para o perfil.
+- `/meu-perfil`, pela sidebar, permite a ambos os perfis consultar seus próprios dados e OS por responsável. Funcionário comum não edita, desativa ou consulta outras pessoas; a API também verifica o id.
+- Perfil inspirado na referência visual: avatar de iniciais (sem foto), identificação, dados pessoais, usuário/situação e histórico de OS. Não foram acrescentados gênero, cargo, especialidade, avaliações ou admissão.
+- `FormularioFuncionario` compartilha cadastro e edição. Cadastro exige nome, CPF, telefone, e-mail, usuário, senha/confirmar senha e perfil. CPF/telefone têm máscaras, enviados sem pontuação, com validação na API.
+- `/funcionarios/:id/editar` altera nome, e-mail, CPF e telefone. Salvar abre `ConfirmarSenhaDialog`; só grava após confirmar a senha do Administrador conectado. Cancelar preserva o formulário; erro mantém dados e limpa a senha. Resultado incerto bloqueia reenvio e direciona para conferir o perfil.
+- Desativar exige senha própria, bloqueia a própria conta e invalida sessões, preservando histórico. Legados sem CPF/telefone continuam desativáveis; edição pessoal exige completar os campos.
+- Reutilização: Button, Icon, Alerta, InputField, SelectField, CartaoInformacoes, ConfirmarSenhaDialog, layout e serviço HTTP/CSRF. Leitura de OS compartilha validação com Clientes.
+- Verificado: lint/build/typecheck, 52 verificações HTTP de perfil/edição, 33 de desativação e 29 de Clientes em PostgreSQL descartável; navegador com API simulada, dois perfis, edição/cadastro, senha, falhas e layouts desktop/celular. Migração ainda não aplicada ao banco existente.
+- Pendentes: upload de foto (adiado), busca, reativação e alteração de acesso pela interface.
 
 ### OS — abrir, acompanhar e registrar materiais
 
