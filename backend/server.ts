@@ -8,6 +8,7 @@ import authRoutes from './src/routes/authRoutes';
 import funcionarioRoutes from './src/routes/funcionarioRoutes';
 import materialRoutes from './src/routes/materialRoutes';
 import produtoRoutes from './src/routes/produtoRoutes';
+import fornecedorRoutes from './src/routes/fornecedorRoutes';
 import ordemServicoRoutes from './src/routes/ordemServicoRoutes';
 import vendaRoutes from './src/routes/vendaRoutes';
 import movimentacaoEstoqueRoutes from './src/routes/movimentacaoEstoqueRoutes';
@@ -53,6 +54,7 @@ app.use('/api/v1/funcionarios', exigirLogin, verificarCsrf, funcionarioRoutes);
 // Ambos os perfis autenticados podem cadastrar, consultar e operar estas entidades.
 app.use('/api/v1/materiais', exigirLogin, verificarCsrf, materialRoutes);
 app.use('/api/v1/produtos', exigirLogin, verificarCsrf, produtoRoutes);
+app.use('/api/v1/fornecedores', exigirLogin, verificarCsrf, fornecedorRoutes);
 app.use('/api/v1/ordens-servico', exigirLogin, verificarCsrf, ordemServicoRoutes);
 app.use('/api/v1/vendas', exigirLogin, verificarCsrf, vendaRoutes);
 app.use('/api/v1/movimentacoes-estoque', exigirLogin, verificarCsrf, movimentacaoEstoqueRoutes);

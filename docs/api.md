@@ -1,5 +1,11 @@
 # Contrato inicial da API — visão do sistema
 
+## Fornecedores — implementado em 02/10/2026
+
+Prefixo `/api/v1`, sessão de Administrador ou Funcionário; alterações exigem CSRF. `GET /fornecedores` retorna `200`, `{"dados":[{"id":1,"nome":"Fornecedor fictício"}]}`. `POST /fornecedores` e `PUT /fornecedores/:id` recebem somente `{"nome":"Fornecedor fictício"}`, texto não vazio, e retornam respectivamente `201`/`200`, com o cadastro em `dados`. `DELETE /fornecedores/:id` retorna `204`, `404` se ausente e `409` se associado a um item.
+
+`GET /fornecedores/vinculos/:tipo` aceita `produtos` ou `materiais` e retorna `200`, `{"dados":[{"item_id":1,"fornecedor_id":1}]}`. `PUT /fornecedores/vinculos/:tipo/:id` recebe `{"fornecedores_ids":[1,2]}`, substitui a seleção em uma transação e retorna `204`. Lista vazia remove associações; duplicados ou fornecedores inexistentes retornam `400`; item inexistente retorna `404`. Nenhum preço/saldo é alterado. Cadastro/edição dos itens mantém os contratos anteriores; associar fornecedores é uma ação separada na interface.
+
 [Índice](README.md) · [Modelo de dados](modelo-de-dados.md) · [Telas e fluxos](telas-e-fluxos.md)
 
 ## Rota implementada de verificação
@@ -234,6 +240,8 @@ Implementado. Corpo `{"material_id":1,"quantidade_usada":"0.125"}`. Exige OS Abe
 
 <a id="a14"></a>
 ### A14 — GET /materiais
+
+**Interface de estoque integrada em 02/10/2026:** `/estoque` consome os cadastros, edições, exclusões e movimentações existentes. Os contratos abaixo foram preservados.
 
 Implementado: `200`, `{"dados": [...]}`, materiais ordenados por id, com saldo e demais colunas documentadas. Sem filtros, paginação ou alertas calculados. Consulta individual também disponível em `GET /materiais/:id`. RF-007/RF-021.
 

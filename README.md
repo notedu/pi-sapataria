@@ -58,9 +58,13 @@ Outros comandos, executados dentro de `frontend/`:
 
 ## Navegação interna
 
+**Estoque funcional:** `/estoque` está ligado ao menu principal para Administrador e Funcionário. Oferece Produtos para venda e Materiais, cadastros, edição, exclusão conforme vínculos/saldo, entradas/saídas e fornecedores associados opcionalmente a vários itens. Lucro previsto por produto é venda menos compra, com percentual sobre o custo. A migração `backend/src/database/fornecedores.sql` foi aplicada ao banco configurado em 02/10/2026; em outro ambiente, aplicar após `entidades.sql`. Os trechos históricos que ainda indicam Estoque em construção foram superados por esta entrega.
+
+Verificação integrada disponível em `backend/`: `node --import tsx scripts/verificarEstoque.cjs`. Usa PostgreSQL real com conta/dados fictícios em transação e rollback, cobrindo sessão/CSRF, cadastros, fornecedores múltiplos, movimentação e exclusões. Não usa contas existentes. Não executar junto a alterações de esquema. O modo `--navegador` mantém essa mesma aplicação na porta 3334 até encerrar o processo; para conferência visual, executar o front-end com `VITE_API_URL=http://localhost:3334/api/v1` e porta 5174. Essa configuração é exclusiva do teste e não altera os arquivos de ambiente normais.
+
 Após o login, `AppLayout` consulta `/auth/me` em cada mudança de rota e compartilha a estrutura com `Sidebar`. Nome e perfil vêm da API; o perfil é exibido como Administrador ou Funcionário, sem inventar cargo profissional. `src/config/navegacao.ts` reúne os nomes e caminhos usados pelo menu e pelas rotas; `EmConstrucao` recebe o título de cada área.
 
-Dashboard, Busca, Ordens de Serviço e Estoque exibem páginas provisórias. Funcionários é exclusivo do Administrador; o acesso direto de funcionário a `/funcionarios` retorna ao Dashboard. Financeiro está habilitado somente para Administrador, com dados fictícios temporários autorizados. Configurações permanece desabilitado, com permissão pendente. Não há indicadores ou operações de negócio nas páginas provisórias.
+Dashboard, Busca e Ordens de Serviço exibem páginas provisórias. Estoque possui a tela funcional descrita acima. Funcionários é exclusivo do Administrador; o acesso direto de funcionário a `/funcionarios` retorna ao Dashboard. Financeiro está habilitado somente para Administrador, com dados fictícios temporários autorizados. Configurações permanece desabilitado, com permissão pendente. Não há indicadores ou operações de negócio nas páginas provisórias.
 
 Sem sessão válida, o acesso interno volta ao login. Falhas de conexão oferecem nova tentativa. “Sair” obtém CSRF e encerra a sessão na API; em caso de falha, mostra o erro sem afirmar que a sessão terminou. O menu se expande no celular e fecha ao navegar. A API continua responsável por validar todas as operações protegidas.
 

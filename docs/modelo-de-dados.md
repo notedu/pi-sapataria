@@ -126,6 +126,10 @@ Usos de materiais ficam em `materiais_os`. Cadastro, edição, avanço de status
 
 ## Estoques — `materiais` e `produtos`
 
+**Atualização de 02/10/2026, aprovada por João Franco:** fornecedores cadastrados pelo nome, associação opcional de vários fornecedores a cada Produto para venda ou Material. `fornecedores.sql` aplicado ao PostgreSQL nesta entrega. `fornecedores` possui `id` gerado e `nome text NOT NULL` não vazio; `produtos_fornecedores` e `materiais_fornecedores` usam chave primária composta (item, fornecedor) e FKs. A exclusão de fornecedor associado é bloqueada. Excluir um item permitido pelas regras existentes remove apenas suas associações de fornecedores. Não há histórico de compras por fornecedor nem preços específicos por fornecedor.
+
+Lucro unitário previsto do Produto = preço de venda − preço de compra; percentual sobre custo = lucro ÷ compra × 100. Custo zero resulta em percentual não calculável. São informações derivadas na interface, sem colunas extras e sem apuração financeira. Materiais continuam com custo por unidade, sem preço de venda.
+
 RF-007/RF-008, RF-021/RF-022. Todos os campos são obrigatórios no banco. Ambos têm saldo `quantidade numeric NOT NULL DEFAULT 0 CHECK (quantidade >= 0)`, conforme RN-019.
 
 | Tabela | Campos além de id |

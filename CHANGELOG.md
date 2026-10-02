@@ -12,6 +12,8 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Adicionado
 
+- Estoque funcional em `/estoque`, com Produtos para venda e Materiais, busca/categorias, cadastro/edição/exclusão, entradas e saídas integradas ao PostgreSQL. Fornecedores com vários vínculos por item; lucro unitário e percentual sobre custo. Preserva histórico e saldo não negativo. Migração de fornecedores aplicada; verificação integrada com dados fictícios e rollback.
+
 - Tela Financeiro em `/financeiro` e no menu, exclusiva do Administrador em desenvolvimento e produção, com botão Voltar e detalhes por categoria. Mantém dados fictícios temporários autorizados e identificados, filtros, cartões, gráfico acessível e movimentações; reutiliza tema e componentes existentes. API/banco financeiro e fórmulas reais continuam pendentes.
 
 - Funcionários: perfil com lupa, Meu perfil para ambos os perfis, edição pessoal com senha do Administrador, CPF/telefone obrigatórios e desativação no perfil. Formulário e confirmação reutilizáveis. Migração preparada, sem aplicação no banco existente; foto adiada.

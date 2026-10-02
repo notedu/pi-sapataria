@@ -12,6 +12,7 @@ import EditarFuncionario from './pages/EditarFuncionario'
 import Funcionarios from './pages/Funcionarios'
 import NovoFuncionario from './pages/NovoFuncionario'
 import Financeiro from './pages/Financeiro'
+import Estoque from './pages/Estoque'
 
 export default function App() {
   return (
@@ -19,7 +20,8 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route element={<AppLayout />}>
         <Route path="/financeiro" element={<Financeiro />} />
-        {areas.filter(area => area.caminho && !['/funcionarios', '/clientes', '/financeiro'].includes(area.caminho)).map(area => (
+        <Route path="/estoque" element={<Estoque />} />
+        {areas.filter(area => area.caminho && !['/funcionarios', '/clientes', '/financeiro', '/estoque'].includes(area.caminho)).map(area => (
           <Route key={area.caminho} path={area.caminho} element={<EmConstrucao titulo={area.titulo} inicial={area.caminho === '/dashboard'} />} />
         ))}
         <Route path="/clientes" element={<Clientes />} />

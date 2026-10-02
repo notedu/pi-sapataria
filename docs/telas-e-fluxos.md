@@ -1,5 +1,13 @@
 # Telas e fluxos — visão inicial do sistema
 
+## Estoque implementado em 02/10/2026
+
+Autorizado por João Franco, integrado à navegação principal em `/estoque`, disponível para Administrador e Funcionário. Abas Produtos para venda e Materiais, busca por nome/categoria e filtro de categoria. Visão geral conta cadastros (não soma unidades diferentes), compara Materiais com o mínimo e estima valor a custo (saldo × custo atual). Produtos mostram compra, venda, lucro unitário e percentual sobre custo, não lucro financeiro realizado.
+
+Cadastro/edição compartilham `FormularioItemEstoque`; saldo começa em zero e é movimentado separadamente. Entrada e saída manual pedem quantidade e motivo, usando a API existente. Saída manual para perda/avaria não substitui Venda nem consumo em OS. Exclusão exige confirmação, saldo zero e ausência de histórico. Fornecedores têm cadastro/edição/exclusão pelo nome e associação opcional múltipla em diálogo próprio. A associação pode ser removida sem excluir o fornecedor. Erros persistentes, bloqueio durante envio e resultado incerto exigem consulta antes de repetir. Layout segue tema e componentes atuais, com rolagem horizontal da tabela no celular. RF-007/RF-008/RF-021/RF-022; RN-018/RN-019/RN-020.
+
+Os trechos históricos abaixo que indicam Estoque em construção foram superados por esta entrega. Vendas e OS continuam com seus próprios fluxos; esta tela não cria novos gatilhos de consumo.
+
 [Índice](README.md) · [Modelo de dados](modelo-de-dados.md) · [Contrato da API](api.md)
 
 ## Login implementado nesta etapa
@@ -8,7 +16,7 @@ A rota `/login` oferece usuário/senha, layout responsivo conforme a referência
 
 ## Estrutura interna implementada
 
-`AppLayout` e `Sidebar` são compartilhados pelas rotas internas; `EmConstrucao` é a página provisória reutilizável. O Dashboard mostra saudação e aviso de construção. Busca, OS e Estoque também exibem o aviso; Funcionários só é acessível ao Administrador (RN-001). Nome e perfil são consultados em `/auth/me` a cada navegação; sessão inválida volta ao login (RN-004/RN-005). O logout usa cookie e CSRF. Financeiro está habilitado somente para Administrador, com dados fictícios temporários autorizados em 01/10/2026; Configurações permanece desabilitado e com acesso pendente (RN-003). Os módulos provisórios e os indicadores de RF-002 permanecem pendentes; a implementação de Funcionários está descrita abaixo.
+`AppLayout` e `Sidebar` são compartilhados pelas rotas internas; `EmConstrucao` é a página provisória reutilizável. O Dashboard mostra saudação e aviso de construção. Busca e OS também exibem o aviso; Estoque possui a tela funcional descrita acima; Funcionários só é acessível ao Administrador (RN-001). Nome e perfil são consultados em `/auth/me` a cada navegação; sessão inválida volta ao login (RN-004/RN-005). O logout usa cookie e CSRF. Financeiro está habilitado somente para Administrador, com dados fictícios temporários autorizados em 01/10/2026; Configurações permanece desabilitado e com acesso pendente (RN-003). Os módulos provisórios e os indicadores de RF-002 permanecem pendentes; a implementação de Funcionários está descrita abaixo.
 
 ## Mapa geral
 
