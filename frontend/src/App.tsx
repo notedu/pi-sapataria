@@ -11,15 +11,27 @@ import PerfilFuncionario from './pages/PerfilFuncionario'
 import EditarFuncionario from './pages/EditarFuncionario'
 import Funcionarios from './pages/Funcionarios'
 import NovoFuncionario from './pages/NovoFuncionario'
+import Dashboard from './pages/Dashboard'
+import Busca from './pages/Busca'
+import OrdensServico from './pages/OrdensServico'
+import NovaOrdemServico from './pages/NovaOrdemServico'
+import DetalhesOrdemServico from './pages/DetalhesOrdemServico'
+import EditarOrdemServico from './pages/EditarOrdemServico'
 
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route element={<AppLayout />}>
-        {areas.filter(area => area.caminho && area.caminho !== '/funcionarios' && area.caminho !== '/clientes').map(area => (
-          <Route key={area.caminho} path={area.caminho} element={<EmConstrucao titulo={area.titulo} inicial={area.caminho === '/dashboard'} />} />
+        {areas.filter(area => area.caminho && area.caminho === '/estoque').map(area => (
+          <Route key={area.caminho} path={area.caminho} element={<EmConstrucao titulo={area.titulo} />} />
         ))}
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/busca" element={<Busca />} />
+        <Route path="/ordens-servico" element={<OrdensServico />} />
+        <Route path="/ordens-servico/nova" element={<NovaOrdemServico />} />
+        <Route path="/ordens-servico/:id/editar" element={<EditarOrdemServico />} />
+        <Route path="/ordens-servico/:id" element={<DetalhesOrdemServico />} />
         <Route path="/clientes" element={<Clientes />} />
         <Route path="/clientes/:id/editar" element={<EditarCliente />} />
         <Route path="/clientes/:id" element={<PerfilCliente />} />

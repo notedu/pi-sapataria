@@ -8,7 +8,13 @@ A rota `/login` oferece usuário/senha, layout responsivo conforme a referência
 
 ## Estrutura interna implementada
 
-`AppLayout` e `Sidebar` são compartilhados pelas rotas internas; `EmConstrucao` é a página provisória reutilizável. O Dashboard mostra saudação e aviso de construção. Busca, OS e Estoque também exibem o aviso; Funcionários só é acessível ao Administrador (RN-001). Nome e perfil são consultados em `/auth/me` a cada navegação; sessão inválida volta ao login (RN-004/RN-005). O logout usa cookie e CSRF. Financeiro e Configurações ficam desabilitados, preservando RN-003 como pendente. Os módulos provisórios e os indicadores de RF-002 permanecem pendentes; a implementação de Funcionários está descrita abaixo.
+`AppLayout` e `Sidebar` são compartilhados pelas rotas internas. Dashboard, Busca e OS têm interface integrada às consultas existentes; Estoque usa `EmConstrucao`. Funcionários só é acessível ao Administrador (RN-001). Nome e perfil são consultados em `/auth/me` a cada navegação; sessão inválida volta ao login (RN-004/RN-005). O logout usa cookie e CSRF. Financeiro e Configurações ficam desabilitados, preservando RN-003 como pendente.
+
+Dashboard (RF-002) exibe entradas do dia e quantidade de OS Abertas, Em andamento e Prontas, calculadas no navegador a partir de A09. Busca (RF-012) consulta Clientes e OS, filtra por nome/telefone, número/item/serviço e oferece atalhos para páginas disponíveis. OS (RF-004/RF-018) possui listagem com filtro local, cadastro conforme A10 e detalhes conforme A11; cliente e responsável são selecionados sem expor a listagem administrativa de Funcionários ao perfil comum. A edição reutiliza os campos do cadastro e só aparece para OS Aberta ou Em andamento, conforme `PUT /ordens-servico/:id`. O detalhe permite avanço/cancelamento por A12 e registro de uso por A13, obedecendo RN-010/RN-012. O valor é manual, a data de entrada vem da API e os materiais são consultados separadamente. Indicadores financeiros, alertas, imposto automático e status de pagamento ainda não possuem interface nesta etapa. As descrições propostas adiante permanecem material histórico, sem substituir esses contratos implementados.
+
+O botão **Cadastrar cliente** dentro da nova OS abre `/clientes/novo` com contexto de retorno. Após A04 confirmar o novo cliente, a navegação volta a `/ordens-servico/nova`, restaura os campos já informados e seleciona o novo `cliente_id`. O mesmo cadastro aberto diretamente pela área de Clientes mantém seu destino normal, `/clientes`.
+
+O valor da OS é digitado com máscara de moeda brasileira no cadastro e na edição. Os dois últimos dígitos representam centavos; por exemplo, `123456` aparece como `R$ 1.234,56` e é enviado como string `1234.56`, sem cálculo financeiro adicional.
 
 ## Mapa geral
 
