@@ -12,6 +12,8 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Adicionado
 
+- Tela Financeiro em `/financeiro` e no menu, exclusiva do Administrador em desenvolvimento e produção, com botão Voltar e detalhes por categoria. Mantém dados fictícios temporários autorizados e identificados, filtros, cartões, gráfico acessível e movimentações; reutiliza tema e componentes existentes. API/banco financeiro e fórmulas reais continuam pendentes.
+
 - Funcionários: perfil com lupa, Meu perfil para ambos os perfis, edição pessoal com senha do Administrador, CPF/telefone obrigatórios e desativação no perfil. Formulário e confirmação reutilizáveis. Migração preparada, sem aplicação no banco existente; foto adiada.
 
 - Componente Alerta compartilhado por Clientes e Funcionários: avisos verdes com barra regressiva e fechamento automático após cinco segundos; cores semânticas no tema.

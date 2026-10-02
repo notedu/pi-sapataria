@@ -20,6 +20,8 @@ A arquitetura ainda registra o framework HTTP como pendente e as fontes anterior
 | 2 - João Contin. Design com Stitch/Figma, padrões e componentes de referência; OS. | Referência visual utilizável progressivamente; abertura e acompanhamento de OS conectados à API e banco; estados e consumo conforme regras adotadas. | Base compartilhada; clientes; estados/serviços da OS; acordo de consumo com João Franco. |
 | 3 - João Franco. Cadastros e estoques; movimentações; vendas independentes. | Materiais e Produtos para venda cadastrados; entradas/saídas e vendas conectadas à interface, API e banco; saldos coerentes conforme regras adotadas. | Base compartilhada; unidades, pagamentos e momentos de baixa; integração com OS de João Contin. |
 
+**Atualização de 01/10/2026:** João Franco informou que assumiu o Financeiro e autorizou a primeira tela como protótipo visual responsivo com dados fictícios. Na atualização da mesma data, autorizou a tela `/financeiro` na navegação normal, exclusiva do Administrador, mantendo dados fictícios temporários. API/banco financeiro e fórmulas continuam pendentes; a permissão do Financeiro foi resolvida. Essa atribuição substitui a ausência de responsável indicada na tabela histórica de cobertura abaixo, sem ampliar as responsabilidades dos demais integrantes.
+
 Materiais são itens utilizados nos serviços. Produtos para venda são itens vendidos avulsos, como palmilhas e cadarços. Padronizar os nomes não altera as regras de estoque. A landing page apenas apresenta o projeto: não é loja virtual, agendamento ou portal do cliente.
 
 

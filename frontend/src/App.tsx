@@ -11,13 +11,15 @@ import PerfilFuncionario from './pages/PerfilFuncionario'
 import EditarFuncionario from './pages/EditarFuncionario'
 import Funcionarios from './pages/Funcionarios'
 import NovoFuncionario from './pages/NovoFuncionario'
+import Financeiro from './pages/Financeiro'
 
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route element={<AppLayout />}>
-        {areas.filter(area => area.caminho && area.caminho !== '/funcionarios' && area.caminho !== '/clientes').map(area => (
+        <Route path="/financeiro" element={<Financeiro />} />
+        {areas.filter(area => area.caminho && !['/funcionarios', '/clientes', '/financeiro'].includes(area.caminho)).map(area => (
           <Route key={area.caminho} path={area.caminho} element={<EmConstrucao titulo={area.titulo} inicial={area.caminho === '/dashboard'} />} />
         ))}
         <Route path="/clientes" element={<Clientes />} />

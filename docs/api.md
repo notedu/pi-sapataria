@@ -44,8 +44,8 @@ O contrato combina como front-end e back-end trocam pedidos e respostas. **Clien
 | A28 | Configurações | `PUT /configuracoes` | Alterar dados e parâmetros | Pendente — RN-003 | Proposto |
 | A29 | Configurações | `POST /configuracoes/{cadastro}` | Cadastrar item auxiliar | Pendente — RN-003 | Proposto |
 | A26 | Dashboard | `GET /dashboard` | Consultar resumo operacional | Pendente; acesso amplo é sugestão | Proposto |
-| A30 | Financeiro | `GET /financeiro` | Consultar painel financeiro | Pendente — RN-003 | Proposto |
-| A31 | Financeiro | `GET /financeiro/{indicador}` | Consultar indicador detalhado | Pendente — RN-003 | Proposto |
+| A30 | Financeiro | `GET /financeiro` | Consultar painel financeiro | Administrador — RN-003 | Proposto; não implementado |
+| A31 | Financeiro | `GET /financeiro/{indicador}` | Consultar indicador detalhado | Administrador — RN-003 | Proposto; não implementado |
 
 ## Consultas adicionais implementadas
 

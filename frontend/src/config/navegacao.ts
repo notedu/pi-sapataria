@@ -8,7 +8,7 @@ export const areas: Area[] = [
   { titulo: 'Busca', caminho: '/busca', icone: 'busca' },
   { titulo: 'Clientes', caminho: '/clientes', icone: 'clientes' },
   { titulo: 'Ordens de Serviço', caminho: '/ordens-servico', icone: 'servicos' },
-  { titulo: 'Financeiro', icone: 'financeiro' },
+  { titulo: 'Financeiro', caminho: '/financeiro', icone: 'financeiro', administrador: true },
   { titulo: 'Funcionários', caminho: '/funcionarios', icone: 'funcionarios', administrador: true },
   { titulo: 'Estoque', caminho: '/estoque', icone: 'estoque' },
 ]
