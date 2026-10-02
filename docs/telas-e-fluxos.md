@@ -8,7 +8,7 @@ A rota `/login` oferece usuário/senha, layout responsivo conforme a referência
 
 ## Estrutura interna implementada
 
-`AppLayout` e `Sidebar` são compartilhados pelas rotas internas; `EmConstrucao` é a página provisória reutilizável. O Dashboard mostra saudação e aviso de construção. Busca, OS e Estoque também exibem o aviso; Funcionários só é acessível ao Administrador (RN-001). Nome e perfil são consultados em `/auth/me` a cada navegação; sessão inválida volta ao login (RN-004/RN-005). O logout usa cookie e CSRF. Financeiro e Configurações ficam desabilitados, preservando RN-003 como pendente. Os módulos provisórios e os indicadores de RF-002 permanecem pendentes; a implementação de Funcionários está descrita abaixo.
+`AppLayout` e `Sidebar` são compartilhados pelas rotas internas; `EmConstrucao` é a página provisória reutilizável. O Dashboard mostra saudação e aviso de construção. Busca, OS e Estoque também exibem o aviso; Funcionários só é acessível ao Administrador (RN-001). Nome e perfil são consultados em `/auth/me` a cada navegação; sessão inválida volta ao login (RN-004/RN-005). O logout usa cookie e CSRF. Financeiro está habilitado somente para Administrador, com dados fictícios temporários autorizados em 01/10/2026; Configurações permanece desabilitado e com acesso pendente (RN-003). Os módulos provisórios e os indicadores de RF-002 permanecem pendentes; a implementação de Funcionários está descrita abaixo.
 
 ## Mapa geral
 
@@ -26,7 +26,7 @@ As onze telas e subtelas são **definições do rascunho** (Guia §4; RF-001 a R
 | Estoque de produtos | Controlar itens para venda | Administrador/funcionário sugeridos. |
 | Perfil do usuário | Consultar o próprio perfil | Ambos consultam a si mesmos; edição pessoal exclusiva do Administrador com senha própria — RN-006, decisão de 30/09/2026. |
 | Configuração | Ajustar funcionamento e cadastros auxiliares | **Pendente — RN-003.** |
-| Financeiro: Dashboard financeiro e Faturamento, Lucro, Imposto, Materiais | Consultar indicadores | **Pendente — RN-003.** |
+| Financeiro: Dashboard financeiro e Faturamento, Lucro, Imposto, Materiais | Consultar indicadores | **Somente Administrador — RN-003, decisão de 01/10/2026.** |
 
 Não inferir acesso irrestrito do administrador: o Guia §3 sugere “todas as telas”, mas §§4/17 deixam Configuração/Financeiro pendentes. A matriz por operação está em PD-N01. Não confundir Perfil do usuário (próprio) com Perfil de funcionário (administração).
 
@@ -137,10 +137,12 @@ Todas as sequências abaixo são **propostas**, salvo objetivos e restrições e
 
 ### Controle financeiro
 
+**Tela habilitada em 01/10/2026, autorizada por João Franco:** `/financeiro` integra a navegação em desenvolvimento e produção, exclusiva do Administrador; menu e acesso direto protegidos por AppLayout. Botão Voltar retorna ao Dashboard. Dados fictícios temporários autorizados e identificados, referência 30/09/2026. Filtros atualizam cartões, gráfico, lista e detalhes por categoria. Recebimentos, Pagamentos e Resultado de caixa mostram exemplos do período em Dialog; Faturamento, Materiais, Lucro e Impostos explicam a apuração indisponível, sem valores inventados. Tema e componentes existentes reutilizados. A30/A31 e integração financeira com banco não foram implementadas. RF-011/RF-025 avançam na apresentação; RN-014 a RN-017 continuam pendentes.
+
 - **Objetivo/origem:** acompanhar indicadores; Guia §5.11, RF-011/RF-025; acesso em RN-003.
 - **Informações:** totais/evolução por período e subtelas Faturamento, Lucro, Imposto e Materiais; fórmulas e dados retornados permanecem pendentes (RN-014 a RN-017).
 - **Fluxo/API:** selecionar período → painel com [A30](api.md#a30) → abrir indicador com [A31](api.md#a31) → voltar ao painel. Consulta apenas é sugestão RN-007; não se criam lançamentos ou edição financeira por inferência.
-- **Pendências:** quem consulta, datas de reconhecimento, custos históricos e fórmulas (PD-N01/PD-N05/PD-N06). Não exibir estimativa fictícia como resultado real, nem transformar regra ausente em valor zero.
+- **Pendências:** integração financeira, datas de reconhecimento, custos históricos e fórmulas (PD-N05/PD-N06). Não exibir estimativa fictícia como resultado real, nem transformar regra ausente em valor zero.
 
 <a id="etapas"></a>
 ## Implementação por funcionalidade — sequência sugerida
