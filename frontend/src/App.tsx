@@ -17,6 +17,8 @@ import OrdensServico from './pages/OrdensServico'
 import NovaOrdemServico from './pages/NovaOrdemServico'
 import DetalhesOrdemServico from './pages/DetalhesOrdemServico'
 import EditarOrdemServico from './pages/EditarOrdemServico'
+import Financeiro from './pages/Financeiro'
+import Estoque from './pages/Estoque'
 
 export default function App() {
   return (
@@ -25,6 +27,10 @@ export default function App() {
       <Route element={<AppLayout />}>
         {areas.filter(area => area.caminho && area.caminho === '/estoque').map(area => (
           <Route key={area.caminho} path={area.caminho} element={<EmConstrucao titulo={area.titulo} />} />
+        <Route path="/financeiro" element={<Financeiro />} />
+        <Route path="/estoque" element={<Estoque />} />
+        {areas.filter(area => area.caminho && !['/funcionarios', '/clientes', '/financeiro', '/estoque'].includes(area.caminho)).map(area => (
+          <Route key={area.caminho} path={area.caminho} element={<EmConstrucao titulo={area.titulo} inicial={area.caminho === '/dashboard'} />} />
         ))}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/busca" element={<Busca />} />

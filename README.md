@@ -58,6 +58,10 @@ Outros comandos, executados dentro de `frontend/`:
 
 ## Navegação interna
 
+**Estoque funcional:** `/estoque` está ligado ao menu principal para Administrador e Funcionário. Oferece Produtos para venda e Materiais, cadastros, edição, exclusão conforme vínculos/saldo, entradas/saídas e fornecedores associados opcionalmente a vários itens. Lucro previsto por produto é venda menos compra, com percentual sobre o custo. A migração `backend/src/database/fornecedores.sql` foi aplicada ao banco configurado em 02/10/2026; em outro ambiente, aplicar após `entidades.sql`. Os trechos históricos que ainda indicam Estoque em construção foram superados por esta entrega.
+
+Verificação integrada disponível em `backend/`: `node --import tsx scripts/verificarEstoque.cjs`. Usa PostgreSQL real com conta/dados fictícios em transação e rollback, cobrindo sessão/CSRF, cadastros, fornecedores múltiplos, movimentação e exclusões. Não usa contas existentes. Não executar junto a alterações de esquema. O modo `--navegador` mantém essa mesma aplicação na porta 3334 até encerrar o processo; para conferência visual, executar o front-end com `VITE_API_URL=http://localhost:3334/api/v1` e porta 5174. Essa configuração é exclusiva do teste e não altera os arquivos de ambiente normais.
+
 Após o login, `AppLayout` consulta `/auth/me` em cada mudança de rota e compartilha a estrutura com `Sidebar`. Nome e perfil vêm da API; o perfil é exibido como Administrador ou Funcionário, sem inventar cargo profissional. `src/config/navegacao.ts` reúne os nomes e caminhos usados pelo menu e pelas rotas; `EmConstrucao` recebe o título de cada área.
 
 Dashboard mostra contagens de OS por estado e entradas do dia, calculadas a partir da lista da API, além de atalhos para OS. Busca localiza clientes, OS e páginas disponíveis. Ordens de Serviço oferece lista com filtros locais, cadastro, detalhes, edição de OS Aberta ou Em andamento, avanço/cancelamento conforme os estados permitidos e registro único de uso de material pela API. O valor da OS é manual; não há imposto automático, faturamento ou status de pagamento nesta interface. Funcionários é exclusivo do Administrador; o acesso direto de funcionário a `/funcionarios` retorna ao Dashboard. Estoque ainda exibe página provisória. Financeiro e Configurações estão desabilitados, sem resolver suas permissões pendentes.
@@ -65,12 +69,26 @@ Dashboard mostra contagens de OS por estado e entradas do dia, calculadas a part
 No cadastro de OS, **Cadastrar cliente** abre o formulário de Clientes. Quando o cadastro começa por esse botão e termina com sucesso, o sistema volta à nova OS, conserva os campos já preenchidos e seleciona o cliente recém-cadastrado. O cadastro iniciado pela área de Clientes continua retornando à lista de Clientes.
 
 O campo **Valor da OS** no cadastro e na edição formata a digitação em reais e centavos (`123456` → `R$ 1.234,56`). A interface envia `1234.56` à API, preservando o valor manual e a validação do servidor.
+Dashboard, Busca e Ordens de Serviço exibem páginas provisórias. Estoque possui a tela funcional descrita acima. Funcionários é exclusivo do Administrador; o acesso direto de funcionário a `/funcionarios` retorna ao Dashboard. Financeiro está habilitado somente para Administrador, com dados fictícios temporários autorizados. Configurações permanece desabilitado, com permissão pendente. Não há indicadores ou operações de negócio nas páginas provisórias.
 
 Sem sessão válida, o acesso interno volta ao login. Falhas de conexão oferecem nova tentativa. “Sair” obtém CSRF e encerra a sessão na API; em caso de falha, mostra o erro sem afirmar que a sessão terminou. O menu se expande no celular e fecha ao navegar. A API continua responsável por validar todas as operações protegidas.
 
 Verificação desta etapa: lint e build aprovados; testes no navegador com API simulada cobriram login→Dashboard, seis áreas, os dois perfis, acesso direto restrito, recarga, sessão inválida, falha de rede com nova tentativa, logout com sucesso/erro e menu móvel. Layout conferido em 1280 × 900 e 390 × 844. Nenhuma conta ou banco real foi utilizado.
 
+## Financeiro — tela integrada à navegação
+
+Entre como Administrador e abra **Financeiro** no menu ou `/financeiro`, disponível em desenvolvimento e no build de produção. Funcionário não vê o item e o acesso direto retorna ao Dashboard. AppLayout reutiliza a sessão e consulta o perfil atual na API (RN-003/RN-004). O botão Voltar no canto superior direito retorna ao Dashboard.
+
+A tela reutiliza AppLayout, Sidebar, CartaoInformacoes, Button, Icon, campos e Dialog. Oferece filtros Hoje/Esta semana/Este mês/Personalizado, cartões de recebimentos/pagamentos/resultado de caixa, gráfico com tabela de valores acessível e movimentações com detalhes. Todos usam o mesmo período aplicado. Os detalhes de Recebimentos, Pagamentos e Resultado de caixa mostram os registros e totais desse período; Faturamento, Materiais, Lucro e Impostos explicam a apuração indisponível, sem valores inventados. Os dados fictícios temporários foram autorizados por João Franco em 01/10/2026 e estão identificados na tela. Fonte e estilos seguem os tokens de `index.css`. Os exemplos são fictícios, de setembro de 2026; a referência dos atalhos é **30/09/2026**, explicitada na tela. Semana demonstrativa começa na segunda-feira. Intervalos personalizados aceitam até 366 dias inclusivos; isso é um limite da demonstração, não uma regra financeira aprovada.
+
+`src/data/financeiroDemonstracao.ts` guarda os exemplos e os totais em centavos; `src/pages/Financeiro.tsx` controla apresentação e filtros; `src/components/financeiro/GraficoEvolucao.tsx` apresenta a evolução dos mesmos dados. Não há consulta financeira, gravação ou migração. Resultado de caixa demonstrativo não representa lucro ou saldo disponível. Faturamento, Materiais, Lucro e Imposto aparecem como indicadores previstos, sem fórmulas presumidas (RN-014 a RN-017). A entrega avança a apresentação de RF-011/RF-025; não conclui esses requisitos.
+
+Verificação: lint e build aprovados; navegador com sessão simulada conferiu totais, filtros, intervalo inválido/excessivo, ausência de dados, lista completa, diálogo, tabela do gráfico e layout em 1440 × 1050 e 390 × 844. A verificação de acesso ao antigo protótipo foi substituída pela verificação da rota administrativa `/financeiro`, descrita abaixo. Nenhuma conta ou banco real foi utilizado.
+
+Verificação da tela habilitada: lint/build aprovados; navegador com sessão simulada conferiu entrada pelo menu e rota em produção/desenvolvimento, bloqueio de Funcionário e de sessão ausente, Voltar, categorias seguindo os filtros, período vazio e indicadores indisponíveis sem valores. Fonte e fundo conferidos contra o tema; layout em 1440 × 1050 e 390 × 844, sem erros JavaScript. Nenhuma conta ou banco real foi alterado.
+
 ## Funcionários — cadastro, perfil e edição
+
 
 Como Administrador, abra **Funcionários → Novo funcionário**. Informe nome, CPF válido, telefone de 11 dígitos, e-mail, usuário, perfil, senha de 15–128 caracteres e confirmação. CPF/telefone usam máscaras e são enviados sem pontuação. A conta começa ativa; somente o hash da senha é gravado.
 

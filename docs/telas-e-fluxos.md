@@ -1,5 +1,13 @@
 # Telas e fluxos — visão inicial do sistema
 
+## Estoque implementado em 02/10/2026
+
+Autorizado por João Franco, integrado à navegação principal em `/estoque`, disponível para Administrador e Funcionário. Abas Produtos para venda e Materiais, busca por nome/categoria e filtro de categoria. Visão geral conta cadastros (não soma unidades diferentes), compara Materiais com o mínimo e estima valor a custo (saldo × custo atual). Produtos mostram compra, venda, lucro unitário e percentual sobre custo, não lucro financeiro realizado.
+
+Cadastro/edição compartilham `FormularioItemEstoque`; saldo começa em zero e é movimentado separadamente. Entrada e saída manual pedem quantidade e motivo, usando a API existente. Saída manual para perda/avaria não substitui Venda nem consumo em OS. Exclusão exige confirmação, saldo zero e ausência de histórico. Fornecedores têm cadastro/edição/exclusão pelo nome e associação opcional múltipla em diálogo próprio. A associação pode ser removida sem excluir o fornecedor. Erros persistentes, bloqueio durante envio e resultado incerto exigem consulta antes de repetir. Layout segue tema e componentes atuais, com rolagem horizontal da tabela no celular. RF-007/RF-008/RF-021/RF-022; RN-018/RN-019/RN-020.
+
+Os trechos históricos abaixo que indicam Estoque em construção foram superados por esta entrega. Vendas e OS continuam com seus próprios fluxos; esta tela não cria novos gatilhos de consumo.
+
 [Índice](README.md) · [Modelo de dados](modelo-de-dados.md) · [Contrato da API](api.md)
 
 ## Login implementado nesta etapa
@@ -15,6 +23,7 @@ Dashboard (RF-002) exibe entradas do dia e quantidade de OS Abertas, Em andament
 O botão **Cadastrar cliente** dentro da nova OS abre `/clientes/novo` com contexto de retorno. Após A04 confirmar o novo cliente, a navegação volta a `/ordens-servico/nova`, restaura os campos já informados e seleciona o novo `cliente_id`. O mesmo cadastro aberto diretamente pela área de Clientes mantém seu destino normal, `/clientes`.
 
 O valor da OS é digitado com máscara de moeda brasileira no cadastro e na edição. Os dois últimos dígitos representam centavos; por exemplo, `123456` aparece como `R$ 1.234,56` e é enviado como string `1234.56`, sem cálculo financeiro adicional.
+`AppLayout` e `Sidebar` são compartilhados pelas rotas internas; `EmConstrucao` é a página provisória reutilizável. O Dashboard mostra saudação e aviso de construção. Busca e OS também exibem o aviso; Estoque possui a tela funcional descrita acima; Funcionários só é acessível ao Administrador (RN-001). Nome e perfil são consultados em `/auth/me` a cada navegação; sessão inválida volta ao login (RN-004/RN-005). O logout usa cookie e CSRF. Financeiro está habilitado somente para Administrador, com dados fictícios temporários autorizados em 01/10/2026; Configurações permanece desabilitado e com acesso pendente (RN-003). Os módulos provisórios e os indicadores de RF-002 permanecem pendentes; a implementação de Funcionários está descrita abaixo.
 
 ## Mapa geral
 
@@ -32,7 +41,7 @@ As onze telas e subtelas são **definições do rascunho** (Guia §4; RF-001 a R
 | Estoque de produtos | Controlar itens para venda | Administrador/funcionário sugeridos. |
 | Perfil do usuário | Consultar o próprio perfil | Ambos consultam a si mesmos; edição pessoal exclusiva do Administrador com senha própria — RN-006, decisão de 30/09/2026. |
 | Configuração | Ajustar funcionamento e cadastros auxiliares | **Pendente — RN-003.** |
-| Financeiro: Dashboard financeiro e Faturamento, Lucro, Imposto, Materiais | Consultar indicadores | **Pendente — RN-003.** |
+| Financeiro: Dashboard financeiro e Faturamento, Lucro, Imposto, Materiais | Consultar indicadores | **Somente Administrador — RN-003, decisão de 01/10/2026.** |
 
 Não inferir acesso irrestrito do administrador: o Guia §3 sugere “todas as telas”, mas §§4/17 deixam Configuração/Financeiro pendentes. A matriz por operação está em PD-N01. Não confundir Perfil do usuário (próprio) com Perfil de funcionário (administração).
 
@@ -143,10 +152,12 @@ Todas as sequências abaixo são **propostas**, salvo objetivos e restrições e
 
 ### Controle financeiro
 
+**Tela habilitada em 01/10/2026, autorizada por João Franco:** `/financeiro` integra a navegação em desenvolvimento e produção, exclusiva do Administrador; menu e acesso direto protegidos por AppLayout. Botão Voltar retorna ao Dashboard. Dados fictícios temporários autorizados e identificados, referência 30/09/2026. Filtros atualizam cartões, gráfico, lista e detalhes por categoria. Recebimentos, Pagamentos e Resultado de caixa mostram exemplos do período em Dialog; Faturamento, Materiais, Lucro e Impostos explicam a apuração indisponível, sem valores inventados. Tema e componentes existentes reutilizados. A30/A31 e integração financeira com banco não foram implementadas. RF-011/RF-025 avançam na apresentação; RN-014 a RN-017 continuam pendentes.
+
 - **Objetivo/origem:** acompanhar indicadores; Guia §5.11, RF-011/RF-025; acesso em RN-003.
 - **Informações:** totais/evolução por período e subtelas Faturamento, Lucro, Imposto e Materiais; fórmulas e dados retornados permanecem pendentes (RN-014 a RN-017).
 - **Fluxo/API:** selecionar período → painel com [A30](api.md#a30) → abrir indicador com [A31](api.md#a31) → voltar ao painel. Consulta apenas é sugestão RN-007; não se criam lançamentos ou edição financeira por inferência.
-- **Pendências:** quem consulta, datas de reconhecimento, custos históricos e fórmulas (PD-N01/PD-N05/PD-N06). Não exibir estimativa fictícia como resultado real, nem transformar regra ausente em valor zero.
+- **Pendências:** integração financeira, datas de reconhecimento, custos históricos e fórmulas (PD-N05/PD-N06). Não exibir estimativa fictícia como resultado real, nem transformar regra ausente em valor zero.
 
 <a id="etapas"></a>
 ## Implementação por funcionalidade — sequência sugerida

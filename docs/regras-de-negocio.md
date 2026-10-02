@@ -70,7 +70,7 @@ Estas confirmações substituem as pendências correspondentes das sugestões or
 | Estoque de produtos | Administrador e funcionário | Sugestão |
 | Perfil do usuário | Administrador e funcionário | Sugestão |
 | Configuração | A definir; ver RN-003 | Pendência |
-| Controle financeiro | A definir; ver RN-003 | Pendência |
+| Controle financeiro | Somente Administrador; ver RN-003 | Decisão de João Franco em 01/10/2026 |
 
 - **Pendente de definição:** aprovação dos perfis e da matriz de acesso; [PD-N01](#pd-n01). A exigência geral de acesso por perfil está em [RNF-005](requisitos.md#rnf-005), mas não aprova esta matriz específica.
 - **Requisitos relacionados:** RF-001 a RF-011 no [catálogo](requisitos.md).
@@ -79,10 +79,12 @@ Estas confirmações substituem as pendências correspondentes das sugestões or
 
 **Acesso a Configuração e Controle financeiro.**
 
+**Decisão de João Franco em 01/10/2026:** Financeiro exclusivo do Administrador. Interface implementada em `/financeiro`, com menu e acesso direto protegidos pelo perfil atual consultado na sessão. Dados fictícios temporários autorizados e identificados; nenhuma API financeira ou mudança de banco nesta etapa. A futura API financeira também deverá exigir Administrador. Configuração permanece pendente; as referências históricas abaixo não reabrem esta decisão.
+
 - **Origem:** Guia §3 (tabela e nota), §4 e §17.
-- **Classificação:** Pendência. **Situação da definição:** Pendente de definição.
+- **Classificação:** Financeiro definido pela decisão acima; Configuração permanece pendente.
 - **Divergência:** a tabela sugerida do §3 atribui todas as telas ao administrador; a nota dessa seção, o mapa do §4 e o §17 deixam estes acessos em aberto.
-- **Critério de aceitação:** não fechado; é necessária a definição dos perfis autorizados, sem presumir exclusividade do administrador ou acesso do funcionário.
+- **Critério de aceitação:** Financeiro visível e acessível somente ao Administrador; a futura API deve exigir o mesmo perfil. Perfis autorizados para Configuração ainda precisam ser definidos.
 - **Decisão necessária:** [PD-N01](#pd-n01).
 - **Requisitos relacionados:** [RF-010](requisitos.md#rf-010) e [RF-011](requisitos.md#rf-011).
 
@@ -188,6 +190,8 @@ Estas confirmações substituem as pendências correspondentes das sugestões or
 - **Requisitos relacionados:** [RF-020](requisitos.md#rf-020) e [RF-022](requisitos.md#rf-022).
 
 ## Estoques e indicadores financeiros
+
+**Decisão de João Franco em 02/10/2026 — implementada:** a tela principal de Estoque permite aos dois perfis autenticados operar Produtos para venda e Materiais, respeitando RN-018/RN-019/RN-020. Fornecedores têm cadastro pelo nome e associação opcional de vários fornecedores por item. Fornecedor associado não pode ser excluído; editar o nome não altera saldos ou preços. O lucro exibido por Produto é a diferença unitária venda − compra, e o percentual é calculado sobre o custo; custo zero não permite percentual. Esta informação prevista por produto não define lucro realizado, impostos ou indicadores financeiros de RN-014 a RN-017. A tela compara Materiais com seu mínimo cadastrado; Produtos não possuem mínimo, e não recebem limite inventado nem alerta automático.
 
 ### RN-012
 
@@ -295,7 +299,7 @@ A situação de cada registro abaixo indica o que foi resolvido e o que permanec
 
 | ID | Decisão necessária | Origem e regras relacionadas |
 |---|---|---|
-| <a id="pd-n01"></a>PD-N01 | Resolvido: ambos os perfis operam Clientes/OS/Vendas/Estoques, incluindo exclusões, cancelamentos e correções permitidos; Gestão de Funcionários exclusiva do Administrador; consulta individual também permitida ao próprio Funcionário. Pendente: Configuração e Financeiro. | Guia §§3, 4, 5.5, 9.3 e 17; RN-001, RN-002, RN-003 e RN-007. “Todas as telas” do administrador é sugestão em tensão com acessos explicitamente pendentes. |
+| <a id="pd-n01"></a>PD-N01 | Resolvido: ambos os perfis operam Clientes/OS/Vendas/Estoques, incluindo exclusões, cancelamentos e correções permitidos; Gestão de Funcionários exclusiva do Administrador; consulta individual também permitida ao próprio Funcionário. Financeiro exclusivo do Administrador, confirmado por João Franco em 01/10/2026. Pendente: Configuração e alcance futuro de operações financeiras (RN-007). | Guia §§3, 4, 5.5, 9.3 e 17; RN-001, RN-002, RN-003 e RN-007. “Todas as telas” do administrador é sugestão em tensão com acessos explicitamente pendentes. |
 | <a id="pd-n02"></a>PD-N02 | Resolvido nesta etapa: usuário e senha, sessões de 8h, limites de tentativas e invalidação na alteração de acesso. Pendente: política e fluxo de alteração/recuperação de senha. | Guia §§5.1, 5.5 e 5.9; RN-004. Mecanismo técnico de armazenamento de senha em [PD-R04](requisitos.md#pd-r04). |
 | <a id="pd-n03"></a>PD-N03 | Resolvidos campos/obrigatoriedade e operações dos nove cadastros conforme modelo/API. Pendentes: vínculos Cliente–Venda e OS–Venda, autoedição por Funcionário comum não autorizada nesta etapa; demais cadastros auxiliares pendentes. | Guia §5 (validação exigida, detalhes sugeridos), §§5.3–5.4, 5.9, 10 e 17; RN-006 e RN-010. Listar um campo não o torna obrigatório. |
 | <a id="pd-n04"></a>PD-N04 | Resolvidos estados, transições, edição e cancelamento da OS. Prazo permanece opcional, sem cálculo automático; catálogo de serviços não definido. | Guia §§6.1 e 17; RN-010. O guia define apenas significados sugeridos, não transições ou duração. |
