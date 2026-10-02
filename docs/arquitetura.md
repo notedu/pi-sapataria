@@ -4,6 +4,8 @@
 
 ## Implementação atual — autenticação, cadastros e consultas
 
+**Estoque, 02/10/2026:** a rota principal `/estoque` usa `pages/Estoque.tsx`, o formulário reutilizável `FormularioItemEstoque`, `services/estoque.ts` e `utils/estoque.ts`, com componentes e tema existentes. Fornecedores seguem Routes → Controllers → Models; associações são substituídas em transação, sem alterar os contratos de cadastro de itens. As operações novas recebem sessão e CSRF no servidor. Sem novas dependências.
+
 A base Express usa `server.ts`, `src/routes`, `src/controllers`, `src/models` e `src/config`. `src/middlewares` verifica sessão, perfil e CSRF; `src/utils` reúne validação e hash de senha. O histórico de planejamento abaixo não representa a ausência desses módulos já implementados.
 
 A autenticação é da aplicação Node.js: scrypt para senhas, express-session para cookie e connect-pg-simple para sessões no mesmo PostgreSQL. `SESSION_SECRET` assina cookies; `DATABASE_URL`/`DATABASE_CA_CERT` configuram o banco. O Supabase hospeda o PostgreSQL temporariamente, sem uso de Supabase Auth; as tabelas e a lógica de login podem acompanhar a aplicação para AWS. Não houve implantação na AWS.

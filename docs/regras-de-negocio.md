@@ -191,6 +191,8 @@ Estas confirmações substituem as pendências correspondentes das sugestões or
 
 ## Estoques e indicadores financeiros
 
+**Decisão de João Franco em 02/10/2026 — implementada:** a tela principal de Estoque permite aos dois perfis autenticados operar Produtos para venda e Materiais, respeitando RN-018/RN-019/RN-020. Fornecedores têm cadastro pelo nome e associação opcional de vários fornecedores por item. Fornecedor associado não pode ser excluído; editar o nome não altera saldos ou preços. O lucro exibido por Produto é a diferença unitária venda − compra, e o percentual é calculado sobre o custo; custo zero não permite percentual. Esta informação prevista por produto não define lucro realizado, impostos ou indicadores financeiros de RN-014 a RN-017. A tela compara Materiais com seu mínimo cadastrado; Produtos não possuem mínimo, e não recebem limite inventado nem alerta automático.
+
 ### RN-012
 
 **Atualização aprovada:** Consumo efetivo, baixa e devolução confirmados e implementados. Cálculo financeiro de materiais continua pendente.

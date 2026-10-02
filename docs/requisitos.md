@@ -1,5 +1,7 @@
 # Requisitos — Seda e Couro
 
+**Entrega de 02/10/2026, aprovada por João Franco:** RF-007/RF-008 têm tela funcional na rota principal `/estoque`. RF-021/RF-022 avançam com consulta, cadastro, edição, exclusão permitida, filtros, entradas/saídas e integração ao PostgreSQL. Fornecedores múltiplos por item e lucro unitário/percentual sobre custo foram confirmados nesta solicitação. Comparação do mínimo de Materiais aparece na tela; Produtos não possuem mínimo cadastrado. Alertas automáticos e apuração financeira permanecem pendentes. RN-018/RN-019/RN-020 preservadas.
+
 [Índice da documentação](README.md) · [Guia do Projeto](guia-do-projeto.md) · [Regras de negócio](regras-de-negocio.md)
 
 ## Leitura e situação atual
