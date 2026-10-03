@@ -8,6 +8,7 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Corrigido
 
+- Rotas internas após a integração das branches: removidos trechos provisórios que impediam a compilação e a abertura do front-end.
 - Configuração TypeScript compartilhada entre editor e `typecheck` no back-end, incluindo os tipos de sessão sem gerar arquivos compilados.
 
 ### Adicionado
