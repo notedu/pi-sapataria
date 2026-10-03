@@ -13,7 +13,7 @@ type Props = {
   inicial?: Cliente
   onSalvar: (dados: DadosCliente) => Promise<Cliente>
   destino: string
-  aoSalvar: () => void
+  aoSalvar: (cliente: Cliente) => void
 }
 
 // Cadastro e edição compartilham campos, máscaras e validação.
@@ -46,8 +46,8 @@ export default function FormularioCliente({ inicial, onSalvar, destino, aoSalvar
     setErro('')
     try {
       // Opcionais vazios seguem como null. A API gera o id utilizado pela OS.
-      await onSalvar({ nome, telefone, cpf, cep, numero, email: email || null, observacoes: observacoes || null })
-      aoSalvar()
+      const clienteSalvo = await onSalvar({ nome, telefone, cpf, cep, numero, email: email || null, observacoes: observacoes || null })
+      aoSalvar(clienteSalvo)
     } catch (error) {
       if (error instanceof ErroApi && error.status === 401) navigate('/login', { replace: true })
       else {

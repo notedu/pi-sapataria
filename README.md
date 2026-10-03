@@ -4,7 +4,7 @@ Sistema web de gestão interna para a sapataria **Seda e Couro**, de Santa Cruz 
 
 Desenvolvido como Projeto Integrado do módulo **Desenvolvimento de Aplicação Web**, do **UNIFEOB**, no 2º semestre de 2026.
 
-> **Em desenvolvimento inicial:** o front-end contém a tela de login em React com Vite, integrada à API. O back-end possui login por usuário e senha, sessões no PostgreSQL e rotas de Clientes e Funcionários. Materiais, Produtos, OS, Vendas e Estoques possuem consultas e operações de gravação autenticadas. Funcionários possui listagem e cadastro com credenciais no front-end, exclusivos do Administrador. Clientes possui listagem e cadastro para ambos os perfis. As demais áreas internas oferecem páginas provisórias “Em construção”.
+> **Em desenvolvimento inicial:** o front-end contém Login, Clientes, Funcionários, Dashboard, Busca e telas de Ordens de Serviço integradas à API. O back-end possui login por usuário e senha, sessões no PostgreSQL e operações autenticadas de Clientes, Funcionários, Materiais, Produtos, OS, Vendas e Estoques. Funcionários permanece exclusivo do Administrador. Estoque ainda exibe página provisória; Financeiro e Configurações permanecem desabilitados.
 
 ## Funcionalidades previstas
 
@@ -64,6 +64,11 @@ Verificação integrada disponível em `backend/`: `node --import tsx scripts/ve
 
 Após o login, `AppLayout` consulta `/auth/me` em cada mudança de rota e compartilha a estrutura com `Sidebar`. Nome e perfil vêm da API; o perfil é exibido como Administrador ou Funcionário, sem inventar cargo profissional. `src/config/navegacao.ts` reúne os nomes e caminhos usados pelo menu e pelas rotas; `EmConstrucao` recebe o título de cada área.
 
+Dashboard mostra contagens de OS por estado e entradas do dia, calculadas a partir da lista da API, além de atalhos para OS. Busca localiza clientes, OS e páginas disponíveis. Ordens de Serviço oferece lista com filtros locais, cadastro, detalhes, edição de OS Aberta ou Em andamento, avanço/cancelamento conforme os estados permitidos e registro único de uso de material pela API. O valor da OS é manual; não há imposto automático, faturamento ou status de pagamento nesta interface. Funcionários é exclusivo do Administrador; o acesso direto de funcionário a `/funcionarios` retorna ao Dashboard. Estoque ainda exibe página provisória. Financeiro e Configurações estão desabilitados, sem resolver suas permissões pendentes.
+
+No cadastro de OS, **Cadastrar cliente** abre o formulário de Clientes. Quando o cadastro começa por esse botão e termina com sucesso, o sistema volta à nova OS, conserva os campos já preenchidos e seleciona o cliente recém-cadastrado. O cadastro iniciado pela área de Clientes continua retornando à lista de Clientes.
+
+O campo **Valor da OS** no cadastro e na edição formata a digitação em reais e centavos (`123456` → `R$ 1.234,56`). A interface envia `1234.56` à API, preservando o valor manual e a validação do servidor.
 Dashboard, Busca e Ordens de Serviço exibem páginas provisórias. Estoque possui a tela funcional descrita acima. Funcionários é exclusivo do Administrador; o acesso direto de funcionário a `/funcionarios` retorna ao Dashboard. Financeiro está habilitado somente para Administrador, com dados fictícios temporários autorizados. Configurações permanece desabilitado, com permissão pendente. Não há indicadores ou operações de negócio nas páginas provisórias.
 
 Sem sessão válida, o acesso interno volta ao login. Falhas de conexão oferecem nova tentativa. “Sair” obtém CSRF e encerra a sessão na API; em caso de falha, mostra o erro sem afirmar que a sessão terminou. O menu se expande no celular e fecha ao navegar. A API continua responsável por validar todas as operações protegidas.
