@@ -9,7 +9,7 @@ export async function listar(_request: Request, response: Response): Promise<voi
 }
 
 export async function buscarPorId(request: Request, response: Response): Promise<void> {
-  const registro = await ordemServicoModel.buscar(idValido(request.params.id));
+  const registro = await ordemServicoModel.buscarComResponsavel(idValido(request.params.id));
   if (!registro) throw new ErroHttp(404, 'OS_NAO_ENCONTRADA', 'Ordem de serviço não encontrada.');
   response.json({ dados: registro });
 }

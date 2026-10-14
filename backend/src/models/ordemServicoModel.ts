@@ -30,9 +30,45 @@ export async function listar(clienteId?: number, responsavelId?: number): Promis
   return resultado.rows;
 }
 
+export type OrdemClienteComResponsavel = OrdemServico & {
+  responsavel_nome: string;
+  responsavel_ativo: boolean;
+};
+
+// O perfil do cliente recebe apenas a identificação necessária para o histórico de OS.
+export async function listarPorClienteComResponsavel(clienteId: number): Promise<OrdemClienteComResponsavel[]> {
+  const resultado = await pool.query<OrdemClienteComResponsavel>(
+    `SELECT os.id, os.cliente_id, os.responsavel_id, os.descricao_calcado, os.servico,
+            os.valor, to_char(os.data_entrada, 'YYYY-MM-DD') AS data_entrada,
+            to_char(os.prazo_entrega, 'YYYY-MM-DD') AS prazo_entrega,
+            os.status, os.forma_pagamento, os.observacoes,
+            f.nome AS responsavel_nome, f.ativo AS responsavel_ativo
+       FROM sapataria.ordens_servico AS os
+       JOIN sapataria.funcionarios AS f ON f.id = os.responsavel_id
+      WHERE os.cliente_id = $1 ORDER BY os.id`,
+    [clienteId],
+  );
+  return resultado.rows;
+}
+
 export async function buscar(id: number): Promise<OrdemServico | undefined> {
   const resultado = await pool.query<OrdemServico>(
     `SELECT ${colunas} FROM sapataria.ordens_servico WHERE id = $1`, [id],
+  );
+  return resultado.rows[0];
+}
+
+export async function buscarComResponsavel(id: number): Promise<OrdemClienteComResponsavel | undefined> {
+  const resultado = await pool.query<OrdemClienteComResponsavel>(
+    `SELECT os.id, os.cliente_id, os.responsavel_id, os.descricao_calcado, os.servico,
+            os.valor, to_char(os.data_entrada, 'YYYY-MM-DD') AS data_entrada,
+            to_char(os.prazo_entrega, 'YYYY-MM-DD') AS prazo_entrega,
+            os.status, os.forma_pagamento, os.observacoes,
+            f.nome AS responsavel_nome, f.ativo AS responsavel_ativo
+       FROM sapataria.ordens_servico AS os
+       JOIN sapataria.funcionarios AS f ON f.id = os.responsavel_id
+      WHERE os.id = $1`,
+    [id],
   );
   return resultado.rows[0];
 }

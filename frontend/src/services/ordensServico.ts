@@ -5,12 +5,13 @@ export type OrdemResumo = {
   servico: string; valor: string; data_entrada: string; prazo_entrega: string | null
   status: string; forma_pagamento: string | null; observacoes: string | null
 }
+export type OrdemDetalhada = OrdemResumo & { responsavel_nome: string; responsavel_ativo: boolean }
 
 export type DadosOrdem = Pick<OrdemResumo, 'cliente_id' | 'responsavel_id' | 'descricao_calcado' | 'servico' | 'valor' | 'prazo_entrega' | 'forma_pagamento' | 'observacoes'>
 export type UsoMaterial = { id: number; material_id: number; quantidade_usada: string }
 export type MaterialDisponivel = { id: number; nome: string; unidade: string; quantidade: string }
 
-function ordem(valor: unknown): valor is OrdemResumo {
+export function ordem(valor: unknown): valor is OrdemResumo {
   return objeto(valor) && Number.isInteger(valor.id) && Number.isInteger(valor.cliente_id)
     && Number.isInteger(valor.responsavel_id) && typeof valor.descricao_calcado === 'string'
     && typeof valor.servico === 'string' && typeof valor.valor === 'string'
@@ -20,15 +21,20 @@ function ordem(valor: unknown): valor is OrdemResumo {
     && (valor.observacoes === null || typeof valor.observacoes === 'string')
 }
 
+export function ordemDetalhada(valor: unknown): valor is OrdemDetalhada {
+  return ordem(valor) && typeof (valor as unknown as Record<string, unknown>).responsavel_nome === 'string'
+    && typeof (valor as unknown as Record<string, unknown>).responsavel_ativo === 'boolean'
+}
+
 export async function listarOrdens(caminho = '/ordens-servico'): Promise<OrdemResumo[]> {
   const resposta = await requisitar(caminho)
   if (!objeto(resposta) || !Array.isArray(resposta.dados) || !resposta.dados.every(ordem)) throw new Error('Não foi possível interpretar as ordens de serviço.')
   return resposta.dados
 }
 
-export async function buscarOrdem(id: string): Promise<OrdemResumo> {
+export async function buscarOrdem(id: string): Promise<OrdemDetalhada> {
   const resposta = await requisitar(`/ordens-servico/${encodeURIComponent(id)}`)
-  if (!objeto(resposta) || !ordem(resposta.dados)) throw new Error('Não foi possível interpretar a ordem de serviço.')
+  if (!objeto(resposta) || !ordemDetalhada(resposta.dados)) throw new Error('Não foi possível interpretar a ordem de serviço.')
   return resposta.dados
 }
 
