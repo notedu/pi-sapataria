@@ -157,7 +157,7 @@ Retorna `200`, `{"dados": funcionario}` sem senha/hash/versão técnica. Sem ses
 
 ### GET /clientes/{id}/ordens-servico
 
-Exige sessão dos dois perfis. Retorna `200`, `{"dados": [OS]}`, filtrando `cliente_id` na consulta SQL e reutilizando o modelo de OS. Cliente sem OS retorna lista vazia; inexistente retorna `404`; id inválido, `400`. Não modifica OS nem estoque.
+Exige sessão dos dois perfis. Retorna `200`, `{"dados": [OS]}`, filtrando `cliente_id` na consulta SQL. Cada OS inclui também `responsavel_nome` (string) e `responsavel_ativo` (booleano), sem expor a listagem administrativa de Funcionários. Cliente sem OS retorna lista vazia; inexistente retorna `404`; id inválido, `400`. Não modifica OS nem estoque.
 
 **Verificação da evolução de Clientes:** typecheck e 29 verificações HTTP/PostgreSQL local descartável, incluindo sessão, CSRF, campos inválidos, migração, preservação de legado, edição e histórico filtrado. Sem alteração no banco existente.
 
@@ -226,7 +226,7 @@ Implementado. Corpo: `cliente_id`, `responsavel_id`, `descricao_calcado`, `servi
 <a id="a11"></a>
 ### A11 — GET /ordens-servico/{id}
 
-Implementado: `200`, `{"dados": OS}`. ID inválido: `400`; inexistente: `404`. Os materiais são consultados separadamente em `GET /ordens-servico/:id/materiais`; não há campo materiais_utilizados embutido na resposta atual. RF-018.
+Implementado: `200`, `{"dados": OS}` com `responsavel_nome` e `responsavel_ativo` adicionais. ID inválido: `400`; inexistente: `404`. Os materiais são consultados separadamente em `GET /ordens-servico/:id/materiais`; não há campo materiais_utilizados embutido na resposta atual. RF-018.
 
 <a id="a12"></a>
 ### A12 — PUT /ordens-servico/{id}/status

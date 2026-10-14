@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import * as clienteModel from '../models/clienteModel';
-import { listar as listarOrdens } from '../models/ordemServicoModel';
+import { listarPorClienteComResponsavel } from '../models/ordemServicoModel';
 import { cpfValido } from '../utils/cpf';
 import type { DadosCliente } from '../models/clienteModel';
 
@@ -109,5 +109,5 @@ export async function ordens(request: Request, response: Response): Promise<void
   const id = lerId(request, response);
   if (id === undefined) return;
   if (!await clienteModel.buscarCliente(id)) return naoEncontrado(response);
-  response.json({ dados: await listarOrdens(id) });
+  response.json({ dados: await listarPorClienteComResponsavel(id) });
 }

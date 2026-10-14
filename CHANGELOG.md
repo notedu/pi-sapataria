@@ -13,6 +13,7 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Adicionado
 
+- Busca de páginas e perfis disponíveis conforme permissão; seleção de cliente por sugestões e serviços já registrados com opção Outros na OS; responsável e situação no histórico do cliente; botão Imprimir com PDF A4 da OS.
 u- Dashboard operacional com contagens de OS, busca de clientes/OS/páginas e telas de listagem, cadastro, edição e detalhes de OS. Fluxo de status e uso de material conectados à API existente, sem cálculos financeiros novos.
 - Atalho para cadastrar cliente durante a abertura de OS, com retorno ao formulário, preservação dos campos e seleção do cliente criado.
 - Máscara de reais e centavos no valor de cadastro e edição de OS, mantendo o envio decimal aceito pela API.

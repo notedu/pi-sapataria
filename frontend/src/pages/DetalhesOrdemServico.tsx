@@ -8,7 +8,7 @@ import { ErroApi, ResultadoIncerto } from '../services/api'
 import { buscarCliente } from '../services/clientes'
 import type { Cliente } from '../services/clientes'
 import { buscarOrdem, listarMateriaisDisponiveis, listarUsosOrdem, mudarStatusOrdem, registrarUsoMaterial } from '../services/ordensServico'
-import type { MaterialDisponivel, OrdemResumo, UsoMaterial } from '../services/ordensServico'
+import type { MaterialDisponivel, OrdemDetalhada, UsoMaterial } from '../services/ordensServico'
 import { formatarTelefone } from '../utils/clientes'
 import { data, dinheiro, proximoStatus } from '../utils/ordensServico'
 
@@ -20,14 +20,16 @@ export default function DetalhesOrdemServico() {
 function Conteudo({ id }: { id: string }) {
   const navigate = useNavigate()
   const { state } = useLocation()
-  const [ordem, setOrdem] = useState<OrdemResumo | null>(null)
+  const [ordem, setOrdem] = useState<OrdemDetalhada | null>(null)
   const [cliente, setCliente] = useState<Cliente | null>(null)
   const [usos, setUsos] = useState<UsoMaterial[]>([])
   const [materiais, setMateriais] = useState<MaterialDisponivel[]>([])
   const [erro, setErro] = useState('')
   const [erroAcao, setErroAcao] = useState('')
+  const [erroPdf, setErroPdf] = useState('')
   const [tentativa, setTentativa] = useState(0)
   const [ocupado, setOcupado] = useState(false)
+  const [imprimindo, setImprimindo] = useState(false)
   const [incerto, setIncerto] = useState(false)
   const [materialId, setMaterialId] = useState('')
   const [quantidade, setQuantidade] = useState('')
@@ -48,11 +50,25 @@ function Conteudo({ id }: { id: string }) {
   async function avancar(status: string) {
     if (!ordem || emCurso.current || incerto) return
     emCurso.current = true; setOcupado(true); setErroAcao('')
-    try { setOrdem(await mudarStatusOrdem(ordem.id, status)) }
+    try {
+      const atualizada = await mudarStatusOrdem(ordem.id, status)
+      setOrdem({ ...ordem, ...atualizada })
+    }
     catch (error) {
       if (error instanceof ErroApi && error.status === 401) navigate('/login', { replace: true })
       else { setErroAcao(error instanceof Error ? error.message : 'Não foi possível atualizar a OS.'); if (error instanceof ResultadoIncerto) setIncerto(true) }
     } finally { emCurso.current = false; setOcupado(false) }
+  }
+
+  async function imprimir() {
+    if (!ordem || !cliente || imprimindo) return
+    setImprimindo(true)
+    setErroPdf('')
+    try {
+      const { gerarPdfOrdemServico } = await import('../utils/pdfOrdemServico')
+      gerarPdfOrdemServico(ordem, cliente, usos, materiais)
+    } catch { setErroPdf('Não foi possível gerar o PDF da OS. Tente novamente.') }
+    finally { setImprimindo(false) }
   }
 
   async function registrar(event: React.FormEvent<HTMLFormElement>) {
@@ -81,7 +97,8 @@ function Conteudo({ id }: { id: string }) {
     {erro ? <div className="space-y-3"><p role="alert" className="rounded-default bg-error-container p-4 text-on-error-container">{erro}</p><Button onClick={() => { setErro(''); setTentativa(v => v + 1) }}>Tentar novamente</Button></div> : !ordem || !cliente ? <p role="status">Carregando ordem de serviço…</p> : <>
       {state?.ordemCadastrada && <Alerta mensagem="Ordem de serviço cadastrada com sucesso." onFechar={() => navigate(`/ordens-servico/${id}`, { replace: true, state: {} })} />}
       {state?.ordemEditada && <Alerta mensagem="Ordem de serviço atualizada com sucesso." onFechar={() => navigate(`/ordens-servico/${id}`, { replace: true, state: {} })} />}
-      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-outline-variant pb-6"><div><div className="flex flex-wrap items-center gap-3"><h1 className="text-headline-lg-mobile md:text-headline-lg">Ordem #{ordem.id}</h1><span className="rounded-full bg-primary-fixed px-3 py-1 text-label-sm text-on-primary-fixed">{ordem.status}</span></div><p className="mt-2 text-on-surface-variant">Entrada em {data(ordem.data_entrada)}</p></div><div className="flex flex-wrap gap-3"><Button variant="secondary" size="compact" onClick={() => window.print()}>Imprimir detalhes</Button>{['Aberta', 'Em andamento'].includes(ordem.status) && <Link to={`/ordens-servico/${ordem.id}/editar`} className="rounded-default bg-primary px-4 py-3 text-label-md text-on-primary hover:bg-primary-container">Editar OS</Link>}</div></header>
+      <header className="flex flex-wrap items-start justify-between gap-4 border-b border-outline-variant pb-6"><div><div className="flex flex-wrap items-center gap-3"><h1 className="text-headline-lg-mobile md:text-headline-lg">Ordem #{ordem.id}</h1><span className="rounded-full bg-primary-fixed px-3 py-1 text-label-sm text-on-primary-fixed">{ordem.status}</span></div><p className="mt-2 text-on-surface-variant">Entrada em {data(ordem.data_entrada)}</p></div><div className="flex flex-wrap gap-3"><Button variant="secondary" size="compact" disabled={imprimindo} onClick={imprimir}>{imprimindo ? 'Gerando PDF…' : 'Imprimir'}</Button>{['Aberta', 'Em andamento'].includes(ordem.status) && <Link to={`/ordens-servico/${ordem.id}/editar`} className="rounded-default bg-primary px-4 py-3 text-label-md text-on-primary hover:bg-primary-container">Editar OS</Link>}</div></header>
+      {erroPdf && <p role="alert" className="rounded-default bg-error-container p-4 text-on-error-container">{erroPdf}</p>}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]"><div className="space-y-6">
         <section className="rounded-xl bg-surface-container-low p-6"><h2 className="mb-6 text-label-md uppercase text-on-surface-variant">Informações do cliente</h2><Link to={`/clientes/${cliente.id}`} className="text-headline-md text-primary hover:underline">{cliente.nome}</Link><p className="mt-2 text-on-surface-variant">{/^\d{11}$/.test(cliente.telefone) ? formatarTelefone(cliente.telefone) : cliente.telefone}</p></section>
         <section className="rounded-xl bg-surface-container-low p-6"><h2 className="mb-6 text-label-md uppercase text-on-surface-variant">Detalhes do serviço</h2><dl className="grid gap-6 sm:grid-cols-2"><div><dt className="text-label-md text-on-surface-variant">Descrição do item</dt><dd className="mt-2 break-words">{ordem.descricao_calcado}</dd></div><div><dt className="text-label-md text-on-surface-variant">Serviço solicitado</dt><dd className="mt-2 break-words">{ordem.servico}</dd></div><div><dt className="text-label-md text-on-surface-variant">Data de entrada</dt><dd className="mt-2">{data(ordem.data_entrada)}</dd></div><div><dt className="text-label-md text-on-surface-variant">Previsão de entrega</dt><dd className="mt-2">{ordem.prazo_entrega ? data(ordem.prazo_entrega) : 'Não informada'}</dd></div></dl></section>
