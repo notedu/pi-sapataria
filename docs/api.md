@@ -387,6 +387,32 @@ Exemplo de sequência no Insomnia: login → cadastrar produto → registrar ent
 - **Sucesso:** 200; detalhamento do indicador aprovado, estrutura pendente.
 - **Erros, efeitos e origem:** E + R + N. Mesmo significado do painel; não inventa fórmula, percentual ou base de custos. Guia §5.11; RN-014 a RN-017; PD-N06.
 
+## Atividades e notificações implementadas em 15/10/2026
+
+Todos os endpoints abaixo exigem sessão válida. Alterações usam CSRF. Datas retornadas são instantes ISO em UTC; filtros por data consideram o calendário de São Paulo e a interface mostra o fuso local do navegador. As atividades são limitadas às 250 mais recentes e notificações às 100 mais recentes.
+
+### A32 — GET /atividades
+
+- **Entrada:** filtros opcionais `de`, `ate` (AAAA-MM-DD), `acao` e `funcionario_id` (este último somente aplicado ao Administrador).
+- **Sucesso:** 200 com ator, ação, tipo/id do registro, detalhes permitidos e instante. O Administrador consulta o histórico geral; o Funcionário consulta ações próprias e eventos de OS atualmente atribuídas a ele.
+- **Erros, efeitos e origem:** 400 para data inválida; 401 sem sessão. Consulta sem alteração de dados.
+
+### A33 — GET /notificacoes e GET /notificacoes/nao-lidas
+
+- **Entrada:** sem corpo; retorna notificações destinadas somente ao usuário autenticado, ou sua quantidade não lida.
+- **Sucesso:** 200 com mensagem, origem, instante e situação de leitura.
+- **Erros, efeitos e origem:** 401 sem sessão. Não expõe notificações de outras pessoas.
+
+### A34 — POST /notificacoes/{id}/lida e POST /notificacoes/lidas
+
+- **Entrada:** ID da notificação no primeiro caminho; sem corpo para marcar todas como lidas no segundo. Exige CSRF.
+- **Sucesso:** 204. Uma pessoa só pode atualizar as próprias notificações.
+- **Erros, efeitos e origem:** 400 para ID inválido; 401 sem sessão; 404 para notificação inexistente, de outra pessoa ou já lida.
+
+As atividades gravadas incluem criação/edição/status/cancelamento e uso/devolução de materiais em OS; login/logout bem-sucedidos; cadastro/edição/exclusão de Clientes; cadastro/edição/alteração de acesso/desativação de Funcionários; cadastros de materiais, produtos e fornecedores, vínculos de fornecedores, movimentos de estoque e vendas/cancelamentos. Dados de senha, CPF, contato, endereço e observações não são copiados para o histórico. As ações da OS são gravadas na mesma transação da operação. Nas demais áreas, a atividade é registrada após a operação de negócio.
+
+Notificações são geradas para Administradores ativos sobre novas OS, cancelamento de OS e cancelamento de venda; Funcionários ativos recebem avisos quando uma OS é atribuída a eles e quando o status de uma OS atualmente atribuída muda. O autor não recebe notificação da própria ação. Alertas de prazo e estoque não são gerados, pois seus critérios continuam pendentes em RN-013/PD-N08.
+
 ## Exemplos de corpos para o Insomnia
 
 Os dados são fictícios. Substitua os IDs por cadastros existentes e use cookie/CSRF do login.

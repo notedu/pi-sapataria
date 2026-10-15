@@ -18,7 +18,7 @@ export default function Sidebar({ usuario, onSair, saindo }: { usuario: Usuario;
       </div>
       <nav aria-label="Navegação principal" className="flex-1">
         <ul className="space-y-2">
-          {areas.filter(area => area.caminho !== '/configuracoes' && (!area.administrador || usuario.perfil === 'administrador')).map(area => (
+          {areas.filter(area => !['/notificacoes', '/atividades', '/configuracoes'].includes(area.caminho ?? '') && (!area.administrador || usuario.perfil === 'administrador')).map(area => (
             <li key={area.titulo}>
               {area.caminho ? (
                 <NavLink to={area.caminho} className={({ isActive }) => `flex items-center gap-3 rounded-xl px-4 py-3 text-label-md focus-visible:outline-2 focus-visible:outline-primary ${isActive ? 'bg-primary text-on-primary' : 'text-on-secondary-fixed hover:bg-primary/5'}`}>
@@ -37,6 +37,9 @@ export default function Sidebar({ usuario, onSair, saindo }: { usuario: Usuario;
         {configuracoes?.caminho && <NavLink to={configuracoes.caminho} className={({ isActive }) => `mb-2 flex items-center gap-3 rounded-xl px-4 py-3 text-label-md hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-primary ${isActive ? 'bg-primary text-on-primary' : 'text-on-secondary-fixed'}`}>
           <Icon name={configuracoes.icone} />{configuracoes.titulo}
         </NavLink>}
+        <NavLink to="/atividades" className={({ isActive }) => `flex items-center gap-3 rounded-xl px-4 py-3 text-label-md focus-visible:outline-2 focus-visible:outline-primary ${isActive ? 'bg-primary text-on-primary' : 'text-on-secondary-fixed hover:bg-primary/5'}`}>
+          <Icon name="atividades" />Atividades
+        </NavLink>
         <button type="button" onClick={onSair} disabled={saindo} className="text-error flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-label-md hover:bg-primary/5 focus-visible:outline-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-60"><Icon name="sair" />{saindo ? 'Saindo…' : 'Sair'}</button>
       </div>
     </aside>

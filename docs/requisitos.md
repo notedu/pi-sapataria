@@ -22,6 +22,8 @@ Este catálogo organiza as funcionalidades e restrições extraídas das fontes.
 
 **Situação da implementação:** API e tela de Estoque integradas ao PostgreSQL. A tela inclui alertas por mínimo, compras, fornecedores, histórico e importação de CSV conforme as decisões acima. Dashboard financeiro, apuração financeira, alertas de prazo de OS e importação de clientes permanecem fora desta implementação.
 
+**Atualização de 15/10/2026:** por solicitação de João Contin, registro de atividades e notificações individuais implementados e documentados em `api.md` e `telas-e-fluxos.md`. As atividades cobrem operações atuais de API; os alertas automáticos de estoque e prazo permanecem pendentes em RN-013/PD-N08.
+
 ## Atualização — operações de negócio
 
 RF-017/RF-018/RF-020/RF-021/RF-022: cadastros e operações aprovadas disponíveis na API, incluindo exclusões sem histórico, sequência de OS, consumo, estoque, compras e venda/cancelamento. RN-018/RN-019: transações e bloqueios impedem registros parciais e saldo negativo. Estoque oferece filtros locais, alertas por limites cadastrados e telas conectadas; cálculo da OS e financeiro, alertas de prazo e telas de outros módulos continuam pendentes.

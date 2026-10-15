@@ -24,11 +24,11 @@ export async function listarMateriais(request: Request, response: Response): Pro
 }
 
 export async function cadastrar(request: Request, response: Response): Promise<void> {
-  response.status(201).json({ dados: await ordemServicoModel.criar(dadosOs(request.body)) });
+  response.status(201).json({ dados: await ordemServicoModel.criar(dadosOs(request.body), { id: request.funcionario!.id, nome: request.funcionario!.nome }) });
 }
 
 export async function atualizar(request: Request, response: Response): Promise<void> {
-  response.json({ dados: await ordemServicoModel.atualizar(idValido(request.params.id), dadosOs(request.body)) });
+  response.json({ dados: await ordemServicoModel.atualizar(idValido(request.params.id), dadosOs(request.body), { id: request.funcionario!.id, nome: request.funcionario!.nome }) });
 }
 
 export async function mudarStatus(request: Request, response: Response): Promise<void> {
@@ -36,17 +36,17 @@ export async function mudarStatus(request: Request, response: Response): Promise
   if (typeof d.status !== 'string' || !['Aberta', 'Em andamento', 'Pronta', 'Entregue', 'Cancelada'].includes(d.status)) {
     throw new ErroHttp(400, 'DADOS_INVALIDOS', 'Informe um status válido da OS.');
   }
-  response.json({ dados: await ordemServicoModel.mudarStatus(idValido(request.params.id), d.status) });
+  response.json({ dados: await ordemServicoModel.mudarStatus(idValido(request.params.id), d.status, { id: request.funcionario!.id, nome: request.funcionario!.nome }) });
 }
 
 export async function consumir(request: Request, response: Response): Promise<void> {
   const d = objeto(request.body, ['material_id', 'quantidade_usada']);
   response.status(201).json({ dados: await ordemServicoModel.consumir(idValido(request.params.id),
-    idCorpo(d.material_id), decimal(d.quantidade_usada, 'quantidade_usada', { positivo: true })) });
+    idCorpo(d.material_id), decimal(d.quantidade_usada, 'quantidade_usada', { positivo: true }), { id: request.funcionario!.id, nome: request.funcionario!.nome }) });
 }
 
 export async function devolverMaterial(request: Request, response: Response): Promise<void> {
   const d = objeto(request.body, ['quantidade', 'motivo']);
   response.status(201).json({ dados: await ordemServicoModel.devolverMaterial(idValido(request.params.id),
-    idValido(request.params.usoId), decimal(d.quantidade, 'quantidade', { positivo: true }), texto(d.motivo, 'motivo')) });
+    idValido(request.params.usoId), decimal(d.quantidade, 'quantidade', { positivo: true }), texto(d.motivo, 'motivo'), { id: request.funcionario!.id, nome: request.funcionario!.nome }) });
 }

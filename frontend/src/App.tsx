@@ -17,6 +17,8 @@ import DetalhesOrdemServico from './pages/DetalhesOrdemServico'
 import EditarOrdemServico from './pages/EditarOrdemServico'
 import Financeiro from './pages/Financeiro'
 import Estoque from './pages/Estoque'
+import Atividades from './pages/Atividades'
+import Notificacoes from './pages/Notificacoes'
 import Configuracoes from './pages/Configuracoes'
 import LandingPage from './pages/LandingPage'
 
@@ -30,6 +32,8 @@ export default function App() {
         <Route path="/configuracoes" element={<Configuracoes />} />
         <Route path="/estoque" element={<Estoque />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/notificacoes" element={<Notificacoes />} />
+        <Route path="/atividades" element={<Atividades />} />
         <Route path="/busca" element={<Busca />} />
         <Route path="/ordens-servico" element={<OrdensServico />} />
         <Route path="/ordens-servico/nova" element={<NovaOrdemServico />} />

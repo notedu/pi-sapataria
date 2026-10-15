@@ -72,11 +72,13 @@ A API recebe `senha` (15–128 caracteres), não `senha_protegida`. A senha não
 
 **Tabelas técnicas:** `sessoes` (`sid`, `sess`, `expire`) armazena identificadores e estado de sessão conforme connect-pg-simple; `tentativas_login` (`chave`, `tentativas`, `expira_em`) controla tentativas por usuário/IP com chaves derivadas por HMAC, sem senha. Sessões contêm ID do funcionário, versão de acesso, expiração e token CSRF, não dados da credencial. Limite absoluto de 8h; mudança de acesso exige novo login. Essas tabelas não representam novas entidades de negócio.
 
+**Tabelas de atividade preparadas e aplicadas em 15/10/2026:** `atividades` guarda ator e nome histórico, ação, tipo/ID da entidade, detalhes limitados e instante; `notificacoes` guarda atividade, destinatário, mensagem e instante de leitura. Ator e destinatário referenciam Funcionários, mantendo atividades após desativação; remoção de destinatário apaga suas notificações. A estrutura está incluída em `backend/src/database/schema.sql` para instalações novas. O script incremental `backend/src/database/atividades-notificacoes.sql` foi aplicado ao banco Supabase configurado no backend; a existência das duas tabelas foi confirmada.
+
 **Evolução aprovada pelo Integrante 1 em 30/09/2026:** CPF e telefone obrigatórios no cadastro e na edição pessoal; sem unicidade nova. A definição consolidada acrescenta colunas nulas aos registros antigos, restrições de formato e gatilho de obrigatoriedade apenas para INSERT/UPDATE dos campos pessoais. Assim, alterar acesso/desativar legados continua possível sem inventar CPF/telefone. Edição de nome, email, cpf e telefone exige senha do Administrador conectado. Funcionário comum pode apenas consultar seu próprio perfil e suas OS. Foto adiada explicitamente.
 
 Essa evolução está incluída em `backend/src/database/schema.sql` para instalações novas. **Ainda não aplicada ao banco existente**; o arquivo completo não é um script de atualização incremental. O bootstrap do primeiro Administrador foi atualizado para solicitar os novos campos.
 
-O arquivo consolidado `backend/src/database/schema.sql` é a única definição SQL versionada da estrutura. Alterações futuras devem ser integradas nele; `CREATE TABLE IF NOT EXISTS` não atualiza colunas de um banco existente.
+O arquivo consolidado `backend/src/database/schema.sql` reúne a estrutura para instalações novas. Alterações em bancos existentes devem usar scripts incrementais versionados; `CREATE TABLE IF NOT EXISTS` não atualiza colunas de um banco existente.
 
 ### Dados comerciais da loja — `sapataria.configuracoes_loja`
 

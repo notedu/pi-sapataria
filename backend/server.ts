@@ -12,6 +12,7 @@ import fornecedorRoutes from './src/routes/fornecedorRoutes';
 import ordemServicoRoutes from './src/routes/ordemServicoRoutes';
 import vendaRoutes from './src/routes/vendaRoutes';
 import movimentacaoEstoqueRoutes from './src/routes/movimentacaoEstoqueRoutes';
+import atividadeRoutes from './src/routes/atividadeRoutes';
 import compraEstoqueRoutes from './src/routes/compraEstoqueRoutes';
 import importacaoEstoqueRoutes from './src/routes/importacaoEstoqueRoutes';
 import configuracaoRoutes from './src/routes/configuracaoRoutes';
@@ -19,6 +20,7 @@ import { pool } from './src/config/db';
 import { armazenarSessoes, gerenciarSessao, producao } from './src/config/sessao';
 import { exigirLogin } from './src/middlewares/autenticacao';
 import { verificarCsrf } from './src/middlewares/csrf';
+import { auditarRequisicoes } from './src/middlewares/auditoria';
 import { ErroHttp } from './src/utils/validacao';
 
 dotenv.config({ quiet: true });
@@ -50,6 +52,7 @@ app.use('/api/v1', (_request, response, next) => {
   next();
 });
 app.use('/api/v1', gerenciarSessao);
+app.use('/api/v1', auditarRequisicoes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/clientes', exigirLogin, verificarCsrf, clienteRoutes);
 app.use('/api/v1/funcionarios', exigirLogin, verificarCsrf, funcionarioRoutes);
@@ -62,6 +65,7 @@ app.use('/api/v1/fornecedores', exigirLogin, verificarCsrf, fornecedorRoutes);
 app.use('/api/v1/ordens-servico', exigirLogin, verificarCsrf, ordemServicoRoutes);
 app.use('/api/v1/vendas', exigirLogin, verificarCsrf, vendaRoutes);
 app.use('/api/v1/movimentacoes-estoque', exigirLogin, verificarCsrf, movimentacaoEstoqueRoutes);
+app.use('/api/v1', exigirLogin, verificarCsrf, atividadeRoutes);
 app.use('/api/v1/compras-estoque', exigirLogin, verificarCsrf, compraEstoqueRoutes);
 app.use('/api/v1/estoque/importacoes', exigirLogin, verificarCsrf, importacaoEstoqueRoutes);
 
