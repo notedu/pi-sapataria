@@ -100,6 +100,80 @@ const { protegerSenha } = require('../src/utils/senha.ts');
     await pedir(`/produtos/${vazio.id}`, 'GET', undefined, 404);
     await pedir(`/fornecedores/vinculos/produtos/${p.id}`, 'PUT', { fornecedores_ids: [f1.id] }, 204);
     await pedir(`/fornecedores/${f2.id}`, 'DELETE', undefined, 204);
+    // Dados opcionais e compatibilidade com os fornecedores cadastrados só pelo nome.
+    const completo = { nome: 'Fornecedor completo fictício', cnpj: '12.ABC.345/01DE-35', razao_social: 'Fornecedor Teste Ltda.', nome_fantasia: 'Teste Estoque', cep: '01001-000', numero: '123A', email: 'fornecedor@example.invalid', telefone: '(11) 1234-5678', prazo_pagamento: '30 dias', meios_pagamento: 'Pix ou boleto', desconto: '2% à vista', moeda: 'BRL' };
+    const f3 = (await pedir('/fornecedores', 'POST', completo, 201)).dados;
+    assert.equal(f3.cnpj, '12ABC34501DE35'); assert.equal(f3.telefone, '1112345678'); assert.equal(f3.cep, '01001000');
+    for (const campo of ['prazo_pagamento', 'meios_pagamento', 'desconto', 'moeda']) assert.equal(f3[campo], completo[campo]);
+    await pedir(`/fornecedores/${f3.id}`, 'PUT', { nome: 'Fornecedor completo editado' });
+    const preservado = (await pedir('/fornecedores')).dados.find(f => f.id === f3.id);
+    assert.equal(preservado.razao_social, completo.razao_social); assert.equal(preservado.cnpj, f3.cnpj);
+    for (const campo of ['prazo_pagamento', 'meios_pagamento', 'desconto', 'moeda']) assert.equal(preservado[campo], completo[campo]);
+    await pedir(`/fornecedores/${f3.id}`, 'PUT', { nome: f3.nome, email: null });
+    assert.equal((await pedir('/fornecedores')).dados.find(f => f.id === f3.id).email, null);
+    await pedir(`/fornecedores/${f3.id}`, 'PUT', { nome: f3.nome, desconto: null });
+    assert.equal((await pedir('/fornecedores')).dados.find(f => f.id === f3.id).desconto, null);
+    await pedir(`/fornecedores/${f3.id}`, 'PUT', { nome: f3.nome, desconto: completo.desconto });
+    await pedir('/fornecedores', 'POST', { nome: 'Condição inválida', prazo_pagamento: 30 }, 400);
+    for (const invalido of [{ cnpj: '12ABC34501DE00' }, { cnpj: '00000000000000' }, { cep: '123' }, { telefone: '123' }, { email: 'invalido' }]) {
+      await pedir('/fornecedores', 'POST', { nome: 'Fornecedor inválido fictício', ...invalido }, 400);
+    }
+    const legacy = (await pedir('/fornecedores')).dados.find(f => f.id === f1.id);
+    assert.equal(legacy.cnpj, null); assert.equal(legacy.email, null);
+    assert.equal(legacy.prazo_pagamento, null); assert.equal(legacy.moeda, null);
+    // Cadastro + associações formam uma única transação, inclusive na edição.
+    for (const tipo of ['produtos', 'materiais']) {
+      const baseItem = tipo === 'produtos'
+        ? { nome: 'Produto associação fictício', categoria: 'Categoria livre', preco_custo: '10', preco_venda: '15' }
+        : { nome: 'Material associação fictício', categoria: 'Cola', unidade: 'kg', quantidade_minima: '1', custo: '12' };
+      const item = (await pedir(`/${tipo}`, 'POST', { ...baseItem, fornecedores_ids: [f1.id, f3.id] }, 201)).dados;
+      assert.equal((await pedir(`/fornecedores/vinculos/${tipo}`)).dados.filter(v => v.item_id === item.id).length, 2);
+      const antes = (await pedir(`/${tipo}`)).dados.length;
+      await pedir(`/${tipo}`, 'POST', { ...baseItem, fornecedores_ids: [f1.id, 2147483647] }, 400);
+      assert.equal((await pedir(`/${tipo}`)).dados.length, antes);
+      await pedir(`/${tipo}`, 'POST', { ...baseItem, fornecedores_ids: [f1.id, f1.id] }, 400);
+      await pedir(`/${tipo}`, 'POST', { ...baseItem, fornecedores_ids: null }, 400);
+      await pedir(`/${tipo}/${item.id}`, 'PUT', { ...baseItem, nome: 'Não deve persistir', fornecedores_ids: [2147483647] }, 400);
+      assert.equal((await pedir(`/${tipo}/${item.id}`)).dados.nome, baseItem.nome);
+      assert.equal((await pedir(`/fornecedores/vinculos/${tipo}`)).dados.filter(v => v.item_id === item.id).length, 2);
+      await pedir(`/${tipo}/${item.id}`, 'PUT', baseItem);
+      assert.equal((await pedir(`/fornecedores/vinculos/${tipo}`)).dados.filter(v => v.item_id === item.id).length, 2);
+      await pedir(`/${tipo}/${item.id}`, 'PUT', { ...baseItem, fornecedores_ids: [] });
+      assert.equal((await pedir(`/fornecedores/vinculos/${tipo}`)).dados.filter(v => v.item_id === item.id).length, 0);
+      if (tipo === 'materiais') {
+        assert.equal(item.unidade_bloqueada, false);
+        await pedir(`/materiais/${item.id}`, 'PUT', { ...baseItem, unidade: 'g' });
+        await pedir('/movimentacoes-estoque', 'POST', { tipo: 'entrada', material_id: item.id, quantidade: '2', motivo: 'Teste de unidade' }, 201);
+        assert.equal((await pedir(`/materiais/${item.id}`)).dados.unidade_bloqueada, true);
+        await pedir(`/materiais/${item.id}`, 'PUT', { ...baseItem, unidade: 'kg' }, 409);
+        await pedir('/movimentacoes-estoque', 'POST', { tipo: 'saida', material_id: item.id, quantidade: '2', motivo: 'Teste com histórico e saldo zero' }, 201);
+        await pedir(`/materiais/${item.id}`, 'PUT', { ...baseItem, unidade: 'kg' }, 409);
+        const saldoZero = (await pedir(`/materiais/${item.id}`)).dados;
+        assert.equal(saldoZero.quantidade, '0'); assert.equal(saldoZero.unidade_bloqueada, true); assert.equal(saldoZero.unidade, 'g');
+        // Regressão relatada: saída total não remove o Material nem o histórico.
+        assert.equal((await pedir('/materiais')).dados.find(i => i.id === item.id).quantidade, '0');
+        const historico = (await pedir(`/movimentacoes-estoque?material_id=${item.id}`)).dados;
+        assert.equal(historico.length, 2); assert.ok(historico.every(h => h.material_id === item.id));
+        assert.deepEqual(historico.map(h => h.tipo), ['saida', 'entrada']);
+        assert.equal(historico[0].motivo, 'Teste com histórico e saldo zero');
+        await assert.rejects(pool.query('UPDATE sapataria.materiais SET unidade = $1 WHERE id = $2', ['kg', item.id]), e => e.code === '23514' && e.constraint === 'materiais_unidade_com_historico');
+        await pedir(`/materiais/${item.id}`, 'PUT', { ...baseItem, unidade: 'g', nome: 'Material histórico editado' });
+      }
+    }
+    const historicoProduto = (await pedir(`/movimentacoes-estoque?produto_id=${p.id}`)).dados;
+    assert.ok(historicoProduto.length >= 2 && historicoProduto.every(h => h.produto_id === p.id));
+    await pedir('/movimentacoes-estoque?material_id=0', 'GET', undefined, 400);
+    await pedir(`/movimentacoes-estoque?material_id=${m.id}&produto_id=${p.id}`, 'GET', undefined, 400);
+    const { cnpjValido: cnpjApi } = require('../src/utils/cnpj.ts');
+    const { cnpjValido: cnpjTela, formatarCnpj, formatarTelefoneFornecedor } = require('../../frontend/src/utils/fornecedores.ts');
+    for (const [valor, esperado] of [['12345678000195', true], ['12ABC34501DE35', true], ['00000000000000', false], ['12ABC34501DE00', false], ['123', false]]) {
+      assert.equal(cnpjApi(valor), esperado); assert.equal(cnpjTela(valor), esperado);
+    }
+    assert.equal(formatarCnpj('12ABC34501DE35'), '12.ABC.345/01DE-35');
+    assert.equal(formatarTelefoneFornecedor('1112345678'), '(11) 1234-5678');
+    const { unidadesDaCategoria } = require('../../frontend/src/config/estoque.ts');
+    assert.deepEqual(unidadesDaCategoria(' Cola '), ['kg', 'g']);
+    assert.deepEqual(unidadesDaCategoria('Categoria livre'), []);
     const { lucroProduto } = require('../../frontend/src/utils/estoque.ts');
     assert.deepEqual(lucroProduto('10.00', '15.00'), { valor: 5, percentual: 50 });
     assert.deepEqual(lucroProduto('0', '15'), { valor: 15, percentual: null });

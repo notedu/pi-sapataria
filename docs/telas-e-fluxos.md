@@ -1,5 +1,13 @@
 # Telas e fluxos — visão inicial do sistema
 
+## Melhoria de Estoque implementada em 13/10/2026
+
+**Complemento confirmado por João Franco:** Fornecedores inclui campos opcionais separados para prazo de pagamento, meios de pagamento, desconto e moeda. Registro informativo, sem aplicação automática. Botão Histórico em cada Produto/Material consulta as movimentações com filtro na API, mostrando data, tipo, quantidade, origem e motivo. Saída até zerar saldo mantém Material visível e histórico preservado; foi verificado com dados fictícios por API e na interface. O complemento resolve a ausência da visualização do histórico descrita na etapa inicial abaixo.
+
+Em `/estoque`, cadastro/edição oferece sugestões de categorias existentes e exemplos por tipo, mantendo outra categoria possível. Cola/Colas novas selecionam kg inicialmente e permitem escolher g; não convertem valores. Outras categorias mantêm unidade livre com sugestões. Materiais com saldo ou movimentações têm campo de unidade bloqueado; unidades legadas não são trocadas ao editar categoria. Fornecedores múltiplos e opcionais podem ser selecionados no formulário do item; gravam na mesma transação do cadastro/edição, além da associação posterior já existente.
+
+`FormularioFornecedor` serve cadastro/edição com nome de exibição obrigatório e CNPJ, razão social, nome fantasia, CEP, número, e-mail e telefone opcionais. CEP reutiliza consulta existente e falha não impede salvar. Dados antigos são editáveis sem preencher novos campos. Máscaras não substituem validações na API e banco. Dados bancários, busca de fornecedores e melhoria de falhas parciais continuam fora desta etapa. Condições comerciais e histórico foram incluídos no complemento acima.
+
 ## Estoque implementado em 02/10/2026
 
 Autorizado por João Franco, integrado à navegação principal em `/estoque`, disponível para Administrador e Funcionário. Abas Produtos para venda e Materiais, busca por nome/categoria e filtro de categoria. Visão geral conta cadastros (não soma unidades diferentes), compara Materiais com o mínimo e estima valor a custo (saldo × custo atual). Produtos mostram compra, venda, lucro unitário e percentual sobre custo, não lucro financeiro realizado.

@@ -1,10 +1,10 @@
 import { useEffect, useId, useRef } from 'react'
 import type { ReactNode } from 'react'
 
-type DialogProps = { titulo: string; children: ReactNode; onCancelar: () => void; ocupado?: boolean }
+type DialogProps = { titulo: string; children: ReactNode; onCancelar: () => void; ocupado?: boolean; largura?: 'normal' | 'ampla' }
 
 // O dialog nativo mantém o foco no modal e torna o restante da página inativo.
-export default function Dialog({ titulo, children, onCancelar, ocupado = false }: DialogProps) {
+export default function Dialog({ titulo, children, onCancelar, ocupado = false, largura = 'normal' }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null)
   const tituloId = useId()
   useEffect(() => {
@@ -20,7 +20,7 @@ export default function Dialog({ titulo, children, onCancelar, ocupado = false }
   return (
     <dialog ref={ref} aria-labelledby={tituloId} aria-busy={ocupado}
       onCancel={event => { event.preventDefault(); if (!ocupado) onCancelar() }}
-      className="m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-lg border border-outline-variant bg-surface p-6 text-on-surface shadow-xl backdrop:bg-black/40 md:p-8">
+      className={`m-auto max-h-[90dvh] w-[calc(100%-2rem)] ${largura === 'ampla' ? 'max-w-4xl' : 'max-w-lg'} overflow-y-auto rounded-lg border border-outline-variant bg-surface p-6 text-on-surface shadow-xl backdrop:bg-black/40 md:p-8`}>
       <h2 id={tituloId} className="mb-4 text-headline-md">{titulo}</h2>
       {children}
     </dialog>

@@ -2,6 +2,7 @@ import { decimal } from '../utils/operacoes';
 import type { Request, Response } from 'express';
 import * as materialModel from '../models/materialModel';
 import { ErroHttp, idValido, objeto, texto } from '../utils/validacao';
+import { fornecedoresIds } from '../utils/fornecedores';
 
 export async function listar(_request: Request, response: Response): Promise<void> {
   response.json({ dados: await materialModel.listar() });
@@ -14,13 +15,14 @@ export async function buscarPorId(request: Request, response: Response): Promise
 }
 
 function validar(corpo: unknown): materialModel.DadosMaterial {
-  const d = objeto(corpo, ['nome', 'categoria', 'unidade', 'quantidade_minima', 'custo']);
+  const d = objeto(corpo, ['nome', 'categoria', 'unidade', 'quantidade_minima', 'custo', 'fornecedores_ids']);
   return {
     nome: texto(d.nome, 'nome'),
     categoria: texto(d.categoria, 'categoria'),
     unidade: texto(d.unidade, 'unidade'),
     quantidade_minima: decimal(d.quantidade_minima, 'quantidade_minima'),
     custo: decimal(d.custo, 'custo', { dinheiro: true }),
+    fornecedores_ids: fornecedoresIds(d.fornecedores_ids),
   };
 }
 

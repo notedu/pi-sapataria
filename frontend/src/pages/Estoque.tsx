@@ -5,12 +5,15 @@ import Button from '../components/Button'
 import Dialog from '../components/Dialog'
 import InputField from '../components/InputField'
 import FormularioItemEstoque from '../components/FormularioItemEstoque'
+import FormularioFornecedor from '../components/FormularioFornecedor'
+import SelecaoFornecedores from '../components/SelecaoFornecedores'
+import HistoricoEstoque from '../components/HistoricoEstoque'
 import { ErroApi, ResultadoIncerto } from '../services/api'
 import { alterarEstoque, listarFornecedores, listarItens, listarVinculos } from '../services/estoque'
 import type { Fornecedor, ItemEstoque, TipoEstoque, Vinculo } from '../services/estoque'
 import { lucroProduto } from '../utils/estoque'
 
-type Modal = { acao: 'cadastro' | 'editar' | 'excluir' | 'entrada' | 'saida' | 'associar'; item?: ItemEstoque }
+type Modal = { acao: 'cadastro' | 'editar' | 'excluir' | 'entrada' | 'saida' | 'associar' | 'historico'; item?: ItemEstoque }
 const moeda = (valor: number) => valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 const numero = (valor: string | number) => Number(valor).toLocaleString('pt-BR', { maximumFractionDigits: 10 })
 
@@ -35,7 +38,6 @@ export default function Estoque() {
   const [gerenciar, setGerenciar] = useState(false)
   const [fornecedorEditado, setFornecedorEditado] = useState<Fornecedor | null>(null)
   const [fornecedorExcluir, setFornecedorExcluir] = useState<Fornecedor | null>(null)
-  const [nomeFornecedor, setNomeFornecedor] = useState('')
   const [selecionados, setSelecionados] = useState<number[]>([])
   const [quantidade, setQuantidade] = useState('')
   const [motivo, setMotivo] = useState('')
@@ -71,7 +73,7 @@ export default function Estoque() {
     setOcupado(true); setErroModal(''); setAviso('')
     try {
       await alterarEstoque(caminho, dados, metodo)
-      setAviso('Operação concluída.'); setFornecedorEditado(null); setFornecedorExcluir(null); setNomeFornecedor('')
+      setAviso('Operação concluída.'); setFornecedorEditado(null); setFornecedorExcluir(null)
       if (!manter) fechar()
       atualizar()
     } catch (error) {
@@ -93,7 +95,7 @@ export default function Estoque() {
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div><h1 className="text-headline-lg-mobile text-primary md:text-headline-lg">Controle de Estoque</h1>
         <p className="mt-2 text-body-md text-on-surface-variant">Produtos para venda e materiais utilizados nos serviços.</p></div>
-      <Button variant="secondary" disabled={bloqueado} onClick={() => { setGerenciar(true); setErroModal(''); setFornecedorEditado(null); setNomeFornecedor('') }}>Fornecedores</Button>
+      <Button variant="secondary" disabled={bloqueado} onClick={() => { setGerenciar(true); setErroModal(''); setFornecedorEditado(null) }}>Fornecedores</Button>
     </div>
     {erro && <p role="alert" className="rounded-default bg-error-container p-4 text-on-error-container">{erro}</p>}
     {aviso && <Alerta mensagem={aviso} />}
@@ -123,17 +125,19 @@ export default function Estoque() {
               <td className="p-3">{item.categoria}</td><td className="whitespace-nowrap p-3">{numero(item.quantidade)} {item.unidade ?? 'un'}</td>
               {lucro ? <><td className="whitespace-nowrap p-3">{moeda(Number(item.preco_custo))}</td><td className="whitespace-nowrap p-3">{moeda(Number(item.preco_venda))}</td><td className="whitespace-nowrap p-3">{moeda(lucro.valor)}</td><td className="p-3">{lucro.percentual === null ? 'Não calculável (custo zero)' : `${numero(lucro.percentual)}%`}</td></>
                 : <><td className="whitespace-nowrap p-3">{numero(item.quantidade_minima!)} {item.unidade}</td><td className="whitespace-nowrap p-3">{moeda(Number(item.custo))}</td><td className="p-3"><span className={`whitespace-nowrap rounded-full px-3 py-1 ${baixo ? 'bg-error-container text-on-error-container' : 'bg-surface-container text-on-surface'}`}>{baixo ? 'Abaixo do mínimo' : 'Em dia'}</span></td></>}
-              <td className="min-w-64 p-3"><div className="flex flex-wrap gap-2">{(['editar', 'entrada', 'saida', 'associar', 'excluir'] as const).map(acao => <Button key={acao} size="compact" variant={acao === 'excluir' ? 'dangerOutline' : 'secondary'} disabled={bloqueado} aria-label={`${{ editar: 'Editar', entrada: 'Entrada', saida: 'Saída', associar: 'Fornecedores', excluir: 'Excluir' }[acao]}: ${item.nome}`} onClick={() => abrir(acao, item)}>{{ editar: 'Editar', entrada: 'Entrada', saida: 'Saída', associar: 'Fornecedores', excluir: 'Excluir' }[acao]}</Button>)}</div></td>
+              <td className="min-w-64 p-3"><div className="flex flex-wrap gap-2">{(['editar', 'entrada', 'saida', 'historico', 'associar', 'excluir'] as const).map(acao => <Button key={acao} size="compact" variant={acao === 'excluir' ? 'dangerOutline' : 'secondary'} disabled={bloqueado} aria-label={`${{ editar: 'Editar', entrada: 'Entrada', saida: 'Saída', historico: 'Histórico', associar: 'Fornecedores', excluir: 'Excluir' }[acao]}: ${item.nome}`} onClick={() => abrir(acao, item)}>{{ editar: 'Editar', entrada: 'Entrada', saida: 'Saída', historico: 'Histórico', associar: 'Fornecedores', excluir: 'Excluir' }[acao]}</Button>)}</div></td>
             </tr>
           })}</tbody>
         </table>
       </div>
       {!carregando && !erro && !filtrados.length && <p role="status" className="py-8 text-center text-on-surface-variant">Nenhum item encontrado.</p>}
-      <p className="mt-4 text-body-sm text-on-surface-variant">{tipo === 'produtos' ? 'Lucro previsto por unidade = venda − compra. Percentual = lucro ÷ compra × 100. Produtos não possuem mínimo cadastrado.' : 'Materiais permitem quantidades fracionadas na unidade cadastrada.'}</p>
+      <p className="mt-4 text-body-sm text-on-surface-variant">{tipo === 'produtos' ? 'Lucro previsto por unidade = venda − compra. Percentual = lucro ÷ compra × 100. Produtos não possuem mínimo cadastrado.' : 'Materiais permitem quantidades fracionadas na unidade cadastrada. Saldo zero mantém o item na lista; consulte as movimentações em Histórico.'}</p>
     </div>
-    {modal && <Dialog titulo={modal.acao === 'cadastro' ? 'Cadastrar item' : `${{ editar: 'Editar', excluir: 'Excluir', entrada: 'Entrada', saida: 'Saída', associar: 'Fornecedores' }[modal.acao]}: ${modal.item?.nome}`} ocupado={ocupado} onCancelar={fechar}>
+    {modal && <Dialog titulo={modal.acao === 'cadastro' ? 'Cadastrar item' : `${{ editar: 'Editar', excluir: 'Excluir', entrada: 'Entrada', saida: 'Saída', historico: 'Histórico', associar: 'Fornecedores' }[modal.acao]}: ${modal.item?.nome}`} largura={modal.acao === 'historico' ? 'ampla' : 'normal'} ocupado={ocupado} onCancelar={fechar}>
       {erroModal && <p role="alert" className="mb-4 rounded-default bg-error-container p-4 text-on-error-container">{erroModal}</p>}
+      {modal.acao === 'historico' && <HistoricoEstoque tipo={tipo} item={modal.item!} onFechar={fechar} />}
       {(modal.acao === 'cadastro' || modal.acao === 'editar') && <FormularioItemEstoque tipo={tipo} item={modal.item} ocupado={ocupado} bloqueado={bloqueado} onCancelar={fechar}
+        categorias={itens.map(i => i.categoria)} fornecedores={fornecedores} fornecedoresIniciais={selecionados}
         onSalvar={dados => void executar(`/${tipo}${modal.item ? `/${modal.item.id}` : ''}`, dados, modal.item ? 'PUT' : 'POST')} />}
       {modal.acao === 'excluir' && <div className="space-y-4"><p>Confirmar exclusão de {modal.item?.nome}? Só é permitido excluir itens com saldo zero e sem vínculos com movimentações, vendas ou OS.</p><Button variant="danger" disabled={bloqueado} onClick={() => void executar(`/${tipo}/${modal.item!.id}`, undefined, 'DELETE')}>Confirmar exclusão</Button> <Button variant="secondary" disabled={ocupado} onClick={fechar}>Cancelar</Button></div>}
       {(modal.acao === 'entrada' || modal.acao === 'saida') && <form className="space-y-4" onSubmit={e => { e.preventDefault(); void executar('/movimentacoes-estoque', { tipo: modal.acao, [tipo === 'produtos' ? 'produto_id' : 'material_id']: modal.item!.id, quantidade, motivo }) }}>
@@ -145,18 +149,16 @@ export default function Estoque() {
       {modal.acao === 'associar' && <form className="space-y-4" onSubmit={e => { e.preventDefault(); void executar(`/fornecedores/vinculos/${tipo}/${modal.item!.id}`, { fornecedores_ids: selecionados }, 'PUT') }}>
         <p>Selecione os fornecedores deste item. A associação é opcional.</p>
         {!fornecedores.length && <p>Cadastre um fornecedor no botão Fornecedores da página.</p>}
-        <fieldset disabled={bloqueado} className="space-y-3"><legend className="sr-only">Fornecedores disponíveis</legend>{fornecedores.map(f => <label key={f.id} className="flex items-center gap-3"><input type="checkbox" checked={selecionados.includes(f.id)} onChange={e => setSelecionados(e.target.checked ? [...selecionados, f.id] : selecionados.filter(id => id !== f.id))} />{f.nome}</label>)}</fieldset>
+        <SelecaoFornecedores fornecedores={fornecedores} selecionados={selecionados} onChange={setSelecionados} disabled={bloqueado} />
         <Button type="submit" disabled={bloqueado}>Salvar associações</Button> <Button variant="secondary" disabled={ocupado} onClick={fechar}>Cancelar</Button>
       </form>}
     </Dialog>}
     {gerenciar && <Dialog titulo="Fornecedores" ocupado={ocupado} onCancelar={fechar}>
       {erroModal && <p role="alert" className="mb-4 rounded-default bg-error-container p-4 text-on-error-container">{erroModal}</p>}
-      <form className="mb-6 space-y-4" onSubmit={e => { e.preventDefault(); void executar(`/fornecedores${fornecedorEditado ? `/${fornecedorEditado.id}` : ''}`, { nome: nomeFornecedor }, fornecedorEditado ? 'PUT' : 'POST', true) }}>
-        <InputField id="fornecedor-nome" label={fornecedorEditado ? 'Editar nome do fornecedor' : 'Nome do novo fornecedor'} required value={nomeFornecedor} disabled={bloqueado} onChange={e => setNomeFornecedor(e.target.value)} />
-        <Button type="submit" disabled={bloqueado}>{fornecedorEditado ? 'Salvar edição' : 'Cadastrar fornecedor'}</Button>
-        {fornecedorEditado && <Button variant="secondary" disabled={ocupado} onClick={() => { setFornecedorEditado(null); setNomeFornecedor('') }}>Cancelar edição</Button>}
-      </form>
-      <ul className="space-y-3">{fornecedores.map(f => <li key={f.id} className="flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant py-3"><span>{f.nome}</span><div className="flex gap-2"><Button size="compact" variant="secondary" disabled={bloqueado} onClick={() => { setFornecedorEditado(f); setNomeFornecedor(f.nome); setFornecedorExcluir(null) }}>Editar</Button><Button size="compact" variant="dangerOutline" disabled={bloqueado} onClick={() => setFornecedorExcluir(f)}>Excluir</Button></div></li>)}</ul>
+      <FormularioFornecedor key={`${fornecedorEditado?.id ?? 'novo'}-${atualizacao}`} inicial={fornecedorEditado ?? undefined} bloqueado={bloqueado} ocupado={ocupado}
+        onSalvar={dados => void executar(`/fornecedores${fornecedorEditado ? `/${fornecedorEditado.id}` : ''}`, dados, fornecedorEditado ? 'PUT' : 'POST', true)}
+        onCancelar={() => setFornecedorEditado(null)} />
+      <ul className="space-y-3">{fornecedores.map(f => <li key={f.id} className="flex flex-wrap items-center justify-between gap-2 border-t border-outline-variant py-3"><span>{f.nome}{f.cnpj && <span className="block text-body-sm text-on-surface-variant">CNPJ {f.cnpj}</span>}</span><div className="flex gap-2"><Button size="compact" variant="secondary" disabled={bloqueado} onClick={() => { setFornecedorEditado(f); setFornecedorExcluir(null) }}>Editar</Button><Button size="compact" variant="dangerOutline" disabled={bloqueado} onClick={() => setFornecedorExcluir(f)}>Excluir</Button></div></li>)}</ul>
       {!fornecedores.length && <p>Nenhum fornecedor cadastrado.</p>}
       {fornecedorExcluir && <div className="my-4 space-y-3 rounded-default bg-error-container p-4"><p>Excluir {fornecedorExcluir.nome}? Fornecedores associados a itens não podem ser excluídos.</p><Button variant="danger" disabled={bloqueado} onClick={() => void executar(`/fornecedores/${fornecedorExcluir.id}`, undefined, 'DELETE', true)}>Confirmar exclusão</Button> <Button variant="secondary" disabled={ocupado} onClick={() => setFornecedorExcluir(null)}>Cancelar</Button></div>}
       <Button className="mt-4" variant="secondary" disabled={ocupado} onClick={fechar}>Fechar</Button>
