@@ -58,7 +58,7 @@ O contrato combina como front-end e back-end trocam pedidos e respostas. **Clien
 | A20 | Vendas | `POST /vendas` | Registrar venda independente | Ambos os perfis autenticados, com CSRF | Implementado |
 | A23 | Perfil | `GET /perfil` | Consultar os próprios dados | Próprio usuário — RN-006; rota específica pendente | Proposto |
 | A24 | Perfil | `PUT /perfil` | Alterar os próprios dados | Próprio usuário; campos editáveis pendentes | Proposto |
-| A27 | Configurações da loja | `GET /configuracoes/loja` | Consultar o endereço comercial | Administrador — RN-003 | Implementado |
+| A27 | Configurações da loja | `GET /configuracoes/loja` | Consultar o endereço comercial | Ambos os perfis autenticados — RN-003 | Implementado |
 | A28 | Configurações da loja | `PUT /configuracoes/loja` | Alterar o endereço comercial | Administrador, com CSRF — RN-003 | Implementado |
 | A29 | Configurações | `POST /configuracoes/{cadastro}` | Cadastrar item auxiliar | Pendente — RN-003 | Proposto |
 | A26 | Dashboard | `GET /dashboard` | Consultar resumo operacional | Pendente; acesso amplo é sugestão | Proposto |
@@ -198,7 +198,7 @@ Retorna `200`, `{"dados": funcionario}`. Não muda id, vínculos, credenciais ne
 
 ### GET /funcionarios/{id}/ordens-servico
 
-Mesma permissão de A21, conferida antes de consultar. Retorna `200`, `{"dados":[OS]}`, filtradas por `responsavel_id`, ordenadas por id. Sem vínculo retorna lista vazia; outro perfil sem permissão retorna `403`; funcionário inexistente para consulta autorizada retorna `404`. Não altera OS.
+Mesma permissão de A21, conferida antes de consultar. Retorna `200`, `{"dados":[OS]}`, filtradas por `responsavel_id`, ordenadas por id e incluindo `cliente_nome` para identificar o cliente no histórico do perfil. Sem vínculo retorna lista vazia; outro perfil sem permissão retorna `403`; funcionário inexistente para consulta autorizada retorna `404`. Não altera OS nem o modelo do banco.
 
 **Banco:** `schema.sql` contém essa estrutura para banco novo. A evolução ainda não foi aplicada ao banco existente; não execute o esquema completo nesse banco.
 
@@ -345,10 +345,10 @@ Exemplo de sequência no Insomnia: login → cadastrar produto → registrar ent
 <a id="a27"></a>
 ### A27 — GET /configuracoes/loja
 
-- **Caminho implementado:** `GET /api/v1/configuracoes/loja`; Administrador autenticado.
+- **Caminho implementado:** `GET /api/v1/configuracoes/loja`; Administrador ou Funcionário autenticado.
 - **Entrada:** Sem corpo.
 - **Sucesso:** `200`, `{"dados":{"endereco":"..."}}`.
-- **Erros, efeitos e origem:** `401` sem sessão; `403` para Funcionário. A consulta retorna somente o endereço comercial aprovado, sem expor outros parâmetros pendentes. RF-024; RN-003.
+- **Erros, efeitos e origem:** `401` sem sessão. A consulta retorna somente o endereço comercial aprovado, sem expor outros parâmetros pendentes. RF-024; RN-003.
 
 <a id="a28"></a>
 ### A28 — PUT /configuracoes/loja

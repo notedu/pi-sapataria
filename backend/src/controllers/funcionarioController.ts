@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import * as funcionarios from '../models/funcionarioModel';
 import type { Perfil } from '../models/funcionarioModel';
 import { cpfValido } from '../utils/cpf';
-import { listar as listarOrdens } from '../models/ordemServicoModel';
+import { listarPorResponsavelComCliente } from '../models/ordemServicoModel';
 import { protegerSenha, validarSenha, verificarSenha } from '../utils/senha';
 import { limitarConfirmacoes } from '../models/loginModel';
 import { ErroHttp, idValido, objeto, texto } from '../utils/validacao';
@@ -67,7 +67,7 @@ function permitirConsulta(request: Request): number {
 export async function ordens(request: Request, response: Response): Promise<void> {
   const id = permitirConsulta(request);
   if (!await funcionarios.buscar(id)) throw new ErroHttp(404, 'FUNCIONARIO_NAO_ENCONTRADO', 'Funcionário não encontrado.');
-  response.json({ dados: await listarOrdens(undefined, id) });
+  response.json({ dados: await listarPorResponsavelComCliente(id) });
 }
 
 async function prepararConfirmacao(request: Request, senha: unknown): Promise<funcionarios.AutorizacaoAcesso> {

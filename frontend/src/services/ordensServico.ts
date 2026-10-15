@@ -3,7 +3,7 @@ import { enviarComCsrf, ErroApi, objeto, requisitar, ResultadoIncerto } from './
 export type OrdemResumo = {
   id: number; cliente_id: number; responsavel_id: number; descricao_calcado: string
   servico: string; valor: string; data_entrada: string; prazo_entrega: string | null
-  status: string; forma_pagamento: string | null; observacoes: string | null
+  status: string; forma_pagamento: string | null; observacoes: string | null; cliente_nome?: string
 }
 export type OrdemDetalhada = OrdemResumo & { responsavel_nome: string; responsavel_ativo: boolean }
 
@@ -19,6 +19,7 @@ export function ordem(valor: unknown): valor is OrdemResumo {
     && (valor.prazo_entrega === null || typeof valor.prazo_entrega === 'string')
     && (valor.forma_pagamento === null || typeof valor.forma_pagamento === 'string')
     && (valor.observacoes === null || typeof valor.observacoes === 'string')
+    && (valor.cliente_nome === undefined || typeof valor.cliente_nome === 'string')
 }
 
 export function ordemDetalhada(valor: unknown): valor is OrdemDetalhada {
