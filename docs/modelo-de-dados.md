@@ -12,7 +12,7 @@ Modelo do banco sujeito a evolução. O contrato da API e o documento de telas d
 - **Implementação aprovada:** tabelas de negócio em `sapataria`, com campos, tipos, chaves e obrigatoriedade descritos abaixo. Fluxos de gravação e total da venda implementados; cálculo automático da OS e indicadores financeiros pendentes.
 - **Pendências de negócio:** apontadas junto aos elementos afetados, por identificadores de [regras de negócio](regras-de-negocio.md#pendencias). Ausência de definição não significa campo opcional.
 
-**Situação atual:** SQL de Clientes, Funcionários, entidades, operações, fornecedores e cadastros de estoque aplicados no banco configurado. A migração `estoque-compras-importacao.sql` também foi aplicada; produtos legados permanecem sem mínimo até configuração. Há tabelas técnicas de autenticação.
+**Situação atual:** `backend/src/database/schema.sql` reúne o esquema completo em ordem de dependência para instalar um banco novo. Não o execute no banco configurado: estruturas de Clientes, Funcionários, entidades, operações, fornecedores e estoque já foram aplicadas em etapas anteriores; as evoluções de perfil e a configuração comercial ainda estão pendentes nesse banco. Produtos legados permanecem sem mínimo até configuração. Há tabelas técnicas de autenticação.
 
 ## Convenções adotadas
 
@@ -66,21 +66,27 @@ Cada movimentação aponta **para um Material ou um Produto, nunca ambos**, conf
 | `senha_protegida` | `text` | Obrigatório; hash scrypt com salt; nunca devolvido pela API |
 | `perfil` | `text` | Obrigatório; administrador ou funcionario; sem padrão |
 | `ativo` | `boolean` | Obrigatório no banco; padrão true |
-| `versao_acesso` | `integer` | Técnico; padrão 1; incrementa ao mudar perfil/ativo; invalida sessões anteriores |
+| `versao_acesso` | `integer` | Técnico; padrão 1; incrementa ao mudar perfil/ativo ou trocar senha; invalida sessões anteriores |
 
-A API recebe `senha` (15–128 caracteres), não `senha_protegida`. A senha não é normalizada. Nenhum cadastro público: o primeiro administrador é criado pelo comando local `npm run criar:admin`, que recusa execução quando já existem funcionários. Só administradores autenticados gerenciam as demais contas. Exclusão e recuperação/troca de senha não foram implementadas.
+A API recebe `senha` (15–128 caracteres), não `senha_protegida`. A senha não é normalizada. Nenhum cadastro público: o primeiro administrador é criado pelo comando local `npm run criar:admin`, que recusa execução quando já existem funcionários. Só administradores autenticados gerenciam as demais contas. A troca da própria senha está implementada em rota autenticada; recuperação continua pendente.
 
 **Tabelas técnicas:** `sessoes` (`sid`, `sess`, `expire`) armazena identificadores e estado de sessão conforme connect-pg-simple; `tentativas_login` (`chave`, `tentativas`, `expira_em`) controla tentativas por usuário/IP com chaves derivadas por HMAC, sem senha. Sessões contêm ID do funcionário, versão de acesso, expiração e token CSRF, não dados da credencial. Limite absoluto de 8h; mudança de acesso exige novo login. Essas tabelas não representam novas entidades de negócio.
 
-**Evolução aprovada pelo Integrante 1 em 30/09/2026:** CPF e telefone obrigatórios no cadastro e na edição pessoal; sem unicidade nova. `funcionarios-perfil.sql` acrescenta colunas nulas aos registros antigos, restrições de formato e gatilho de obrigatoriedade apenas para INSERT/UPDATE dos campos pessoais. Assim, alterar acesso/desativar legados continua possível sem inventar CPF/telefone. Edição de nome, email, cpf e telefone exige senha do Administrador conectado. Funcionário comum pode apenas consultar seu próprio perfil e suas OS. Foto adiada explicitamente.
+**Evolução aprovada pelo Integrante 1 em 30/09/2026:** CPF e telefone obrigatórios no cadastro e na edição pessoal; sem unicidade nova. A definição consolidada acrescenta colunas nulas aos registros antigos, restrições de formato e gatilho de obrigatoriedade apenas para INSERT/UPDATE dos campos pessoais. Assim, alterar acesso/desativar legados continua possível sem inventar CPF/telefone. Edição de nome, email, cpf e telefone exige senha do Administrador conectado. Funcionário comum pode apenas consultar seu próprio perfil e suas OS. Foto adiada explicitamente.
 
-Migração preparada e verificada em PostgreSQL local descartável, **não aplicada ao banco existente**. Instalações novas também precisam executar esse script após `funcionarios.sql`. O bootstrap do primeiro Administrador foi atualizado para solicitar os novos campos.
+Essa evolução está incluída em `backend/src/database/schema.sql` para instalações novas. **Ainda não aplicada ao banco existente**; o arquivo completo não é um script de atualização incremental. O bootstrap do primeiro Administrador foi atualizado para solicitar os novos campos.
 
-O script `backend/src/database/funcionarios.sql` cria apenas a etapa original. Alterações futuras em tabelas existentes deverão ser registradas em novos scripts; `CREATE TABLE IF NOT EXISTS` não atualiza colunas antigas.
+O arquivo consolidado `backend/src/database/schema.sql` é a única definição SQL versionada da estrutura. Alterações futuras devem ser integradas nele; `CREATE TABLE IF NOT EXISTS` não atualiza colunas de um banco existente.
+
+### Dados comerciais da loja — `sapataria.configuracoes_loja`
+
+Decisão do Integrante 1 em 15/10/2026: manter o endereço da loja para uso administrativo e futura Landing Page. A tabela tem um único registro (`id = 1`) e um campo `endereco text` editável apenas pelo Administrador; texto vazio é permitido para não inventar obrigatoriedade, e o limite é 500 caracteres. A interface consulta rua, bairro, cidade e UF pelo ViaCEP a partir do CEP informado, solicita também o número e persiste um único endereço formatado; indisponibilidade do ViaCEP permite salvar CEP e número sem os demais dados. Preferências de notificações e tema são específicas por funcionário, ficam no `localStorage` deste navegador e não criam colunas nem API.
+
+`backend/src/database/schema.sql` cria a tabela e seu registro inicial sem apagar dados em uma instalação nova. **Essa estrutura ainda não foi aplicada ao banco existente.** A seção comercial da tela dependerá da atualização do esquema desse banco. RF-024; RN-003.
 
 ## Cliente
 
-**Tabela:** `sapataria.clientes`. Evolução aprovada pelo Integrante 1 em 29/09/2026: CPF obrigatório, telefone de 11 dígitos, CEP e número no lugar do endereço livre, data de cadastro e perfil com OS. Código implementado; migração `backend/src/database/clientes-perfil.sql` preparada e testada apenas em PostgreSQL local descartável, **não aplicada ao banco existente**.
+**Tabela:** `sapataria.clientes`. Evolução aprovada pelo Integrante 1 em 29/09/2026: CPF obrigatório, telefone de 11 dígitos, CEP e número no lugar do endereço livre, data de cadastro e perfil com OS. Código implementado; estrutura incluída em `schema.sql` para banco novo, **não aplicada ao banco existente**.
 
 | Campo | Tipo PostgreSQL / JSON | Obrigatoriedade |
 |---|---|---|
@@ -126,13 +132,13 @@ Usos de materiais ficam em `materiais_os`. Cadastro, edição, avanço de status
 
 ## Estoques — `materiais` e `produtos`
 
-**Complemento confirmado por João Franco:** a mesma migração `estoque-cadastros.sql`, reaplicável com IF NOT EXISTS, inclui `prazo_pagamento`, `meios_pagamento`, `desconto` e `moeda` como text nullable, com CHECK de texto não vazio quando presente. Migração aplicada com os quatro campos, sem preencher dados desconhecidos. São condições comerciais informativas; não criam cálculo financeiro ou tabela de compras. Histórico exibido pela interface usa `movimentacoes_estoque` existente, sem duplicação. Saída total mantém o Material e suas movimentações.
+**Complemento confirmado por João Franco:** o esquema consolidado inclui `prazo_pagamento`, `meios_pagamento`, `desconto` e `moeda` como text nullable, com CHECK de texto não vazio quando presente. A atualização foi aplicada com os quatro campos, sem preencher dados desconhecidos. São condições comerciais informativas; não criam cálculo financeiro ou tabela de compras. Histórico exibido pela interface usa `movimentacoes_estoque` existente, sem duplicação. Saída total mantém o Material e suas movimentações.
 
-**15/10/2026 — `estoque-compras-importacao.sql` aplicada:** `produtos.quantidade_minima numeric` nullable para preservar cadastros anteriores; novos cadastros exigem mínimo inteiro não negativo. `compras_estoque` guarda fornecedor e instante; `itens_compra_estoque` guarda Produto/Material, quantidade e preço unitário. `movimentacoes_estoque.item_compra_id` liga cada linha da compra à sua entrada. Chaves, trigger e restrições garantem que a origem corresponda ao item, quantidade inteira para Produto, entrada como movimento de compra e apenas uma origem por movimento. Migração não apaga nem reatribui histórico.
+**15/10/2026 — Compras e importação aplicadas:** `produtos.quantidade_minima numeric` nullable para preservar cadastros anteriores; novos cadastros exigem mínimo inteiro não negativo. `compras_estoque` guarda fornecedor e instante; `itens_compra_estoque` guarda Produto/Material, quantidade e preço unitário. `movimentacoes_estoque.item_compra_id` liga cada linha da compra à sua entrada. Chaves, trigger e restrições garantem que a origem corresponda ao item, quantidade inteira para Produto, entrada como movimento de compra e apenas uma origem por movimento. O esquema consolidado preserva o histórico.
 
-**13/10/2026 — `estoque-cadastros.sql` aplicado ao PostgreSQL:** adiciona `cnpj`, `razao_social`, `nome_fantasia`, `cep`, `numero`, `email` e `telefone` como text nullable em fornecedores, com CHECK de formato; registros antigos mantêm null, sem preenchimento inventado ou unicidade nova. CNPJ armazenado sem máscara em maiúsculas, com 12 caracteres alfanuméricos e dois dígitos; CEP e telefone somente números. Nome continua obrigatório. Trigger `materiais_proteger_unidade` rejeita mudança de unidade com saldo antigo/novo não zero ou movimentações existentes, sem modificar saldos ou históricos. Categorias/unidades continuam textos, sem catálogo obrigatório ou conversão. `unidade_bloqueada` é informação derivada na API, não coluna do banco.
+**13/10/2026 — Cadastros de estoque aplicados ao PostgreSQL:** adiciona `cnpj`, `razao_social`, `nome_fantasia`, `cep`, `numero`, `email` e `telefone` como text nullable em fornecedores, com CHECK de formato; registros antigos mantêm null, sem preenchimento inventado ou unicidade nova. CNPJ armazenado sem máscara em maiúsculas, com 12 caracteres alfanuméricos e dois dígitos; CEP e telefone somente números. Nome continua obrigatório. Trigger `materiais_proteger_unidade` rejeita mudança de unidade com saldo antigo/novo não zero ou movimentações existentes, sem modificar saldos ou históricos. Categorias/unidades continuam textos, sem catálogo obrigatório ou conversão. `unidade_bloqueada` é informação derivada na API, não coluna do banco.
 
-**Atualização de 02/10/2026, aprovada por João Franco:** fornecedores cadastrados pelo nome, associação opcional de vários fornecedores a cada Produto para venda ou Material. `fornecedores.sql` aplicado ao PostgreSQL nesta entrega. `fornecedores` possui `id` gerado e `nome text NOT NULL` não vazio; `produtos_fornecedores` e `materiais_fornecedores` usam chave primária composta (item, fornecedor) e FKs. A exclusão de fornecedor associado é bloqueada. Excluir um item permitido pelas regras existentes remove apenas suas associações de fornecedores.
+**Atualização de 02/10/2026, aprovada por João Franco:** fornecedores cadastrados pelo nome, associação opcional de vários fornecedores a cada Produto para venda ou Material. A estrutura foi aplicada ao PostgreSQL nesta entrega e está representada em `schema.sql`. `fornecedores` possui `id` gerado e `nome text NOT NULL` não vazio; `produtos_fornecedores` e `materiais_fornecedores` usam chave primária composta (item, fornecedor) e FKs. A exclusão de fornecedor associado é bloqueada. Excluir um item permitido pelas regras existentes remove apenas suas associações de fornecedores.
 
 Compra guarda fornecedor, data automática e itens com preço unitário histórico; esse preço não altera automaticamente `preco_custo`, `preco_venda` ou `custo`. Lotes CSV não criam fornecedor; saldos iniciais positivos viram movimentos manuais identificados como importação.
 
@@ -192,7 +198,7 @@ Todos os campos obrigatórios: `ordem_servico_id integer` → ordens_servico.id;
 
 A restrição `movimentacao_um_item` exige **exatamente um** entre material_id e produto_id; nenhum ou ambos são rejeitados pelo banco. Quantidade positiva e finita; produtos exigem inteiros. No máximo um vínculo de origem (item_venda_id, material_os_id, reversao_de_id). Movimento manual não possui origem. Vendas/usos geram uma saída por linha; devoluções apontam para essa saída. Bloqueios transacionais na API impedem reversões acima da quantidade original. Não há edição/exclusão de movimentos na API.
 
-**Alteração incremental aplicada no Supabase:** `backend/src/database/operacoes.sql`, após os três scripts de estrutura anteriores. Acrescenta restrições e vínculos sem inserir dados nem converter valores existentes. A aplicação usa transações para manter saldos coerentes; inserir diretamente uma linha por SQL não executa os fluxos da API.
+**Alteração incremental aplicada no Supabase:** restrições e vínculos de operações foram aplicados após as estruturas base. A definição atual está em `backend/src/database/schema.sql`. A alteração não insere dados nem converte valores existentes. A aplicação usa transações para manter saldos coerentes; inserir diretamente uma linha por SQL não executa os fluxos da API.
 
 ## Cadastros auxiliares e informações calculadas
 

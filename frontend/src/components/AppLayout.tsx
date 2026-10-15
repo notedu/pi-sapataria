@@ -6,6 +6,7 @@ import { areas } from '../config/navegacao'
 import Button from './Button'
 import Icon from './Icon'
 import Sidebar from './Sidebar'
+import { aplicarTemaEscuro, lerPreferencias } from '../services/preferencias'
 
 // Uma nova rota verifica novamente a sessão e o perfil na API.
 export default function AppLayout() {
@@ -26,7 +27,10 @@ function LayoutComSessao({ caminho }: { caminho: string }) {
   useEffect(() => {
     let ativo = true
     consultarUsuario().then(dados => {
-      if (ativo) setUsuario(dados)
+      if (ativo) {
+        aplicarTemaEscuro(lerPreferencias(dados.id).modoEscuro)
+        setUsuario(dados)
+      }
     }).catch(error => {
       if (!ativo) return
       if (error instanceof ErroApi && error.status === 401) navigate('/login', { replace: true })

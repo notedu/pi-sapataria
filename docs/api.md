@@ -24,12 +24,13 @@ CNPJ aceita numérico ou alfanumérico com 12 caracteres A–Z/0–9 e dois díg
 
 ## Operações e situação atual
 
-O contrato combina como front-end e back-end trocam pedidos e respostas. **Clientes, autenticação, Funcionários, Materiais, Produtos, OS, Vendas e Movimentações estão disponíveis nas operações indicadas abaixo**. O prefixo `/api/v1` foi adotado nas rotas implementadas; detalhes das rotas restantes continuam propostos (Guia §§9.2–9.4; RNF-009/RNF-010). Os caminhos da tabela recebem esse prefixo. Os objetivos das funcionalidades são definidos no guia; isso não aprova automaticamente seus detalhes.
+O contrato combina como front-end e back-end trocam pedidos e respostas. **Clientes, autenticação, Funcionários, Configurações comerciais, Materiais, Produtos, OS, Vendas e Movimentações estão disponíveis nas operações indicadas abaixo**. O prefixo `/api/v1` foi adotado nas rotas implementadas; detalhes das rotas restantes continuam propostos (Guia §§9.2–9.4; RNF-009/RNF-010). Os caminhos da tabela recebem esse prefixo. Os objetivos das funcionalidades são definidos no guia; isso não aprova automaticamente seus detalhes.
 
 | ID | Funcionalidade | Método e caminho após `/api/v1` | Finalidade | Permissão | Situação |
 |---|---|---|---|---|---|
 | A01 | Autenticação | `POST /auth/login` | Entrar | Público, com CSRF e limite de tentativas | Implementado |
 | A02 | Autenticação | `POST /auth/logout` | Sair | Sessão atual, com CSRF | Implementado |
+| A25 | Perfil | `PUT /auth/senha` | Alterar a própria senha e encerrar as sessões | Administrador ou Funcionário autenticado, com CSRF | Implementado |
 | A03 | Clientes | `GET /clientes` | Listar/buscar clientes | Administrador e funcionario autenticados | Implementado e verificado localmente |
 | A04 | Clientes | `POST /clientes` | Cadastrar cliente | Administrador e funcionario autenticados | Implementado e verificado localmente |
 | A05 | Clientes | `GET /clientes/{id}` | Consultar perfil do cliente | Administrador e funcionario autenticados | Implementado e verificado localmente |
@@ -57,9 +58,8 @@ O contrato combina como front-end e back-end trocam pedidos e respostas. **Clien
 | A20 | Vendas | `POST /vendas` | Registrar venda independente | Ambos os perfis autenticados, com CSRF | Implementado |
 | A23 | Perfil | `GET /perfil` | Consultar os próprios dados | Próprio usuário — RN-006; rota específica pendente | Proposto |
 | A24 | Perfil | `PUT /perfil` | Alterar os próprios dados | Próprio usuário; campos editáveis pendentes | Proposto |
-| A25 | Perfil | `PUT /perfil/senha` | Alterar a própria senha | Próprio usuário; política pendente | Proposto |
-| A27 | Configurações | `GET /configuracoes` | Consultar dados e parâmetros | Pendente — RN-003 | Proposto |
-| A28 | Configurações | `PUT /configuracoes` | Alterar dados e parâmetros | Pendente — RN-003 | Proposto |
+| A27 | Configurações da loja | `GET /configuracoes/loja` | Consultar o endereço comercial | Administrador — RN-003 | Implementado |
+| A28 | Configurações da loja | `PUT /configuracoes/loja` | Alterar o endereço comercial | Administrador, com CSRF — RN-003 | Implementado |
 | A29 | Configurações | `POST /configuracoes/{cadastro}` | Cadastrar item auxiliar | Pendente — RN-003 | Proposto |
 | A26 | Dashboard | `GET /dashboard` | Consultar resumo operacional | Pendente; acesso amplo é sugestão | Proposto |
 | A30 | Financeiro | `GET /financeiro` | Consultar painel financeiro | Administrador — RN-003 | Proposto; não implementado |
@@ -150,7 +150,7 @@ Retorna `200`, `{"dados": funcionario}` sem senha/hash/versão técnica. Sem ses
 - **Entrada:** `nome`, `telefone`, `cpf`, `cep` e `numero` obrigatórios; `email` e `observacoes` opcionais. Não aceita `id`, `criado_em`, `endereco` ou campos desconhecidos.
 - **Validação:** textos não vazios; telefone e CPF com 11 dígitos, CEP com 8, sem pontuação. CPF exige dígitos verificadores válidos e rejeita sequência repetida. Número é texto (ex.: `123A`, `S/N`). E-mail exige formato básico. Sem unicidade nova.
 - **Sucesso:** `201`, `{"dados": cliente}` com data e id gerados pelo banco. Campos retornados: id, nome, telefone, cpf, cep, numero, endereco legado, email, observacoes e criado_em. CPF/CEP/número/data podem ser nulos em registros anteriores à migração.
-- **Dependência:** aplicar `clientes-perfil.sql` antes de usar o novo contrato. Script preparado, não aplicado ao banco existente. RF-003/RF-017.
+- **Dependência:** `schema.sql` contém essa estrutura para banco novo. A evolução ainda não foi aplicada ao banco existente; não execute o esquema completo nesse banco. RF-003/RF-017.
 
 <a id="a05"></a>
 ### A05 — GET /clientes/{id}
@@ -200,7 +200,7 @@ Retorna `200`, `{"dados": funcionario}`. Não muda id, vínculos, credenciais ne
 
 Mesma permissão de A21, conferida antes de consultar. Retorna `200`, `{"dados":[OS]}`, filtradas por `responsavel_id`, ordenadas por id. Sem vínculo retorna lista vazia; outro perfil sem permissão retorna `403`; funcionário inexistente para consulta autorizada retorna `404`. Não altera OS.
 
-**Migração necessária:** aplicar `funcionarios-perfil.sql` uma única vez após `funcionarios.sql`, antes de iniciar o código atualizado. Preparada e testada apenas localmente, não aplicada ao banco existente.
+**Banco:** `schema.sql` contém essa estrutura para banco novo. A evolução ainda não foi aplicada ao banco existente; não execute o esquema completo nesse banco.
 
 <a id="a22"></a>
 ### A22 — PUT /funcionarios/{id}/acesso
@@ -335,25 +335,29 @@ Exemplo de sequência no Insomnia: login → cadastrar produto → registrar ent
 - **Erros, efeitos e origem:** E. Sem alteração de credencial por este comando. Guia §5.9; RN-006; PD-N01/PD-N03.
 
 <a id="a25"></a>
-### A25 — PUT /perfil/senha
+### A25 — PUT /auth/senha
 
-- **Entrada:** Credenciais transitórias conforme política a definir; nomes das chaves, confirmação de identidade e obrigatoriedade em PD-N02/PD-R04.
-- **Sucesso:** 204, sem corpo.
-- **Erros, efeitos e origem:** E. Não recebe nem devolve senha_protegida; efeitos sobre acessos iniciados pendentes. Guia §5.9; RF-023.
+- **Caminho implementado:** `PUT /api/v1/auth/senha`; exige sessão autenticada e token CSRF.
+- **Entrada:** `{ "senha_atual": "...", "senha_nova": "...", "confirmar_senha_nova": "..." }`. A nova senha deve ter 15–128 caracteres e a confirmação deve coincidir. Senhas nunca são devolvidas pela API.
+- **Sucesso:** `204`, sem corpo. Incrementa `versao_acesso`, encerra a sessão atual e invalida todas as demais; é necessário entrar novamente.
+- **Erros e efeitos:** `400` para campos inválidos, senha fora da política ou confirmação divergente; `401` para sessão inválida; `403 SENHA_ATUAL_INVALIDA` para senha atual incorreta; `429` após 10 tentativas por funcionário ou 50 por IP em 15 minutos. Contadores próprios não alteram os limites de login. Guia §5.9; RF-023; RN-004.
 
 <a id="a27"></a>
-### A27 — GET /configuracoes
+### A27 — GET /configuracoes/loja
 
+- **Caminho implementado:** `GET /api/v1/configuracoes/loja`; Administrador autenticado.
 - **Entrada:** Sem corpo.
-- **Sucesso:** 200; dados da empresa, auxiliares e parâmetros aprovados; formato interno pendente.
-- **Erros, efeitos e origem:** E. Guia §5.10; RF-024; PD-N01/PD-N03/PD-N06. Não implica tabela Configuração.
+- **Sucesso:** `200`, `{"dados":{"endereco":"..."}}`.
+- **Erros, efeitos e origem:** `401` sem sessão; `403` para Funcionário. A consulta retorna somente o endereço comercial aprovado, sem expor outros parâmetros pendentes. RF-024; RN-003.
 
 <a id="a28"></a>
-### A28 — PUT /configuracoes
+### A28 — PUT /configuracoes/loja
 
-- **Entrada:** Somente dados e parâmetros aprovados; esquema, campos obrigatórios e semântica de substituição pendentes.
-- **Sucesso:** 200; configuração confirmada.
-- **Erros, efeitos e origem:** E + N. §5.10 respalda ajustes, não alíquota ou fórmula específica. Não habilitar gravação de objeto arbitrário; definir esquema antes (PD-N03/PD-N06).
+- **Caminho implementado:** `PUT /api/v1/configuracoes/loja`; Administrador autenticado e CSRF obrigatório.
+- **Entrada:** `{"endereco":"Texto de até 500 caracteres"}`. String vazia limpa o campo; campos extras ou tipos incompatíveis são rejeitados.
+- A interface monta essa string a partir do CEP consultado no ViaCEP e do número informado; a API e o banco continuam armazenando um único campo de endereço.
+- **Sucesso:** `200`, com endereço confirmado em `dados`.
+- **Erros, efeitos e origem:** `400` para corpo inválido, `401` sem sessão, `403` para Funcionário. Altera apenas o endereço, nunca catálogos ou parâmetros financeiros. RF-024; RN-003.
 
 <a id="a29"></a>
 ### A29 — POST /configuracoes/{cadastro}

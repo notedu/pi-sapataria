@@ -30,7 +30,9 @@ A rota `/login` oferece usuário/senha, layout responsivo conforme a referência
 
 ## Estrutura interna implementada
 
-`AppLayout` e `Sidebar` são compartilhados pelas rotas internas. Dashboard, Busca, OS e Estoque têm interfaces integradas; Financeiro mostra a demonstração autorizada somente ao Administrador. Funcionários só é acessível ao Administrador (RN-001). Nome e perfil são consultados em `/auth/me` a cada navegação; sessão inválida volta ao login (RN-004/RN-005). O logout usa cookie e CSRF. Configurações permanece desabilitada.
+`AppLayout` e `Sidebar` são compartilhados pelas rotas internas. Dashboard, Busca, OS, Estoque e Configurações têm interfaces integradas; Financeiro mostra a demonstração autorizada somente ao Administrador. Funcionários só é acessível ao Administrador (RN-001). Nome e perfil são consultados em `/auth/me` a cada navegação; sessão inválida volta ao login (RN-004/RN-005). O logout usa cookie e CSRF.
+
+Em `/configuracoes`, ambos os perfis consultam o próprio usuário/e-mail, alteram a própria senha e controlam preferências locais de notificações e modo escuro. Somente Administrador vê os dados comerciais: o formulário pede CEP e número, consulta o ViaCEP e mostra rua, bairro, cidade, UF e CEP antes de salvar o endereço formatado. Se a consulta falhar, permite salvar somente CEP e número; CEP e número vazios removem o endereço. A API persiste o resultado em um único campo de texto. Notificações ainda são apenas preferência visual (RF-023/RF-024/RF-026; RN-003).
 
 Dashboard (RF-002) exibe entradas do dia e quantidade de OS Abertas, Em andamento e Prontas, calculadas no navegador a partir de A09. Busca (RF-012) consulta Clientes e OS e mostra páginas disponíveis conforme o perfil; perfis individuais aparecem por resultado de busca ou pela lista da área correspondente. Funcionários são pesquisados apenas pelo Administrador. OS (RF-004/RF-018) possui listagem com filtro local, cadastro conforme A10 e detalhes conforme A11; o cliente é escolhido por busca com sugestões e o responsável segue a permissão existente. Serviços já registrados são sugeridos; **Outros** permite texto livre, sem criar catálogo persistente. A edição reutiliza os campos do cadastro e só aparece para OS Aberta ou Em andamento, conforme `PUT /ordens-servico/:id`. O detalhe permite avanço/cancelamento por A12 e registro de uso por A13, obedecendo RN-010/RN-012. O botão **Imprimir** gera um PDF A4 da OS com os dados exibidos, sem alterar o registro. O valor é manual, a data de entrada vem da API e os materiais são consultados separadamente. Indicadores financeiros, alertas, imposto automático e status de pagamento ainda não possuem interface nesta etapa. As descrições propostas adiante permanecem material histórico, sem substituir esses contratos implementados.
 
@@ -55,10 +57,10 @@ As onze telas e subtelas são **definições do rascunho** (Guia §4; RF-001 a R
 | Estoque de materiais | Controlar insumos consumidos | Administrador/funcionário sugeridos. |
 | Estoque de produtos | Controlar itens para venda | Administrador/funcionário sugeridos. |
 | Perfil do usuário | Consultar o próprio perfil | Ambos consultam a si mesmos; edição pessoal exclusiva do Administrador com senha própria — RN-006, decisão de 30/09/2026. |
-| Configuração | Ajustar funcionamento e cadastros auxiliares | **Pendente — RN-003.** |
+| Configuração | Preferências pessoais para ambos; endereço comercial somente Administrador | **Definido parcialmente — RN-003.** Catálogos e parâmetros seguem pendentes. |
 | Financeiro: Dashboard financeiro e Faturamento, Lucro, Imposto, Materiais | Consultar indicadores | **Somente Administrador — RN-003, decisão de 01/10/2026.** |
 
-Não inferir acesso irrestrito do administrador: o Guia §3 sugere “todas as telas”, mas §§4/17 deixam Configuração/Financeiro pendentes. A matriz por operação está em PD-N01. Não confundir Perfil do usuário (próprio) com Perfil de funcionário (administração).
+Não inferir acesso irrestrito do administrador: o Guia §3 sugere “todas as telas”; a decisão posterior em RN-003 define apenas as áreas já implementadas. Não confundir Perfil do usuário (próprio) com Perfil de funcionário (administração).
 
 ## Navegação e padrões compartilhados
 
@@ -106,7 +108,7 @@ Todas as sequências abaixo são **propostas**, salvo objetivos e restrições e
 - **Perfil:** cabeçalho com Editar e data, cartão pessoal em tom secundário, endereço ao lado no desktop, OS em linhas compactas e observações próprias. Responsivo, com tema de index.css e CartaoInformacoes reutilizado. Todas as OS continuam visíveis. Informações pessoais, endereço, data de cadastro e OS filtradas pela API. Ausência de OS é diferente de erro. Cliente antigo preserva endereço legado e data desconhecida.
 - **Fluxo:** preencher → validar → cadastrar com cookie/CSRF → retornar à lista com confirmação → abrir perfil. Resultado incerto bloqueia reenvio e orienta consultar a lista.
 - **Reutilização:** AppLayout, Sidebar, Button (tamanhos padrão/compacto/ícone), Icon, InputField, TextareaField, FormularioCliente e serviço HTTP/CSRF; EnderecoPorCep atende cadastro e perfil.
-- **Pendências:** aplicar migração `clientes-perfil.sql` ao banco existente; busca continua sem interface. Histórico de compras continua fora do escopo.
+- **Pendências:** a evolução de Clientes incluída em `backend/src/database/schema.sql` ainda não foi aplicada ao banco existente; o arquivo completo é somente para uma instalação nova. Busca continua sem interface. Histórico de compras continua fora do escopo.
 - **Verificação:** na etapa de base, typecheck e 29 verificações HTTP/PostgreSQL local. Na revisão visual/edição, lint/build e navegador com API/ViaCEP simulados: campos preenchidos, PUT/CSRF, opcionais apagados, cancelamento, validações, resultado incerto, legado, dois perfis e layouts desktop/celular; cadastro e exclusão conferidos novamente. Banco existente não alterado.
 
 ### Funcionários — cadastro, perfil e edição
@@ -155,15 +157,15 @@ Todas as sequências abaixo são **propostas**, salvo objetivos e restrições e
 
 - **Objetivo/origem:** gerenciar os próprios dados; Guia §5.9, RF-009/RF-023/RN-006.
 - **Informações:** dados pessoais aprovados da entidade Funcionário, sem senha armazenada; não criar cadastro paralelo de usuário.
-- **Fluxo/API:** abrir perfil → [A23](api.md#a23) → alterar somente campos pessoais autorizados por [A24](api.md#a24). Alteração de senha sugerida usa [A25](api.md#a25), com campos e confirmação de identidade ainda pendentes. Retornar ao próprio perfil.
-- **Pendências:** campos editáveis e política de senha (PD-N02/PD-N03/PD-R04). Autoedição não concede alteração de `perfil` ou `ativo`.
+- **Fluxo/API:** a rota `/meu-perfil` continua para consulta; `/configuracoes` mostra usuário/e-mail e abre formulário de troca da senha própria por A25. Exige senha atual, nova senha de 15–128 caracteres e confirmação. O sucesso invalida as sessões e encaminha para novo login. A edição de nome, CPF, telefone e e-mail continua exclusiva do Administrador conforme RN-006.
+- **Situação:** troca da própria senha implementada em 15/10/2026; recuperação permanece pendente. Não altera usuário, perfil nem situação da conta.
 
 ### Configuração
 
-- **Objetivo/origem:** ajustar funcionamento; Guia §5.10, RF-010/RF-024. Acesso pendente (RN-003).
-- **Informações:** dados da empresa, tipos de serviço, formas de pagamento, categorias e parâmetros financeiros, somente conforme adoção e esquema aprovados. Não há campos completos nem alíquota definidos.
-- **Fluxo/API:** abrir → [A27](api.md#a27); ajustar dados/parâmetros por [A28](api.md#a28); cadastrar auxiliares por [A29](api.md#a29), se aprovados. Atualizar consulta; formulários de OS/venda/estoque podem consumir as opções autorizadas sem conceder edição de Configuração.
-- **Pendências:** esquema e divisão dos catálogos, permissões de leitura de opções por outras telas, formas aceitas e parâmetros (PD-N01/PD-N03/PD-N04/PD-N05/PD-N06). Não usar um formulário JSON livre nem conceder acesso à configuração inteira como atalho.
+- **Acesso (decisão do Integrante 1 em 15/10/2026, RN-003):** ambos os perfis acessam preferências pessoais; a seção de dados comerciais fica visível somente ao Administrador. A API também protege consulta e gravação do endereço por perfil.
+- **Preferências pessoais:** notificações (ainda sem geração de alertas para OS ou estoque) e modo escuro são armazenados por usuário no `localStorage` deste navegador. O tema troca os tokens de cor em todas as telas sem atualizar dados no servidor.
+- **Dados comerciais:** Administrador consulta/altera somente um campo de endereço, por A27/A28. Informa CEP e número; ViaCEP preenche a prévia e a interface salva um endereço formatado com até 500 caracteres. Em falha da consulta, CEP e número ainda podem ser salvos. O campo pode ser limpo e o endereço é destinado também à futura Landing Page.
+- **Pendências:** cadastro de tipos de serviço, formas de pagamento, categorias e parâmetros financeiros permanece proposto em A29/RF-024. A estrutura comercial está incluída em `backend/src/database/schema.sql`, ainda não aplicada ao banco existente; não execute o arquivo completo nesse banco.
 
 ### Controle financeiro
 

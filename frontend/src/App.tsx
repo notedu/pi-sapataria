@@ -17,6 +17,7 @@ import DetalhesOrdemServico from './pages/DetalhesOrdemServico'
 import EditarOrdemServico from './pages/EditarOrdemServico'
 import Financeiro from './pages/Financeiro'
 import Estoque from './pages/Estoque'
+import Configuracoes from './pages/Configuracoes'
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route element={<AppLayout />}>
         <Route path="/financeiro" element={<Financeiro />} />
+        <Route path="/configuracoes" element={<Configuracoes />} />
         <Route path="/estoque" element={<Estoque />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/busca" element={<Busca />} />
