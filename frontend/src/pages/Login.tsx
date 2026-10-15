@@ -4,7 +4,7 @@ import type { SubmitEvent } from 'react'
 import logo from '../assets/logo-sapataria.png'
 import Button from '../components/Button'
 import InputField from '../components/InputField'
-import { autenticar } from '../services/auth'
+import { autenticar, consultarUsuario, ErroApi } from '../services/auth'
 import { aplicarTemaEscuro } from '../services/preferencias'
 
 function LoginIcon({ tipo }: { tipo: 'usuario' | 'senha' | 'info' }) {
@@ -21,14 +21,30 @@ export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const [enviando, setEnviando] = useState(false)
+  const [verificandoSessao, setVerificandoSessao] = useState(true)
   const [erro, setErro] = useState('')
   const envioEmCurso = useRef(false)
 
   useEffect(() => { aplicarTemaEscuro(false) }, [])
 
+  useEffect(() => {
+    let ativo = true
+    consultarUsuario().then(() => {
+      if (ativo) navigate('/dashboard', { replace: true })
+    }).catch(error => {
+      if (!ativo) return
+      if (!(error instanceof ErroApi && error.status === 401)) {
+        setErro('Não foi possível verificar sua sessão. Você ainda pode tentar entrar com usuário e senha.')
+      }
+    }).finally(() => {
+      if (ativo) setVerificandoSessao(false)
+    })
+    return () => { ativo = false }
+  }, [navigate])
+
   async function entrar(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault() // Envia pela API, sem recarregar a página.
-    if (envioEmCurso.current) return
+    if (verificandoSessao || envioEmCurso.current) return
     const formulario = event.currentTarget
     const campos = new FormData(formulario)
     const usuario = String(campos.get('usuario') ?? '').trim()
@@ -76,11 +92,13 @@ export default function Login() {
 
           {location.state?.senhaAlterada && <p role="status" className="mb-6 rounded-default border border-success/25 bg-success-container p-4 text-on-success-container">Senha atualizada. Entre novamente com a nova senha.</p>}
 
-          <form onSubmit={entrar} className="flex flex-col gap-6" aria-busy={enviando} aria-describedby={erro ? 'erro-login' : undefined}>
-            <InputField id="usuario" name="usuario" label="Usuário" placeholder="Seu nome de usuário" autoComplete="username" autoCapitalize="none" spellCheck={false} required disabled={enviando} icon={<LoginIcon tipo="usuario" />} />
-            <InputField id="senha" name="senha" label="Senha" type="password" placeholder="Sua senha" autoComplete="current-password" required disabled={enviando} icon={<LoginIcon tipo="senha" />} />
+          {verificandoSessao && <p role="status" className="mb-4 text-center text-body-md text-on-surface-variant">Verificando se você já está conectado…</p>}
+
+          <form onSubmit={entrar} className="flex flex-col gap-6" aria-busy={enviando || verificandoSessao} aria-describedby={erro ? 'erro-login' : undefined}>
+            <InputField id="usuario" name="usuario" label="Usuário" placeholder="Seu nome de usuário" autoComplete="username" autoCapitalize="none" spellCheck={false} required disabled={enviando || verificandoSessao} icon={<LoginIcon tipo="usuario" />} />
+            <InputField id="senha" name="senha" label="Senha" type="password" placeholder="Sua senha" autoComplete="current-password" required disabled={enviando || verificandoSessao} icon={<LoginIcon tipo="senha" />} />
             {erro && <p id="erro-login" role="alert" className="rounded-default bg-error-container p-4 text-body-md text-on-error-container">{erro}</p>}
-            <Button type="submit" disabled={enviando} className="mt-4 w-full">{enviando ? 'Acessando…' : 'Acessar'}</Button>
+            <Button type="submit" disabled={enviando || verificandoSessao} className="mt-4 w-full">{verificandoSessao ? 'Verificando sessão…' : enviando ? 'Acessando…' : 'Acessar'}</Button>
           </form>
 
           <footer className="mt-16 border-t border-outline-variant/20 pt-8 text-center">

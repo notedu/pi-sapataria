@@ -49,9 +49,9 @@ A inspeção foi estática: leitura dos arquivos, sem execução da aplicação 
 
 **Planejamento:** interface React, API RESTful em Node.js, persistência em PostgreSQL e integração de dados. A classificação individual dessas partes está nas seções seguintes; o desenho geral do Guia §7.2 continua sendo uma sugestão, não uma topologia de implantação aprovada. Topologia significa como os componentes ficam distribuídos e conectados no ambiente.
 
-**Implementação atual:** a entrada [frontend/index.html](../frontend/index.html) carrega [frontend/src/main.tsx](../frontend/src/main.tsx), que monta o componente [frontend/src/App.tsx](../frontend/src/App.tsx) com React e `StrictMode`. O componente exibe imagens, links e um contador mantido no estado local, sem chamadas à API ou persistência.
+**Implementação atual:** [frontend/index.html](../frontend/index.html) carrega [frontend/src/main.tsx](../frontend/src/main.tsx), que monta [frontend/src/App.tsx](../frontend/src/App.tsx) com React e `StrictMode`. A rota pública `/` apresenta a loja; `/login` e as rotas internas dão acesso ao sistema. A Landing Page usa imagens locais, links para contato e conteúdo estático, sem chamada à API nem persistência.
 
-O back-end contém somente [backend/.gitkeep](../backend/.gitkeep), arquivo usado para manter a pasta no Git. Não há servidor de negócio, autenticação, endpoints, conexão com banco, migrações ou integração implementados. Isso é coerente com o aviso inicial do [README do projeto](../README.md) e com o [CHANGELOG](../CHANGELOG.md), em “Não lançado”.
+O back-end contém API Express, autenticação, rotas de negócio e conexão PostgreSQL descritas nas seções abaixo; essa implementação substitui os parágrafos históricos de ausência que permanecem como contexto do planejamento original.
 
 ## 3. Restrições e exigências arquiteturais
 

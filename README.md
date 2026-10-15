@@ -4,7 +4,7 @@ Sistema web de gestão interna para a sapataria **Seda e Couro**, de Santa Cruz 
 
 Desenvolvido como Projeto Integrado do módulo **Desenvolvimento de Aplicação Web**, do **UNIFEOB**, no 2º semestre de 2026.
 
-> **Em desenvolvimento:** o front-end contém Login, Clientes, Funcionários, Dashboard, Busca, Estoque, Ordens de Serviço e Configurações integradas à API. Financeiro possui demonstração com dados fictícios, exclusiva do Administrador. Configurações oferece dados de acesso, troca de senha, preferências locais por usuário e endereço comercial somente ao Administrador. `backend/src/database/schema.sql` reúne o esquema completo para um banco novo; não o execute no banco já usado pelo projeto.
+> **Em desenvolvimento:** a página pública em `/` apresenta a Seda e Couro, serviços, fotos da loja e formas de contato; “Acessar o sistema” abre `/login`. Clientes, Funcionários, Dashboard, Busca, Estoque, Ordens de Serviço e Configurações estão integrados à API. Financeiro possui demonstração com dados fictícios, exclusiva do Administrador. Configurações oferece dados de acesso, troca de senha, preferências locais por usuário e endereço comercial somente ao Administrador. `backend/src/database/schema.sql` reúne o esquema completo para um banco novo; não o execute no banco já usado pelo projeto.
 
 ## Funcionalidades previstas
 
