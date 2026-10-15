@@ -10,7 +10,7 @@ export default function Sidebar({ usuario, onSair, saindo }: { usuario: Usuario;
   return (
     <aside className="flex h-full flex-col bg-secondary-container p-4">
       <div className="mb-10 flex items-center gap-2 pt-2">
-        <img src={logo} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover mix-blend-multiply" />
+        <img src={logo} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
         <div className="min-w-0">
           <p className="whitespace-nowrap text-body-lg font-bold text-primary">Seda e Couro</p>
           <p className="text-label-sm text-on-secondary-fixed-variant">Sapataria Profissional</p>

@@ -166,6 +166,11 @@
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
+  }
+
   body {
     font-family: var(--font-sans);
     font-size: var(--text-body-md);
@@ -174,6 +179,25 @@
     color: var(--color-on-background);
     background-color: var(--color-background);
   }
+}
+
+.galeria-faixa {
+  scrollbar-width: none;
+}
+
+.galeria-faixa::-webkit-scrollbar {
+  display: none;
+}
+
+.theme-transition,
+.theme-transition * {
+  transition-property: background-color, color, border-color, fill, stroke;
+  transition-duration: 250ms;
+  transition-timing-function: ease-in-out;
+}
+
+.interruptor-tema-thumb {
+  transition: transform 250ms ease-in-out;
 }
 
 button {
@@ -191,5 +215,8 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
   .alerta-progresso { animation-timing-function: steps(5, end); }
+  .theme-transition,
+  .theme-transition * { transition-duration: 0ms !important; }
 }

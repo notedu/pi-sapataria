@@ -15,6 +15,8 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Adicionado
 
+- Landing Page pública em `/` para a Seda e Couro, com serviços, carrossel automático de fotos a cada cinco segundos com setas laterais, controle de tema claro/escuro, rolagem suave, endereço, Instagram, telefone/WhatsApp e atalho `/login`. Endereço fornecido estático nesta etapa; sem mudanças na API ou no banco.
+- A tela `/login` agora verifica se já existe sessão válida e redireciona diretamente ao dashboard, sem pedir credenciais novamente.
 - Esquema SQL consolidado em `backend/src/database/schema.sql`, ordenado para instalar toda a estrutura em um banco novo. Os scripts SQL separados foram reunidos; o consolidado não deve ser executado em banco existente.
 - Configurações para os dois perfis: consulta de usuário/e-mail, troca própria de senha com invalidação de sessões, notificações visuais e modo escuro salvos localmente por usuário. Administrador consulta/altera o endereço comercial da loja informando CEP e número com consulta ViaCEP; API e banco mantêm um único campo formatado. A configuração comercial está no esquema consolidado, ainda não aplicada ao banco existente.
 

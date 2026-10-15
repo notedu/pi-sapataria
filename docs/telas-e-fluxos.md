@@ -26,9 +26,13 @@ Os trechos históricos abaixo que indicam Estoque em construção foram superado
 
 ## Login implementado nesta etapa
 
-A rota `/login` oferece usuário/senha, layout responsivo conforme a referência visual e integração com a API existente, usando cookie e CSRF (RF-001, RF-013, RF-014 e RN-004). Durante o envio, os campos e o botão ficam desabilitados; erros são apresentados na tela. Após a resposta válida de sucesso, o formulário é limpo e a navegação segue para `/dashboard`. Recuperação de senha permanece pendente. Os demais fluxos abaixo preservam seu caráter de planejamento; os contratos atuais da API estão em `api.md`.
+A rota `/login` oferece usuário/senha, layout responsivo conforme a referência visual e integração com a API existente, usando cookie e CSRF (RF-001, RF-013, RF-014 e RN-004). Ao abrir, consulta `/auth/me`: uma sessão ainda válida segue direto para `/dashboard`; sessão ausente ou expirada mantém o formulário. Durante a verificação e o envio, os campos e o botão ficam desabilitados; erros são apresentados na tela. Após a resposta válida de login, o formulário é limpo e a navegação segue para `/dashboard`. Recuperação de senha permanece pendente. Os demais fluxos abaixo preservam seu caráter de planejamento; os contratos atuais da API estão em `api.md`.
 
 ## Estrutura interna implementada
+
+### Página pública da loja
+
+A rota `/` apresenta a Seda e Couro sem autenticação, com atalho **Acessar o sistema** para `/login`, serviços informados pelo Integrante 1, carrossel de fotos locais (troca automática a cada cinco segundos e setas laterais para navegação), Instagram, telefone/WhatsApp, endereço fornecido e controle de tema claro/escuro no rodapé. A escolha de tema da página pública fica salva neste navegador, separada da preferência por usuário dentro do sistema. Os links internos rolam suavemente e respeitam a preferência por movimento reduzido. O endereço é estático nesta entrega; não consulta Configurações nem altera API ou banco. A página é institucional, sem venda, agendamento ou portal do cliente, conforme planejamento.
 
 `AppLayout` e `Sidebar` são compartilhados pelas rotas internas. Dashboard, Busca, OS, Estoque e Configurações têm interfaces integradas; Financeiro mostra a demonstração autorizada somente ao Administrador. Funcionários só é acessível ao Administrador (RN-001). Nome e perfil são consultados em `/auth/me` a cada navegação; sessão inválida volta ao login (RN-004/RN-005). O logout usa cookie e CSRF.
 
