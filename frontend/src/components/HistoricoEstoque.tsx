@@ -32,7 +32,7 @@ export default function HistoricoEstoque({ tipo, item, onFechar }: { tipo: TipoE
           <td className="whitespace-nowrap p-3">{new Date(m.data).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</td>
           <td className="p-3"><span className={`rounded-full px-2 py-1 ${m.tipo === 'entrada' ? 'bg-success-container text-on-success-container' : 'bg-secondary-container text-on-surface'}`}>{m.tipo === 'entrada' ? 'Entrada' : 'Saída'}</span></td>
           <td className="whitespace-nowrap p-3">{Number(m.quantidade).toLocaleString('pt-BR', { maximumFractionDigits: 10 })} {unidade}</td>
-          <td className="p-3">{m.material_os_id !== null ? `Uso em OS (registro #${m.material_os_id})` : m.item_venda_id !== null ? `Item de venda #${m.item_venda_id}` : m.reversao_de_id !== null ? `Reversão de #${m.reversao_de_id}` : 'Manual'}</td>
+          <td className="p-3">{m.material_os_id !== null ? `Uso em OS (registro #${m.material_os_id})` : m.item_venda_id !== null ? `Item de venda #${m.item_venda_id}` : m.item_compra_id !== null ? `Compra (item #${m.item_compra_id})` : m.reversao_de_id !== null ? `Reversão de #${m.reversao_de_id}` : 'Manual'}</td>
           <td className="min-w-40 p-3">{m.motivo}</td>
         </tr>)}</tbody>
       </table>

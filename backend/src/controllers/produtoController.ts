@@ -15,12 +15,13 @@ export async function buscarPorId(request: Request, response: Response): Promise
 }
 
 function validar(corpo: unknown): produtoModel.DadosProduto {
-  const d = objeto(corpo, ['nome', 'categoria', 'preco_custo', 'preco_venda', 'fornecedores_ids']);
+  const d = objeto(corpo, ['nome', 'categoria', 'preco_custo', 'preco_venda', 'quantidade_minima', 'fornecedores_ids']);
   return {
     nome: texto(d.nome, 'nome'),
     categoria: texto(d.categoria, 'categoria'),
     preco_custo: decimal(d.preco_custo, 'preco_custo', { dinheiro: true }),
     preco_venda: decimal(d.preco_venda, 'preco_venda', { dinheiro: true }),
+    quantidade_minima: decimal(d.quantidade_minima, 'quantidade_minima', { inteiro: true }),
     fornecedores_ids: fornecedoresIds(d.fornecedores_ids),
   };
 }

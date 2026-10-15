@@ -3,7 +3,7 @@ import { enviarComCsrf, ErroApi, objeto, requisitar, ResultadoIncerto } from './
 export type TipoEstoque = 'produtos' | 'materiais'
 export type ItemEstoque = {
   id: number; nome: string; categoria: string; quantidade: string
-  preco_custo?: string; preco_venda?: string; custo?: string; unidade?: string; quantidade_minima?: string
+  preco_custo?: string; preco_venda?: string; custo?: string; unidade?: string; quantidade_minima?: string | null
   unidade_bloqueada?: boolean
 }
 export type DadosFornecedor = { nome: string; cnpj: string | null; razao_social: string | null; nome_fantasia: string | null; cep: string | null; numero: string | null; email: string | null; telefone: string | null; prazo_pagamento: string | null; meios_pagamento: string | null; desconto: string | null; moeda: string | null }
@@ -12,15 +12,21 @@ export type DadosItemEstoque = Record<string, string | number[]>
 export type Vinculo = { item_id: number; fornecedor_id: number }
 export type MovimentoEstoque = {
   id: number; tipo: 'entrada' | 'saida'; material_id: number | null; produto_id: number | null
-  quantidade: string; data: string; motivo: string; item_venda_id: number | null; material_os_id: number | null; reversao_de_id: number | null
+  quantidade: string; data: string; motivo: string; item_venda_id: number | null; material_os_id: number | null; reversao_de_id: number | null; item_compra_id: number | null
 }
+export type ItemCompraEstoque = { id: number; material_id: number | null; produto_id: number | null; item_nome: string; quantidade: string; preco_unitario: string }
+export type CompraEstoque = { id: number; fornecedor_id: number; fornecedor_nome: string; registrada_em: string; itens: ItemCompraEstoque[] }
+export type LinhaImportacaoEstoque =
+  | { tipo: 'material'; nome: string; categoria: string; unidade: string; quantidade: string; quantidade_minima: string; custo: string }
+  | { tipo: 'produto'; nome: string; categoria: string; quantidade: string; quantidade_minima: string; preco_custo: string; preco_venda: string }
 function decimal(valor: unknown) { return typeof valor === 'string' && /^\d+(\.\d+)?$/.test(valor) }
 export async function listarItens(tipo: TipoEstoque): Promise<ItemEstoque[]> {
   const r = await requisitar(`/${tipo}`)
   if (!objeto(r) || !Array.isArray(r.dados) || !r.dados.every(v => objeto(v) && Number.isInteger(v.id)
     && typeof v.nome === 'string' && typeof v.categoria === 'string' && decimal(v.quantidade)
     && (tipo === 'produtos' ? decimal(v.preco_custo) && decimal(v.preco_venda)
-      : decimal(v.custo) && decimal(v.quantidade_minima) && typeof v.unidade === 'string' && (v.unidade_bloqueada === undefined || typeof v.unidade_bloqueada === 'boolean')))) {
+      : decimal(v.custo) && decimal(v.quantidade_minima) && typeof v.unidade === 'string' && (v.unidade_bloqueada === undefined || typeof v.unidade_bloqueada === 'boolean'))
+    && (tipo !== 'produtos' || v.quantidade_minima === null || decimal(v.quantidade_minima)))) {
     throw new Error('Não foi possível interpretar o estoque.')
   }
   return r.dados as ItemEstoque[]
@@ -43,8 +49,31 @@ export async function listarHistoricoEstoque(tipo: TipoEstoque, id: number): Pro
     && (v.tipo === 'entrada' || v.tipo === 'saida') && decimal(v.quantidade)
     && typeof v.data === 'string' && Number.isFinite(Date.parse(v.data)) && typeof v.motivo === 'string'
     && v[campo] === id
-    && ['material_id', 'produto_id', 'item_venda_id', 'material_os_id', 'reversao_de_id'].every(c => v[c] === null || Number.isInteger(v[c])))) throw new Error('Não foi possível interpretar o histórico deste item.')
+    && ['material_id', 'produto_id', 'item_venda_id', 'material_os_id', 'reversao_de_id', 'item_compra_id'].every(c => v[c] === null || Number.isInteger(v[c])))) throw new Error('Não foi possível interpretar o histórico deste item.')
   return r.dados as MovimentoEstoque[]
+}
+export async function listarComprasEstoque(): Promise<CompraEstoque[]> {
+  const r = await requisitar('/compras-estoque')
+  if (!objeto(r) || !Array.isArray(r.dados) || !r.dados.every(v => objeto(v) && Number.isInteger(v.id) && Number.isInteger(v.fornecedor_id)
+    && typeof v.fornecedor_nome === 'string' && typeof v.registrada_em === 'string' && Array.isArray(v.itens)
+    && v.itens.every(item => objeto(item) && Number.isInteger(item.id) && typeof item.item_nome === 'string'
+      && decimal(item.quantidade) && decimal(item.preco_unitario)
+      && (item.material_id === null || Number.isInteger(item.material_id))
+      && (item.produto_id === null || Number.isInteger(item.produto_id))))) throw new Error('Não foi possível interpretar as compras.')
+  return r.dados as CompraEstoque[]
+}
+export async function registrarCompraEstoque(fornecedorId: number, itens: Omit<ItemCompraEstoque, 'id' | 'item_nome'>[]) {
+  const r = await enviarComCsrf('/compras-estoque', { fornecedor_id: fornecedorId, itens })
+  if (!objeto(r) || !objeto(r.dados) || !Number.isInteger(r.dados.id)) throw new ResultadoIncerto('Atualize o histórico antes de repetir a compra.')
+  return r
+}
+export async function importarItensEstoque(itens: LinhaImportacaoEstoque[]) {
+  const r = await enviarComCsrf('/estoque/importacoes', { itens })
+  if (!objeto(r) || !Array.isArray(r.dados) || !r.dados.every(item => objeto(item) && Number.isInteger(item.id)
+    && ['material', 'produto'].includes(String(item.tipo)) && typeof item.nome === 'string' && decimal(item.quantidade))) {
+    throw new ResultadoIncerto('Atualize o estoque antes de repetir a importação.')
+  }
+  return r
 }
 // Traduz apenas os erros deste módulo, sem alterar as mensagens dos demais cadastros.
 export async function alterarEstoque(caminho: string, dados?: unknown, metodo: 'POST' | 'PUT' | 'DELETE' = 'POST') {

@@ -15,6 +15,8 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Adicionado
 
+- Estoque: alertas visuais por mínimo de materiais/produtos, cadastro do mínimo inteiro por Produto, compras por fornecedor com preço histórico e entrada atômica, consulta completa de fornecedores e importação de CSV com modelo, prévia e validação. Migração `estoque-compras-importacao.sql` preserva produtos legados sem mínimo e registra compras junto às movimentações.
+
 - Fornecedores: condições comerciais opcionais em campos separados para prazo de pagamento, meios de pagamento, desconto e moeda, sem aplicação automática. Histórico de movimentações por item na tela de Estoque, incluindo entradas e saídas de Materiais com saldo zero.
 
 - Estoque: categorias sugeridas, unidades kg/g para Cola, seleção opcional de fornecedores no cadastro/edição e gravação conjunta com o item. Fornecedores com CNPJ numérico/alfanumérico, razão social, nome fantasia, CEP, número, e-mail e telefone opcionais; consulta de CEP reutilizada. Migração aplicada preservando os cadastros antigos.

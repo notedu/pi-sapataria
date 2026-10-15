@@ -14,7 +14,7 @@ export default function FormularioItemEstoque({ tipo, item, ocupado, bloqueado, 
 }) {
   const [dados, setDados] = useState<Record<string, string>>({
     nome: item?.nome ?? '', categoria: item?.categoria ?? '',
-    ...(tipo === 'produtos' ? { preco_custo: item?.preco_custo ?? '', preco_venda: item?.preco_venda ?? '' }
+    ...(tipo === 'produtos' ? { quantidade_minima: item?.quantidade_minima ?? '', preco_custo: item?.preco_custo ?? '', preco_venda: item?.preco_venda ?? '' }
       : { unidade: item?.unidade ?? '', quantidade_minima: item?.quantidade_minima ?? '', custo: item?.custo ?? '' }),
   })
   const [selecionados, setSelecionados] = useState(fornecedoresIniciais)
@@ -22,7 +22,7 @@ export default function FormularioItemEstoque({ tipo, item, ocupado, bloqueado, 
   const unidades = unidadesDaCategoria(dados.categoria)
   const opcoesUnidade = [...new Set([...unidades, ...(item?.unidade ? [item.unidade] : [])])]
   const campos = tipo === 'produtos'
-    ? [['preco_custo', 'Preço de compra (R$)'], ['preco_venda', 'Preço de venda (R$)']]
+    ? [['quantidade_minima', 'Quantidade mínima (unidades)'], ['preco_custo', 'Preço de compra (R$)'], ['preco_venda', 'Preço de venda (R$)']]
     : [['quantidade_minima', 'Quantidade mínima'], ['custo', `Custo por ${dados.unidade || 'unidade'} (R$)`]]
   function categoria(valor: string) {
     const opcoes = unidadesDaCategoria(valor)
@@ -48,11 +48,11 @@ export default function FormularioItemEstoque({ tipo, item, ocupado, bloqueado, 
         const numerico = !['nome', 'categoria', 'unidade'].includes(campo)
         return <InputField key={campo} id={`item-${campo}`} label={label} required value={dados[campo]}
           type={numerico ? 'number' : 'text'} min={numerico ? '0' : undefined}
-          step={numerico ? (campo === 'quantidade_minima' ? 'any' : '0.01') : undefined}
+          step={numerico ? (campo === 'quantidade_minima' ? (tipo === 'produtos' ? '1' : 'any') : '0.01') : undefined}
           onChange={event => setDados({ ...dados, [campo]: event.target.value })} />
       })}
       <SelecaoFornecedores fornecedores={fornecedores} selecionados={selecionados} onChange={setSelecionados} disabled={ocupado || bloqueado} />
-      <p className="text-body-sm text-on-surface-variant">O cadastro começa com saldo zero. Use Entrada para registrar a reposição. A edição não altera o saldo.</p>
+      <p className="text-body-sm text-on-surface-variant">O cadastro começa com saldo zero. Use Entrada para registrar a reposição. A edição não altera o saldo nem o limite mínimo.</p>
       <Button type="submit" disabled={ocupado || bloqueado}>{ocupado ? 'Salvando…' : 'Salvar'}</Button>
     </fieldset>
     <Button variant="secondary" disabled={ocupado} onClick={onCancelar}>Cancelar</Button>

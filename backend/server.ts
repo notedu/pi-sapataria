@@ -12,6 +12,8 @@ import fornecedorRoutes from './src/routes/fornecedorRoutes';
 import ordemServicoRoutes from './src/routes/ordemServicoRoutes';
 import vendaRoutes from './src/routes/vendaRoutes';
 import movimentacaoEstoqueRoutes from './src/routes/movimentacaoEstoqueRoutes';
+import compraEstoqueRoutes from './src/routes/compraEstoqueRoutes';
+import importacaoEstoqueRoutes from './src/routes/importacaoEstoqueRoutes';
 import { pool } from './src/config/db';
 import { armazenarSessoes, gerenciarSessao, producao } from './src/config/sessao';
 import { exigirLogin } from './src/middlewares/autenticacao';
@@ -58,6 +60,8 @@ app.use('/api/v1/fornecedores', exigirLogin, verificarCsrf, fornecedorRoutes);
 app.use('/api/v1/ordens-servico', exigirLogin, verificarCsrf, ordemServicoRoutes);
 app.use('/api/v1/vendas', exigirLogin, verificarCsrf, vendaRoutes);
 app.use('/api/v1/movimentacoes-estoque', exigirLogin, verificarCsrf, movimentacaoEstoqueRoutes);
+app.use('/api/v1/compras-estoque', exigirLogin, verificarCsrf, compraEstoqueRoutes);
+app.use('/api/v1/estoque/importacoes', exigirLogin, verificarCsrf, importacaoEstoqueRoutes);
 
 // O Express 5 encaminha falhas dos controllers assíncronos para este tratamento.
 const tratarErro: ErrorRequestHandler = (error, _request, response, _next) => {
@@ -76,6 +80,10 @@ const tratarErro: ErrorRequestHandler = (error, _request, response, _next) => {
   }
   if (error.code === '23514' && error.constraint === 'materiais_unidade_com_historico') {
     response.status(409).json({ erro: { codigo: 'MATERIAL_UNIDADE_BLOQUEADA', mensagem: 'Não é permitido trocar a unidade de material com saldo ou movimentações.' } });
+    return;
+  }
+  if (error.code === '23514' && error.constraint === 'movimentos_compra_item_compativel') {
+    response.status(400).json({ erro: { codigo: 'COMPRA_ITEM_INVALIDO', mensagem: 'A movimentação deve corresponder ao item registrado na compra.' } });
     return;
   }
   if (['23514', '22003', '22007', '22008'].includes(error.code)) {

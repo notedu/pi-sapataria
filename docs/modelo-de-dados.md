@@ -4,21 +4,21 @@
 
 ## Escopo e situação
 
-Modelo inicial do banco completo, sujeito a evolução. O contrato da API e o documento de telas apresentam o mesmo conjunto de funcionalidades, com detalhes pendentes marcados localmente; as nove tabelas de negócio estão aplicadas, com cadastros, consultas e operações de estoque, OS e vendas implementados.
+Modelo do banco sujeito a evolução. O contrato da API e o documento de telas descrevem os fluxos atuais; as tabelas de negócio cobrem cadastros, compras, estoque, OS e vendas.
 
 - **Definição da equipe:** objetivos dos módulos (Guia §§1.3, 4 e 5; RF-003 a RF-011), PostgreSQL (§7.1), cadastro de funcionários exclusivo do administrador (RN-001) e venda independente de OS (RN-008).
 - **Exigência acadêmica:** validação, chaves estrangeiras, consistência, estoque não negativo e segurança (§8.2; RNF-004/RNF-005, RN-018/RN-019).
 - **Sugestões das fontes:** entidades e campos do §10, detalhes do §5 e fluxos do §6. Sua presença neste modelo não os aprova.
-- **Implementação aprovada:** nove tabelas de negócio em `sapataria`, com campos, tipos, chaves e obrigatoriedade descritos abaixo. Fluxos de gravação e total da venda implementados; cálculo automático da OS e indicadores financeiros pendentes.
+- **Implementação aprovada:** tabelas de negócio em `sapataria`, com campos, tipos, chaves e obrigatoriedade descritos abaixo. Fluxos de gravação e total da venda implementados; cálculo automático da OS e indicadores financeiros pendentes.
 - **Pendências de negócio:** apontadas junto aos elementos afetados, por identificadores de [regras de negócio](regras-de-negocio.md#pendencias). Ausência de definição não significa campo opcional.
 
-**Situação atual:** SQL de Clientes, Funcionários e `backend/src/database/entidades.sql` aplicados no Supabase. A última etapa acrescentou sete tabelas, nove FKs e três restrições de estoque/vínculo, sem alterar os dados existentes. Há também três tabelas técnicas de autenticação.
+**Situação atual:** SQL de Clientes, Funcionários, entidades, operações, fornecedores e cadastros de estoque aplicados no banco configurado. A migração `estoque-compras-importacao.sql` também foi aplicada; produtos legados permanecem sem mínimo até configuração. Há tabelas técnicas de autenticação.
 
 ## Convenções adotadas
 
 **PK** é a chave primária: identifica uma linha. **FK** é a chave estrangeira: aponta para uma linha existente de outra tabela. Por exemplo, `cliente_id` aponta para `clientes.id`.
 
-Todas as nove tabelas principais possuem `id integer` gerado pelo banco, PK, único e não nulo. As FKs usam `integer`. Essa exigência técnica de identificação não torna obrigatório um dado cadastral.
+As tabelas principais possuem `id integer` gerado pelo banco, PK, único e não nulo; associações usam chave primária composta. As FKs usam `integer`. Essa exigência técnica de identificação não torna obrigatório um dado cadastral.
 
 A obrigatoriedade abaixo incorpora as decisões confirmadas pelo Integrante 1. Não há unicidade de nomes/contatos nem exclusões em cascata; usuário de login tem unicidade própria. Remoção de Clientes exige ausência de vínculos; Materiais/Produtos exigem também saldo zero. OS/Vendas e movimentos preservam o histórico.
 
@@ -128,20 +128,30 @@ Usos de materiais ficam em `materiais_os`. Cadastro, edição, avanço de status
 
 **Complemento confirmado por João Franco:** a mesma migração `estoque-cadastros.sql`, reaplicável com IF NOT EXISTS, inclui `prazo_pagamento`, `meios_pagamento`, `desconto` e `moeda` como text nullable, com CHECK de texto não vazio quando presente. Migração aplicada com os quatro campos, sem preencher dados desconhecidos. São condições comerciais informativas; não criam cálculo financeiro ou tabela de compras. Histórico exibido pela interface usa `movimentacoes_estoque` existente, sem duplicação. Saída total mantém o Material e suas movimentações.
 
+**15/10/2026 — `estoque-compras-importacao.sql` aplicada:** `produtos.quantidade_minima numeric` nullable para preservar cadastros anteriores; novos cadastros exigem mínimo inteiro não negativo. `compras_estoque` guarda fornecedor e instante; `itens_compra_estoque` guarda Produto/Material, quantidade e preço unitário. `movimentacoes_estoque.item_compra_id` liga cada linha da compra à sua entrada. Chaves, trigger e restrições garantem que a origem corresponda ao item, quantidade inteira para Produto, entrada como movimento de compra e apenas uma origem por movimento. Migração não apaga nem reatribui histórico.
+
 **13/10/2026 — `estoque-cadastros.sql` aplicado ao PostgreSQL:** adiciona `cnpj`, `razao_social`, `nome_fantasia`, `cep`, `numero`, `email` e `telefone` como text nullable em fornecedores, com CHECK de formato; registros antigos mantêm null, sem preenchimento inventado ou unicidade nova. CNPJ armazenado sem máscara em maiúsculas, com 12 caracteres alfanuméricos e dois dígitos; CEP e telefone somente números. Nome continua obrigatório. Trigger `materiais_proteger_unidade` rejeita mudança de unidade com saldo antigo/novo não zero ou movimentações existentes, sem modificar saldos ou históricos. Categorias/unidades continuam textos, sem catálogo obrigatório ou conversão. `unidade_bloqueada` é informação derivada na API, não coluna do banco.
 
-**Atualização de 02/10/2026, aprovada por João Franco:** fornecedores cadastrados pelo nome, associação opcional de vários fornecedores a cada Produto para venda ou Material. `fornecedores.sql` aplicado ao PostgreSQL nesta entrega. `fornecedores` possui `id` gerado e `nome text NOT NULL` não vazio; `produtos_fornecedores` e `materiais_fornecedores` usam chave primária composta (item, fornecedor) e FKs. A exclusão de fornecedor associado é bloqueada. Excluir um item permitido pelas regras existentes remove apenas suas associações de fornecedores. Não há histórico de compras por fornecedor nem preços específicos por fornecedor.
+**Atualização de 02/10/2026, aprovada por João Franco:** fornecedores cadastrados pelo nome, associação opcional de vários fornecedores a cada Produto para venda ou Material. `fornecedores.sql` aplicado ao PostgreSQL nesta entrega. `fornecedores` possui `id` gerado e `nome text NOT NULL` não vazio; `produtos_fornecedores` e `materiais_fornecedores` usam chave primária composta (item, fornecedor) e FKs. A exclusão de fornecedor associado é bloqueada. Excluir um item permitido pelas regras existentes remove apenas suas associações de fornecedores.
+
+Compra guarda fornecedor, data automática e itens com preço unitário histórico; esse preço não altera automaticamente `preco_custo`, `preco_venda` ou `custo`. Lotes CSV não criam fornecedor; saldos iniciais positivos viram movimentos manuais identificados como importação.
 
 Lucro unitário previsto do Produto = preço de venda − preço de compra; percentual sobre custo = lucro ÷ compra × 100. Custo zero resulta em percentual não calculável. São informações derivadas na interface, sem colunas extras e sem apuração financeira. Materiais continuam com custo por unidade, sem preço de venda.
 
-RF-007/RF-008, RF-021/RF-022. Todos os campos são obrigatórios no banco. Ambos têm saldo `quantidade numeric NOT NULL DEFAULT 0 CHECK (quantidade >= 0)`, conforme RN-019.
+RF-007/RF-008, RF-021/RF-022. Materiais têm os campos listados obrigatórios. Produtos legados podem ter `quantidade_minima` nulo; novos cadastros e edições exigem um inteiro não negativo. Ambos têm saldo `quantidade numeric NOT NULL DEFAULT 0 CHECK (quantidade >= 0)`, conforme RN-019.
 
 | Tabela | Campos além de id |
 |---|---|
 | materiais | nome text, categoria text, unidade text, quantidade numeric, quantidade_minima numeric, custo numeric |
-| produtos | nome text, categoria text, quantidade numeric, preco_custo numeric, preco_venda numeric |
+| produtos | nome text, categoria text, quantidade numeric, quantidade_minima numeric nullable para legado, preco_custo numeric, preco_venda numeric |
 
-Categoria e unidade são textos nesta etapa. Sem catálogo, lista fechada ou unicidade de nome presumida. Somente o saldo tem padrão zero; quantidade mínima, custos e preços não receberam valores padrão. Custo é por unidade informada; materiais aceitam frações e produtos inteiros. Valores monetários não negativos, com até duas casas; mínimo não negativo. Cadastro/edição não alteram saldo. Entradas, saídas, consumo, venda e reversões atualizam movimento e saldo juntos (RN-018). Alertas continuam pendentes.
+Categoria e unidade são textos nesta etapa. Sem catálogo ou lista fechada. O nome/categoria não é globalmente único; importação rejeita duplicados no lote ou já cadastrados. Saldos começam em zero. Novos Produtos exigem mínimo inteiro; Produtos legados permanecem null até edição. Mínimos de Materiais aceitam frações. Valores monetários não negativos, com até duas casas. Cadastro/edição não alteram saldo. Compras e importações, além de entradas, saídas, consumo, venda e reversões, atualizam movimentos e saldos juntos (RN-018). Alertas abaixo de mínimos cadastrados estão implementados.
+
+CSV inicial não inclui fornecedor; vínculos de fornecedores podem ser associados após a importação pela tela. O lote não altera o custo/preço atual de cadastros existentes, pois duplicados são rejeitados.
+
+## Compras — `compras_estoque` e `itens_compra_estoque`
+
+`compras_estoque` contém fornecedor obrigatório e data automática. Cada linha liga a compra a exatamente um Produto ou Material, quantidade positiva e preço unitário de compra com até duas casas. Produtos exigem quantidades inteiras; Materiais aceitam frações. Cada linha tem uma movimentação de entrada vinculada por `item_compra_id`. Compra/itens/movimentos/saldos confirmam juntos ou sofrem rollback. Não há alteração automática do custo/preço cadastral, pagamento, nota fiscal ou exclusão/edição de compra.
 
 ## Venda — `vendas`
 
@@ -178,6 +188,7 @@ Todos os campos obrigatórios: `ordem_servico_id integer` → ordens_servico.id;
 | item_venda_id | integer → itens_venda.id, único quando preenchido | Somente saída originada por item de venda |
 | material_os_id | integer → materiais_os.id, único quando preenchido | Somente saída originada por uso de material |
 | reversao_de_id | integer → movimentacoes_estoque.id | Reversão/devolução vinculada ao movimento original |
+| item_compra_id | integer → itens_compra_estoque.id, único quando preenchido | Entrada originada por compra, deve corresponder ao Produto/Material da linha |
 
 A restrição `movimentacao_um_item` exige **exatamente um** entre material_id e produto_id; nenhum ou ambos são rejeitados pelo banco. Quantidade positiva e finita; produtos exigem inteiros. No máximo um vínculo de origem (item_venda_id, material_os_id, reversao_de_id). Movimento manual não possui origem. Vendas/usos geram uma saída por linha; devoluções apontam para essa saída. Bloqueios transacionais na API impedem reversões acima da quantidade original. Não há edição/exclusão de movimentos na API.
 

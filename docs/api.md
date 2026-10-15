@@ -4,9 +4,11 @@
 
 **Complemento aprovado por João Franco nesta implementação:** fornecedores também aceitam `prazo_pagamento`, `meios_pagamento`, `desconto` e `moeda` como campos separados, textuais e opcionais. São condições informativas, sem prazo em dias obrigatório, enum de meios/moedas ou fórmula de desconto. Omitir preserva os dados na edição; null/vazio limpa; valores não textuais retornam `400` DADOS_INVALIDOS. GET e respostas de POST/PUT incluem esses quatro campos string/null. Não alteram automaticamente custos, preços, saldos ou as formas de pagamento aprovadas para Vendas/OS.
 
-**Histórico por item:** `GET /movimentacoes-estoque?material_id=1` ou `?produto_id=1` retorna `200`, com as movimentações daquele item em `dados`, da mais recente para a mais antiga. Aceita no máximo um desses filtros; id inválido, filtros simultâneos ou desconhecidos retornam `400`. Sem filtro preserva a consulta geral em ordem de id. Item sem movimentações retorna []; saldo zero não remove cadastro nem movimentos. A consulta é somente leitura, com as permissões já existentes. A interface mostra data em Brasília, tipo, quantidade, origem e motivo.
+**Estoque em 15/10/2026:** Produtos aceitam `quantidade_minima` inteiro não negativo em POST/PUT; registros legados podem retornar null até edição. `GET /compras-estoque` lista compras com fornecedor, data e linhas. POST exige `{fornecedor_id, itens:[{material_id, produto_id, quantidade, preco_unitario}]}`; cada linha seleciona exatamente um item. Compra, linhas, movimentações e saldo são confirmados em uma transação. A compra preserva o preço unitário e não altera os preços do cadastro. `POST /estoque/importacoes` aceita `{itens:[...]}` (até 500), usando o modelo em `frontend/public/modelos/estoque-importacao.csv`; valida nomes/categorias duplicados e dados, grava lote inteiro atomicamente e cria entrada para saldo inicial maior que zero. Ambos os perfis autenticados podem consultar e operar; POST exige CSRF.
 
-Prefixo `/api/v1`, sessão de Administrador ou Funcionário; alterações exigem CSRF. `GET /fornecedores` retorna `200`, com lista em `dados`: id, nome e os sete campos opcionais `cnpj`, `razao_social`, `nome_fantasia`, `cep`, `numero`, `email`, `telefone` (string ou null). `POST /fornecedores` e `PUT /fornecedores/:id` aceitam nome obrigatório não vazio e esses opcionais. Retornam `201`/`200`, com cadastro em `dados`. Corpo antigo apenas com nome continua aceito; opcionais omitidos na edição são preservados; null/vazio limpa explicitamente o campo. `DELETE /fornecedores/:id` retorna `204`, `404` se ausente e `409` se associado a um item.
+**Histórico por item:** `GET /movimentacoes-estoque?material_id=1` ou `?produto_id=1` retorna `200`, com as movimentações daquele item em `dados`, da mais recente para a mais antiga. Aceita no máximo um desses filtros; id inválido, filtros simultâneos ou desconhecidos retornam `400`. Sem filtro preserva a consulta geral em ordem de id. Item sem movimentações retorna []; saldo zero não remove cadastro nem movimentos. A consulta é somente leitura, com as permissões já existentes. A interface mostra data em Brasília, tipo, quantidade, origem (incluindo compra), e motivo.
+
+Prefixo `/api/v1`, sessão de Administrador ou Funcionário; alterações exigem CSRF. `GET /fornecedores` retorna `200`, com lista em `dados`: id, nome e os campos opcionais `cnpj`, `razao_social`, `nome_fantasia`, `cep`, `numero`, `email`, `telefone`, `prazo_pagamento`, `meios_pagamento`, `desconto` e `moeda` (string ou null). `POST /fornecedores` e `PUT /fornecedores/:id` aceitam nome obrigatório não vazio e esses opcionais. Retornam `201`/`200`, com cadastro em `dados`. Corpo antigo apenas com nome continua aceito; opcionais omitidos na edição são preservados; null/vazio limpa explicitamente o campo. `DELETE /fornecedores/:id` retorna `204`, `404` se ausente e `409` se associado a um item.
 
 CNPJ aceita numérico ou alfanumérico com 12 caracteres A–Z/0–9 e dois dígitos, valida os verificadores e normaliza maiúsculas/sem máscara, sem consulta de situação cadastral ou unicidade presumida. CEP tem 8 números e telefone com DDD tem 10 ou 11; máscaras usuais são removidas pela API. E-mail informado deve ter formato válido. Falhas retornam `400` com CNPJ_INVALIDO, CEP_INVALIDO, TELEFONE_INVALIDO ou EMAIL_INVALIDO; tipos/estrutura incorretos usam DADOS_INVALIDOS. Exemplo fictício: `{"nome":"Fornecedor exemplo","cnpj":"12.ABC.345/01DE-35","razao_social":"Fornecedor Exemplo Ltda.","nome_fantasia":null,"cep":"01001000","numero":"123A","email":"teste@example.invalid","telefone":"1112345678"}`. Fórmula do CNPJ conforme [manual da Receita Federal](https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/documentos-tecnicos/cnpj/manual-dv-cnpj.pdf).
 
@@ -49,6 +51,8 @@ O contrato combina como front-end e back-end trocam pedidos e respostas. **Clien
 | A16 | Produtos | `GET /produtos` | Consultar produtos e saldo | Ambos os perfis autenticados | Implementado — consulta |
 | A17 | Produtos | `POST /produtos` | Registrar cadastro de produto | Ambos os perfis autenticados, com CSRF | Implementado |
 | A18 | Estoques | `POST /movimentacoes-estoque` | Registrar entrada/reposição | Ambos os perfis autenticados, com CSRF | Implementado |
+| A32 | Estoques | `GET/POST /compras-estoque` | Consultar e registrar compras ligadas a entradas | Ambos os perfis autenticados; POST com CSRF | Implementado |
+| A33 | Estoques | `POST /estoque/importacoes` | Importar lote de estoque de CSV validado | Ambos os perfis autenticados, com CSRF | Implementado |
 | A19 | Vendas | `GET /vendas` | Consultar histórico de vendas independentes | Ambos os perfis autenticados | Implementado — consulta |
 | A20 | Vendas | `POST /vendas` | Registrar venda independente | Ambos os perfis autenticados, com CSRF | Implementado |
 | A23 | Perfil | `GET /perfil` | Consultar os próprios dados | Próprio usuário — RN-006; rota específica pendente | Proposto |
@@ -261,12 +265,12 @@ Implementado. Campos obrigatórios: `nome`, `categoria`, `unidade`, `quantidade_
 <a id="a16"></a>
 ### A16 — GET /produtos
 
-Implementado: `200`, `{"dados": [...]}`, produtos para venda ordenados por id. Sem filtros/paginação. Consulta individual em `GET /produtos/:id`. RF-008/RF-022.
+Implementado: `200`, `{"dados": [...]}`, produtos para venda ordenados por id, incluindo mínimo configurado ou null para registros legados. Sem filtros/paginação. Consulta individual em `GET /produtos/:id`. RF-008/RF-022.
 
 <a id="a17"></a>
 ### A17 — POST /produtos
 
-Implementado. Campos obrigatórios: `nome`, `categoria`, `preco_custo`, `preco_venda`. Textos não vazios; preços não negativos com até duas casas. Retorna `201`, `{"dados": produto}`, saldo zero. Não aceita saldo no corpo.
+Implementado. Campos obrigatórios: `nome`, `categoria`, `quantidade_minima`, `preco_custo`, `preco_venda`. Mínimo inteiro não negativo; textos não vazios; preços não negativos com até duas casas. Retorna `201`, `{"dados": produto}`, saldo zero. Não aceita saldo no corpo.
 
 <a id="a18"></a>
 ### A18 — POST /movimentacoes-estoque
@@ -298,8 +302,17 @@ Todas as rotas desta seção exigem sessão e CSRF; ambos os perfis podem execut
 | DELETE /produtos/:id | Mesma regra de Materiais. |
 | PUT /ordens-servico/:id | Mesmo corpo de A10; apenas Aberta ou Em andamento. `200` ou `409` por estado. |
 | POST /ordens-servico/:id/materiais/:usoId/devolucoes | `{"quantidade":"0.05","motivo":"Sobra não utilizada"}`. Devolve parte não utilizada, até o uso menos devoluções anteriores. Funciona também após encerramento; nunca representa cola já consumida. `201`, `{"dados": movimentacao}`. |
+
 | POST /movimentacoes-estoque/:id/estorno | `{"motivo":"Correção de lançamento"}`. Inverte integralmente um movimento manual uma única vez, sem editar o original. Requer saldo se a reversão gerar saída. `201`, `{"dados": movimentacao}`. |
 | POST /vendas/:id/cancelamento | `{"itens_devolvidos":[{"item_venda_id":1,"quantidade":1}]}`. Lista explícita, podendo ser vazia. Cancela uma única vez (`200`); devolve somente as quantidades indicadas, limitadas às vendidas. Preserva itens, preços e total originais; preenche `cancelada_em`. |
+
+### Compras e importações de estoque
+
+`GET /compras-estoque` retorna as compras mais recentes, com fornecedor, data automática e linhas contendo item, quantidade e preço unitário histórico.
+
+`POST /compras-estoque` recebe `fornecedor_id` e uma lista `itens`; cada linha informa exatamente um de `material_id` ou `produto_id`, mais `quantidade` e `preco_unitario`. Exige fornecedor existente, ao menos uma linha e no máximo 100. Materiais aceitam frações; Produtos exigem quantidade inteira. Cada linha cria entrada vinculada, e compra, saldo e movimentações são transacionados juntos. Preços atuais do cadastro não mudam. Respostas `201`; item inexistente `404`; dados inválidos `400`.
+
+`POST /estoque/importacoes` recebe até 500 itens interpretados do modelo CSV em `frontend/public/modelos/estoque-importacao.csv`. Materiais usam `tipo`, `nome`, `categoria`, `unidade`, `quantidade`, `quantidade_minima`, `custo`; Produtos usam `tipo`, `nome`, `categoria`, `quantidade`, `quantidade_minima`, `preco_custo`, `preco_venda`. Quantidade é o saldo inicial; se positiva, gera movimento de entrada. Duplicados geram `409`; erro de linha ou limite gera `400`; nenhuma linha grava quando qualquer operação falha. `201` retorna os itens criados.
 
 Estorno genérico não se aplica a movimentos de venda, uso ou reversões: use a operação do módulo de origem. Devoluções não podem ultrapassar a quantidade de origem, mesmo em requisições simultâneas. Movimentações, usos, itens, OS e vendas não têm DELETE genérico; movimentações também não têm PUT. Para corrigir um lançamento manual, faça o estorno e registre o movimento correto.
 

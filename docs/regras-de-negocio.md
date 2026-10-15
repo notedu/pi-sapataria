@@ -199,6 +199,8 @@ Cadastro/edição de item aceita fornecedores opcionais na mesma transação. Ca
 
 **Decisão de João Franco em 02/10/2026 — implementada:** a tela principal de Estoque permite aos dois perfis autenticados operar Produtos para venda e Materiais, respeitando RN-018/RN-019/RN-020. Fornecedores têm cadastro pelo nome e associação opcional de vários fornecedores por item. Fornecedor associado não pode ser excluído; editar o nome não altera saldos ou preços. O lucro exibido por Produto é a diferença unitária venda − compra, e o percentual é calculado sobre o custo; custo zero não permite percentual. Esta informação prevista por produto não define lucro realizado, impostos ou indicadores financeiros de RN-014 a RN-017. A tela compara Materiais com seu mínimo cadastrado; Produtos não possuem mínimo, e não recebem limite inventado nem alerta automático.
 
+**Decisão de João Franco em 15/10/2026 — implementada:** Produtos têm quantidade mínima inteira configurável por item; registros anteriores sem mínimo permanecem sem valor até serem editados, sem atribuição de limites presumidos. A tela destaca Materiais ou Produtos cujo saldo atual está abaixo do respectivo mínimo cadastrado. A compra exige um fornecedor e ao menos um item com quantidade e preço unitário; gera registros de compra, itens e entradas vinculadas na mesma transação. O preço da compra fica preservado no histórico e não altera automaticamente o custo/preço atual do cadastro. A importação CSV valida os dados, rejeita duplicados e grava o lote integralmente ou não grava nada; quantidade inicial positiva cria movimento de entrada identificado como saldo inicial importado.
+
 ### RN-012
 
 **Atualização aprovada:** Consumo efetivo, baixa e devolução confirmados e implementados. Cálculo financeiro de materiais continua pendente.
@@ -218,7 +220,7 @@ Cadastro/edição de item aceita fornecedores opcionais na mesma transação. Ca
 - **Origem:** Guia §§1.2, 5.2, 5.7 e 5.8.
 - **Classificação:** Sugestão. **Situação da definição:** proposta não aprovada.
 - **Regra e critério propostos:** para materiais, alertar quando a quantidade estiver abaixo do mínimo. Para produtos, alertar estoque baixo; para OS, alertar proximidade do prazo.
-- **Pendente de definição:** aprovação dos alertas, mínimos de materiais, critério de estoque baixo de produtos e antecedência de OS; [PD-N08](#pd-n08). Não há número ou prazo fixado nas fontes.
+- **Pendente de definição:** antecedência para alerta de prazo de OS; [PD-N08](#pd-n08). Alertas de materiais e produtos abaixo dos limites cadastrados foram aprovados e implementados em 15/10/2026.
 - **Requisitos relacionados:** [RF-016](requisitos.md#rf-016), [RF-021](requisitos.md#rf-021) e [RF-022](requisitos.md#rf-022).
 
 ### RN-014
@@ -312,7 +314,7 @@ A situação de cada registro abaixo indica o que foi resolvido e o que permanec
 | <a id="pd-n05"></a>PD-N05 | Formas aceitas resolvidas: PIX, crédito, débito, dinheiro. Pagamento opcional em OS, obrigatório em venda. Situações financeiras adicionais permanecem pendentes. | Guia §§5.4, 5.6, 6.1–6.2 e 17; RN-009 a RN-011. Não há política documentada de parcelamento ou pagamento parcial. |
 | <a id="pd-n06"></a>PD-N06 | Aprovar critérios de faturamento e períodos, apuração de materiais, fórmula de lucro, custos incluídos e regra/parâmetro do imposto. | Guia §§5.11, 6.1, 6.3 e 17; RN-012 e RN-014 a RN-017. Definições atuais são sugestões; lucro e imposto são pendências explícitas. |
 | <a id="pd-n07"></a>PD-N07 | Resolvido para esta etapa: baixas no uso/venda; operações atômicas; estoque não negativo; estorno de movimento manual; devolução de material não utilizado; cancelamento de venda com itens efetivamente devolvidos. | Guia §§5.6–5.8 e 6: **Sugestões**; §8.2: **Exigência acadêmica** de consistência; RN-011, RN-012, RN-018 e RN-019. Preservar ambas as classificações. |
-| <a id="pd-n08"></a>PD-N08 | Aprovar alertas e definir mínimos de materiais, critério de estoque baixo de produtos e proximidade de prazo de OS. | Guia §§1.2, 5.2, 5.7 e 5.8; RN-013. O critério “abaixo do mínimo” é sugerido para materiais, sem valores definidos. |
+| <a id="pd-n08"></a>PD-N08 | Parcialmente resolvido em 15/10/2026: materiais e produtos são alertados quando o saldo cai abaixo do mínimo cadastrado; Produtos possuem mínimo inteiro individual. Pendente: antecedência do alerta de prazo de OS. | Guia §§1.2, 5.2, 5.7 e 5.8; RN-013. |
 | <a id="pd-n09"></a>PD-N09 | Resolvido: Clientes sem vínculos; Materiais/Produtos sem vínculos e com saldo zero; funcionários desativados; OS/vendas canceladas; movimentos preservados. | Guia §§5.5 e 9.1; RN-020. As alternativas não estão resolvidas por recurso. |
 | <a id="pd-n10"></a>PD-N10 | Confirmar a classificação da frase sobre visibilidade de Funcionários no menu. | Guia §11.3; RN-005. Preservar a ambiguidade da marcação posterior ao esboço, sem enfraquecer a restrição de acesso de RN-001. |
 

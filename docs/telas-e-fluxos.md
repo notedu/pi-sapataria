@@ -8,6 +8,12 @@ Em `/estoque`, cadastro/edição oferece sugestões de categorias existentes e e
 
 `FormularioFornecedor` serve cadastro/edição com nome de exibição obrigatório e CNPJ, razão social, nome fantasia, CEP, número, e-mail e telefone opcionais. CEP reutiliza consulta existente e falha não impede salvar. Dados antigos são editáveis sem preencher novos campos. Máscaras não substituem validações na API e banco. Dados bancários, busca de fornecedores e melhoria de falhas parciais continuam fora desta etapa. Condições comerciais e histórico foram incluídos no complemento acima.
 
+## Estoque — compras, alertas e importação em 15/10/2026
+
+Produtos aceitam mínimo inteiro por item. A visão geral e a tabela sinalizam saldos abaixo do mínimo de Materiais ou Produtos; cadastros legados sem mínimo são indicados para configuração. O diálogo de fornecedores permite consultar os dados cadastrais e condições comerciais completos.
+
+O fluxo Compras registra fornecedor, data automática, vários itens, quantidades e preços unitários históricos. A gravação cria compra, linhas, movimentações de entrada e atualiza saldos em uma transação; custo/preço cadastrado não muda. Histórico de compra é somente consulta nesta etapa. Importar CSV oferece modelo para download, prévia, identificação de linhas inválidas/duplicadas e confirmação atômica. Cada linha contém tipo, nome, categoria, unidade se Material, saldo inicial, mínimo, custo ou preço de compra/venda; saldo inicial cria entrada identificada no histórico. Limite atual: 500 linhas e arquivo de até 1 MB na interface.
+
 ## Estoque implementado em 02/10/2026
 
 Autorizado por João Franco, integrado à navegação principal em `/estoque`, disponível para Administrador e Funcionário. Abas Produtos para venda e Materiais, busca por nome/categoria e filtro de categoria. Visão geral conta cadastros (não soma unidades diferentes), compara Materiais com o mínimo e estima valor a custo (saldo × custo atual). Produtos mostram compra, venda, lucro unitário e percentual sobre custo, não lucro financeiro realizado.

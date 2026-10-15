@@ -60,6 +60,8 @@ Outros comandos, executados dentro de `frontend/`:
 
 **Complemento de Estoque:** condições comerciais opcionais em campos separados por fornecedor (prazo, meios de pagamento, desconto e moeda), apenas informativas. A mesma migração `estoque-cadastros.sql` contém esses campos e foi reaplicada ao banco configurado. Botão Histórico consulta movimentos por item na API existente. Registrar Saída até zerar mantém o Material listado e seu histórico; isso não é exclusão de cadastro. Verificação integrada ampliada para 87 verificações HTTP, incluindo persistência das condições e preservação do item/histórico após saída total.
 
+**Estoque — compras, mínimos e CSV (15/10/2026):** Produtos têm mínimo por item e alertas visuais são recalculados a partir dos saldos atuais. Compras salvam fornecedor, itens e preço histórico e lançam entradas atomicamente, sem alterar o preço cadastrado. A tela permite consultar os dados completos dos fornecedores e importar o modelo `frontend/public/modelos/estoque-importacao.csv` com prévia, validação de duplicados e saldo inicial no histórico. A migração `backend/src/database/estoque-compras-importacao.sql` foi aplicada ao PostgreSQL configurado; em outros ambientes, aplique-a após `estoque-cadastros.sql`.
+
 **Melhorias de Estoque em 13/10/2026:** cadastro/edição sugere categorias, oferece kg/g para Cola e permite selecionar vários fornecedores opcionalmente na mesma operação do item. Fornecedores têm nome obrigatório e CNPJ, razão social, nome fantasia, CEP, número, e-mail e telefone opcionais, com consulta de CEP reutilizada. Materiais com saldo ou movimentações têm unidade bloqueada para proteger custo e histórico, mesmo com saldo novamente zero. Nenhuma conversão de unidades foi adicionada. A migração `backend/src/database/estoque-cadastros.sql` foi aplicada ao PostgreSQL configurado; em outro ambiente, aplicar após `fornecedores.sql` e `operacoes.sql`, antes de executar a API atualizada. Cadastros antigos foram preservados.
 
 Verificações desta melhoria: lint/build do front-end, tipos do back-end e 78 verificações HTTP/PostgreSQL, além de cálculos de CNPJ/formatadores/unidades; conta e dados fictícios usados em transação com rollback. Cenários incluem cadastro e edição atômicos com fornecedores, preservação de opcionais/vínculos omitidos, validação dos novos campos e bloqueio de unidade na API e direto no banco. O teste versionado permanece em `backend/scripts/verificarEstoque.cjs`.
@@ -275,6 +277,8 @@ No Insomnia, faça login conforme explicado acima e mantenha o cookie. Todos os 
 | Ordens de serviço | /ordens-servico | /ordens-servico/:id |
 | Vendas | /vendas | /vendas/:id |
 | Movimentações | /movimentacoes-estoque | /movimentacoes-estoque/:id |
+| Compras de estoque | /compras-estoque | — |
+| Importação CSV de estoque | /estoque/importacoes (POST) | — |
 
 Itens de uma venda: `/vendas/:id/itens`. Materiais utilizados em uma OS: `/ordens-servico/:id/materiais`. Substitua `:id` pelo identificador; se a venda/OS não existir, retorna 404; se existir sem itens/usos, retorna `{"dados": []}`. Ambos os perfis autenticados podem consultar. GET não exige token CSRF.
 
