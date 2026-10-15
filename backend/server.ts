@@ -74,6 +74,10 @@ const tratarErro: ErrorRequestHandler = (error, _request, response, _next) => {
     response.status(409).json({ erro: { codigo: 'REGISTRO_VINCULADO', mensagem: 'A operação conflita com um vínculo do cadastro. Preserve os registros usados no histórico.' } });
     return;
   }
+  if (error.code === '23514' && error.constraint === 'materiais_unidade_com_historico') {
+    response.status(409).json({ erro: { codigo: 'MATERIAL_UNIDADE_BLOQUEADA', mensagem: 'Não é permitido trocar a unidade de material com saldo ou movimentações.' } });
+    return;
+  }
   if (['23514', '22003', '22007', '22008'].includes(error.code)) {
     response.status(400).json({ erro: { codigo: 'DADOS_INVALIDOS', mensagem: 'Valores incompatíveis com as regras do cadastro.' } });
     return;

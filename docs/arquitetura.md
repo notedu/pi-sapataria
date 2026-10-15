@@ -4,6 +4,10 @@
 
 ## Implementação atual — autenticação, cadastros e consultas
 
+**Complemento de Estoque:** `HistoricoEstoque` consulta a API existente com filtro opcional por material/produto, sem duplicar históricos ou executar alterações. `FormularioFornecedor` contém condições comerciais opcionais em quatro campos textuais separados, persistidos junto aos demais dados do fornecedor. Sessão/CSRF e regras operacionais compartilhadas preservadas.
+
+**Estoque, 13/10/2026:** `FormularioFornecedor` e `SelecaoFornecedores` reutilizam componentes/tema atuais; consulta de CEP usa `EnderecoPorCep`. `config/estoque.ts` concentra sugestões locais de categorias/unidades, sem catálogo fechado. Models de itens reutilizam `associarNaConexao` do fornecedor na transação de criação/edição, preservando vínculo e cadastro juntos. API deriva `unidade_bloqueada`, e validação com bloqueio de linha + trigger protege unidade de materiais. Novos campos de fornecedor são opcionais e contratos antigos continuam aceitos. Sem novas dependências.
+
 **Estoque, 02/10/2026:** a rota principal `/estoque` usa `pages/Estoque.tsx`, o formulário reutilizável `FormularioItemEstoque`, `services/estoque.ts` e `utils/estoque.ts`, com componentes e tema existentes. Fornecedores seguem Routes → Controllers → Models; associações são substituídas em transação, sem alterar os contratos de cadastro de itens. As operações novas recebem sessão e CSRF no servidor. Sem novas dependências.
 
 A base Express usa `server.ts`, `src/routes`, `src/controllers`, `src/models` e `src/config`. `src/middlewares` verifica sessão, perfil e CSRF; `src/utils` reúne validação e hash de senha. O histórico de planejamento abaixo não representa a ausência desses módulos já implementados.

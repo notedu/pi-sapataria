@@ -3,8 +3,12 @@ import type { Request, Response } from 'express';
 import * as movimentacaoEstoqueModel from '../models/movimentacaoEstoqueModel';
 import { ErroHttp, idValido, objeto, texto } from '../utils/validacao';
 
-export async function listar(_request: Request, response: Response): Promise<void> {
-  response.json({ dados: await movimentacaoEstoqueModel.listar() });
+export async function listar(request: Request, response: Response): Promise<void> {
+  const d = objeto(request.query, ['material_id', 'produto_id']);
+  if (d.material_id !== undefined && d.produto_id !== undefined) throw new ErroHttp(400, 'DADOS_INVALIDOS', 'Filtre por um material ou um produto por vez.');
+  const campo = d.material_id !== undefined ? 'material_id' : d.produto_id !== undefined ? 'produto_id' : undefined;
+  const filtro: { campo: 'material_id' | 'produto_id'; id: number } | undefined = campo ? { campo, id: idValido(d[campo]) } : undefined;
+  response.json({ dados: await movimentacaoEstoqueModel.listar(filtro) });
 }
 
 export async function buscarPorId(request: Request, response: Response): Promise<void> {

@@ -1,5 +1,9 @@
 # Requisitos — Seda e Couro
 
+**Complemento da solicitação de João Franco:** condições comerciais opcionais em campos separados (prazo, meios, desconto, moeda) e visualização do histórico de entradas/saídas por item em RF-021/RF-022. Registrar saída total preserva Material com saldo zero e movimentações; sem nova regra de exclusão, desconto, pagamento ou conversão. RN-018/RN-019/RN-020 mantidas.
+
+**Atualização de 13/10/2026, aprovada por João Franco:** RF-021/RF-022 avançam com categorias sugeridas sem lista fechada, unidades kg/g sugeridas para Cola e seleção opcional de vários fornecedores no cadastro/edição do item, gravados juntos. Fornecedores incluem CNPJ, razão social, nome fantasia, CEP, número, e-mail e telefone opcionais; nome de exibição continua obrigatório. Troca de unidade de Material com saldo ou histórico bloqueada na interface, API e banco (RN-018/RN-019). Sem conversão automática. Dados bancários, busca de fornecedores e melhoria de falhas parciais continuam fora desta etapa; condições comerciais e histórico foram aprovados no complemento acima.
+
 **Entrega de 02/10/2026, aprovada por João Franco:** RF-007/RF-008 têm tela funcional na rota principal `/estoque`. RF-021/RF-022 avançam com consulta, cadastro, edição, exclusão permitida, filtros, entradas/saídas e integração ao PostgreSQL. Fornecedores múltiplos por item e lucro unitário/percentual sobre custo foram confirmados nesta solicitação. Comparação do mínimo de Materiais aparece na tela; Produtos não possuem mínimo cadastrado. Alertas automáticos e apuração financeira permanecem pendentes. RN-018/RN-019/RN-020 preservadas.
 
 [Índice da documentação](README.md) · [Guia do Projeto](guia-do-projeto.md) · [Regras de negócio](regras-de-negocio.md)

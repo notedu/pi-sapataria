@@ -8,10 +8,16 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Corrigido
 
+- Troca de unidade de Material com saldo ou movimentações bloqueada na interface, API e PostgreSQL, inclusive quando o saldo retorna a zero, preservando a interpretação de custo e histórico.
+
 - Rotas internas após a integração das branches: removidos trechos provisórios que impediam a compilação e a abertura do front-end.
 - Configuração TypeScript compartilhada entre editor e `typecheck` no back-end, incluindo os tipos de sessão sem gerar arquivos compilados.
 
 ### Adicionado
+
+- Fornecedores: condições comerciais opcionais em campos separados para prazo de pagamento, meios de pagamento, desconto e moeda, sem aplicação automática. Histórico de movimentações por item na tela de Estoque, incluindo entradas e saídas de Materiais com saldo zero.
+
+- Estoque: categorias sugeridas, unidades kg/g para Cola, seleção opcional de fornecedores no cadastro/edição e gravação conjunta com o item. Fornecedores com CNPJ numérico/alfanumérico, razão social, nome fantasia, CEP, número, e-mail e telefone opcionais; consulta de CEP reutilizada. Migração aplicada preservando os cadastros antigos.
 
 - Busca de páginas e perfis disponíveis conforme permissão; seleção de cliente por sugestões e serviços já registrados com opção Outros na OS; responsável e situação no histórico do cliente; botão Imprimir com PDF A4 da OS.
 u- Dashboard operacional com contagens de OS, busca de clientes/OS/páginas e telas de listagem, cadastro, edição e detalhes de OS. Fluxo de status e uso de material conectados à API existente, sem cálculos financeiros novos.
