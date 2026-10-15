@@ -15,7 +15,10 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Adicionado
 
-- Estoque: alertas visuais por mínimo de materiais/produtos, cadastro do mínimo inteiro por Produto, compras por fornecedor com preço histórico e entrada atômica, consulta completa de fornecedores e importação de CSV com modelo, prévia e validação. Migração `estoque-compras-importacao.sql` preserva produtos legados sem mínimo e registra compras junto às movimentações.
+- Esquema SQL consolidado em `backend/src/database/schema.sql`, ordenado para instalar toda a estrutura em um banco novo. Os scripts SQL separados foram reunidos; o consolidado não deve ser executado em banco existente.
+- Configurações para os dois perfis: consulta de usuário/e-mail, troca própria de senha com invalidação de sessões, notificações visuais e modo escuro salvos localmente por usuário. Administrador consulta/altera o endereço comercial da loja informando CEP e número com consulta ViaCEP; API e banco mantêm um único campo formatado. A configuração comercial está no esquema consolidado, ainda não aplicada ao banco existente.
+
+- Estoque: alertas visuais por mínimo de materiais/produtos, cadastro do mínimo inteiro por Produto, compras por fornecedor com preço histórico e entrada atômica, consulta completa de fornecedores e importação de CSV com modelo, prévia e validação. O esquema consolidado preserva produtos legados sem mínimo e registra compras junto às movimentações.
 
 - Fornecedores: condições comerciais opcionais em campos separados para prazo de pagamento, meios de pagamento, desconto e moeda, sem aplicação automática. Histórico de movimentações por item na tela de Estoque, incluindo entradas e saídas de Materiais com saldo zero.
 
@@ -52,7 +55,7 @@ u- Dashboard operacional com contagens de OS, busca de clientes/OS/páginas e te
 - Cadastros/edição/exclusão de Materiais e Produtos e exclusão de Clientes sem vínculos.
 - Abertura, edição, sequência de estados, cancelamento, consumo e devolução de materiais de OS.
 - Vendas com preço histórico, total calculado no PostgreSQL, baixa atômica e cancelamento com devoluções explícitas.
-- Entradas, saídas e estornos com histórico, validação de quantidades/valores e proteção contra concorrência; alteração incremental em `operacoes.sql` aplicada ao Supabase sem inserir dados.
+- Entradas, saídas e estornos com histórico, validação de quantidades/valores e proteção contra concorrência; estruturas e restrições de operações reunidas no esquema consolidado, preservando os dados existentes.
 
 - Sete tabelas restantes de negócio aplicadas no Supabase, com obrigatoriedade confirmada, nove relacionamentos, estoque inicial zero e vínculo exclusivo nas movimentações.
 - Consultas autenticadas de Materiais, Produtos, OS, Vendas, itens/usos vinculados e Movimentações; ampliadas pelas operações registradas acima.

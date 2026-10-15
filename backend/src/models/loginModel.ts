@@ -38,3 +38,10 @@ export async function limitarConfirmacoes(funcionarioId: number, ip: string): Pr
   await consumir(chave('confirmacao-ip', ip), 50);
   await consumir(chave('confirmacao-administrador', String(funcionarioId)), 10);
 }
+
+// Trocas de senha têm contadores próprios e não alteram os limites do login.
+export async function limitarTrocasSenha(funcionarioId: number, ip: string): Promise<void> {
+  await pool.query('DELETE FROM sapataria.tentativas_login WHERE expira_em <= now()');
+  await consumir(chave('troca-senha-ip', ip), 50);
+  await consumir(chave('troca-senha-funcionario', String(funcionarioId)), 10);
+}

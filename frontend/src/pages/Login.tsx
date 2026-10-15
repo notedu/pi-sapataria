@@ -1,10 +1,11 @@
-import { useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import type { SubmitEvent } from 'react'
 import logo from '../assets/logo-sapataria.png'
 import Button from '../components/Button'
 import InputField from '../components/InputField'
 import { autenticar } from '../services/auth'
+import { aplicarTemaEscuro } from '../services/preferencias'
 
 function LoginIcon({ tipo }: { tipo: 'usuario' | 'senha' | 'info' }) {
   return (
@@ -18,9 +19,12 @@ function LoginIcon({ tipo }: { tipo: 'usuario' | 'senha' | 'info' }) {
 
 export default function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
   const envioEmCurso = useRef(false)
+
+  useEffect(() => { aplicarTemaEscuro(false) }, [])
 
   async function entrar(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault() // Envia pela API, sem recarregar a página.
@@ -69,6 +73,8 @@ export default function Login() {
             <h1 id="titulo-login" className="mb-2 text-headline-lg-mobile text-primary md:text-headline-lg">Acesso ao Sistema</h1>
             <p className="text-body-md text-on-surface-variant">Seda e Couro Gestão Interna</p>
           </header>
+
+          {location.state?.senhaAlterada && <p role="status" className="mb-6 rounded-default border border-success/25 bg-success-container p-4 text-on-success-container">Senha atualizada. Entre novamente com a nova senha.</p>}
 
           <form onSubmit={entrar} className="flex flex-col gap-6" aria-busy={enviando} aria-describedby={erro ? 'erro-login' : undefined}>
             <InputField id="usuario" name="usuario" label="Usuário" placeholder="Seu nome de usuário" autoComplete="username" autoCapitalize="none" spellCheck={false} required disabled={enviando} icon={<LoginIcon tipo="usuario" />} />

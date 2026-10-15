@@ -30,12 +30,12 @@ Os requisitos apontam para regras por identificador, evitando repetir permissõe
 | **Sugestão** | Proposta presente na fonte, ainda não aprovada por esta documentação. |
 | **Pendência** | Pendente de definição: decisão, confirmação ou esclarecimento ainda necessário. Não substitui a classificação do requisito ao qual se refere. |
 
-Origem da legenda: Guia, “Como usar este documento”. A autorização para organizar estes arquivos não aprova sugestões nem resolve pendências. Nenhuma nova decisão de comportamento foi fornecida para esta edição.
+Origem da legenda: Guia, “Como usar este documento”. A autorização para organizar estes arquivos não aprova sugestões nem resolve pendências. A decisão do Integrante 1 em 15/10/2026 está registrada somente nas seções relacionadas a Configurações.
 
 As marcações também se aplicam a seções inteiras:
 
 - **§2:** exigências acadêmicas, respeitando sugestões locais, como as opções de ODS do §2.8.
-- **§4:** telas definidas pela equipe; acessos sugeridos, exceto Funcionários, exclusivo do administrador; Configuração e Financeiro permanecem pendentes.
+- **§4:** telas definidas pela equipe; acessos sugeridos, exceto Funcionários, exclusivo do administrador; permissões de Configurações e Financeiro têm decisões posteriores registradas em RN-003.
 - **§5:** objetivos definidos pela equipe; detalhes de conteúdo e funcionalidades sugeridos, inclusive nas subtelas. A exigência geral de validação e uso da API é acadêmica.
 - **§6 e §10:** fluxos e modelo de dados são sugestões; estados, campos e relacionamentos não se tornam decisões por aparecerem em tabelas.
 - **Demais seções:** preservar marcações locais e a coluna de origem, quando houver. Divergências de classificação são registradas, sem escolher silenciosamente uma versão.

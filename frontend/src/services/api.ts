@@ -36,6 +36,9 @@ export async function requisitar(caminho: string, opcoes: RequestInit = {}): Pro
       SENHA_CONFIRMACAO_INVALIDA: 'Sua senha está incorreta. A operação não foi realizada.',
       CONFIRMACAO_OBRIGATORIA: 'Informe sua senha para confirmar a operação.',
       FUNCIONARIO_NAO_ENCONTRADO: 'Funcionário não encontrado. Atualize a lista.',
+      SENHA_ATUAL_INVALIDA: 'A senha atual está incorreta.',
+      CONFIRMACAO_SENHA_DIVERGENTE: 'A confirmação precisa ser igual à nova senha.',
+      SENHA_INVALIDA: 'A nova senha deve ter entre 15 e 128 caracteres.',
     }
     const mensagens: Record<number, string> = {
       400: 'Confira os dados informados.',

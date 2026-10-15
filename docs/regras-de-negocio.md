@@ -21,7 +21,7 @@ Critérios de sugestões são propostos e condicionados à aprovação. Quando f
 - Senha com 15–128 caracteres, armazenada como hash scrypt; sessão PostgreSQL com duração absoluta de 8h. Login inválido não revela se a pessoa existe ou está inativa. Limite de 10 tentativas por usuário e 50 por IP em 15min.
 - Desativação e mudança de perfil invalidam sessões anteriores, verificadas em cada requisição. Reativação exige novo login. O logout encerra a sessão utilizada.
 - Operações que alteram dados exigem token CSRF ligado ao cookie de sessão. Primeiro administrador criado apenas por comando local quando não há funcionários; nenhum cadastro público ou conta padrão.
-- Recuperação e troca de senha, e exclusão de funcionário não foram implementadas. A interface permanece pendente.
+- Recuperação de senha e exclusão física de funcionário não estão implementadas. A troca da própria senha foi implementada em 15/10/2026; consulte RN-004/PD-N02.
 
 Essas decisões atualizam as pendências correspondentes de RN-001/RN-002/RN-004 e PD-N01/PD-N02; as referências ao guia abaixo são mantidas como origem histórica.
 
@@ -79,13 +79,15 @@ Estas confirmações substituem as pendências correspondentes das sugestões or
 
 **Acesso a Configuração e Controle financeiro.**
 
-**Decisão de João Franco em 01/10/2026:** Financeiro exclusivo do Administrador. Interface implementada em `/financeiro`, com menu e acesso direto protegidos pelo perfil atual consultado na sessão. Dados fictícios temporários autorizados e identificados; nenhuma API financeira ou mudança de banco nesta etapa. A futura API financeira também deverá exigir Administrador. Configuração permanece pendente; as referências históricas abaixo não reabrem esta decisão.
+**Decisão de João Franco em 01/10/2026:** Financeiro exclusivo do Administrador. Interface implementada em `/financeiro`, com menu e acesso direto protegidos pelo perfil atual consultado na sessão. Dados fictícios temporários autorizados e identificados; nenhuma API financeira ou mudança de banco nesta etapa. A futura API financeira também deverá exigir Administrador.
+
+**Decisão do Integrante 1 em 15/10/2026 — Configurações:** ambos os perfis acessam `/configuracoes` para consultar os próprios dados de acesso, trocar a própria senha e manter preferências pessoais de notificações e tema. Essas preferências ficam salvas no navegador por usuário; notificações não geram alertas nesta etapa. A seção de dados comerciais da loja, incluindo consulta e alteração do endereço, é exclusiva do Administrador e a API verifica esse perfil. Esta decisão cobre somente as opções implementadas; catálogos e parâmetros financeiros sugeridos continuam pendentes.
 
 - **Origem:** Guia §3 (tabela e nota), §4 e §17.
-- **Classificação:** Financeiro definido pela decisão acima; Configuração permanece pendente.
+- **Classificação:** Financeiro definido pela decisão acima. Para Configuração, os acessos das preferências pessoais e dos dados comerciais foram definidos na decisão do Integrante 1 em 15/10/2026; demais opções continuam pendentes.
 - **Divergência:** a tabela sugerida do §3 atribui todas as telas ao administrador; a nota dessa seção, o mapa do §4 e o §17 deixam estes acessos em aberto.
-- **Critério de aceitação:** Financeiro visível e acessível somente ao Administrador; a futura API deve exigir o mesmo perfil. Perfis autorizados para Configuração ainda precisam ser definidos.
-- **Decisão necessária:** [PD-N01](#pd-n01).
+- **Critério de aceitação:** Financeiro visível e acessível somente ao Administrador; a futura API deve exigir o mesmo perfil. Ambos acessam as preferências pessoais em Configurações; somente Administrador consulta e altera dados comerciais da loja. Outros parâmetros/catálogos não estão habilitados.
+- **Decisão necessária:** resolvida para essas áreas; qualquer opção futura de configuração deve ter seu acesso definido antes da implementação.
 - **Requisitos relacionados:** [RF-010](requisitos.md#rf-010) e [RF-011](requisitos.md#rf-011).
 
 ### RN-004
@@ -95,7 +97,7 @@ Estas confirmações substituem as pendências correspondentes das sugestões or
 - **Origem:** Guia §5.1, sob a marcação de sugestão da introdução do §5; §9.4 sugere rotas protegidas. Exigência geral de segurança no §8.2, com classificação mista no §14.
 - **Classificação:** Sugestão para o comportamento específico de proteger as demais telas; Exigência acadêmica para segurança e acesso por perfil no §8.2. **Situação da definição:** comportamento proposto, com alcance a esclarecer.
 - **Regra e critério propostos:** as telas além do Login só abrem para usuários autenticados.
-- **Atualização:** mecanismo de login, expiração e limites confirmados na seção de decisões acima. Recuperação/troca de senha e interface continuam pendentes.
+- **Atualização:** mecanismo de login, expiração e limites confirmados na seção de decisões acima. Troca da própria senha implementada em 15/10/2026 com senha atual, nova senha e confirmação; política existente de 15–128 caracteres mantida e sessões invalidadas após o sucesso. Recuperação de senha permanece pendente.
 - **Requisitos relacionados:** [RF-001](requisitos.md#rf-001), [RF-015](requisitos.md#rf-015) e [RNF-005](requisitos.md#rnf-005).
 
 ### RN-005
@@ -111,7 +113,7 @@ Estas confirmações substituem as pendências correspondentes das sugestões or
 
 ### RN-006
 
-**Decisão do Integrante 1 em 30/09/2026 — implementada no código:** Funcionário comum consulta somente o próprio perfil e suas OS; Administrador consulta todos. Edição pessoal (nome, e-mail, CPF e telefone), inclusive a própria, é exclusiva do Administrador e exige confirmação com sua senha. Não autoriza troca de usuário/senha ou mudança de permissões nessa operação. Limites de confirmação compartilhados com desativação: 10/Administrador e 50/IP em 15 minutos, incluindo sucessos, separados do login. CPF/telefone são obrigatórios em novos cadastros e na edição pessoal, preservando valores desconhecidos dos legados. Foto ficou fora do escopo por decisão explícita. Estas decisões atualizam as pendências históricas abaixo.
+**Decisão do Integrante 1 em 30/09/2026 — implementada no código:** Funcionário comum consulta somente o próprio perfil e suas OS; Administrador consulta todos. Edição pessoal (nome, e-mail, CPF e telefone), inclusive a própria, é exclusiva do Administrador e exige confirmação com sua senha. Essa decisão restringe a operação de edição pessoal e não concede mudança de usuário ou permissões. Em 15/10/2026, a troca da própria senha foi definida e implementada em operação separada para ambos os perfis (ver RN-003 e PD-N02). Limites de confirmação compartilhados com desativação: 10/Administrador e 50/IP em 15 minutos, incluindo sucessos, separados do login. CPF/telefone são obrigatórios em novos cadastros e na edição pessoal, preservando valores desconhecidos dos legados. Foto ficou fora do escopo por decisão explícita. Estas decisões atualizam as pendências históricas abaixo.
 
 **Gerenciamento dos próprios dados.**
 
@@ -307,8 +309,8 @@ A situação de cada registro abaixo indica o que foi resolvido e o que permanec
 
 | ID | Decisão necessária | Origem e regras relacionadas |
 |---|---|---|
-| <a id="pd-n01"></a>PD-N01 | Resolvido: ambos os perfis operam Clientes/OS/Vendas/Estoques, incluindo exclusões, cancelamentos e correções permitidos; Gestão de Funcionários exclusiva do Administrador; consulta individual também permitida ao próprio Funcionário. Financeiro exclusivo do Administrador, confirmado por João Franco em 01/10/2026. Pendente: Configuração e alcance futuro de operações financeiras (RN-007). | Guia §§3, 4, 5.5, 9.3 e 17; RN-001, RN-002, RN-003 e RN-007. “Todas as telas” do administrador é sugestão em tensão com acessos explicitamente pendentes. |
-| <a id="pd-n02"></a>PD-N02 | Resolvido nesta etapa: usuário e senha, sessões de 8h, limites de tentativas e invalidação na alteração de acesso. Pendente: política e fluxo de alteração/recuperação de senha. | Guia §§5.1, 5.5 e 5.9; RN-004. Mecanismo técnico de armazenamento de senha em [PD-R04](requisitos.md#pd-r04). |
+| <a id="pd-n01"></a>PD-N01 | Resolvido: ambos os perfis operam Clientes/OS/Vendas/Estoques, incluindo exclusões, cancelamentos e correções permitidos; Gestão de Funcionários exclusiva do Administrador; consulta individual também permitida ao próprio Funcionário. Financeiro exclusivo do Administrador, confirmado por João Franco em 01/10/2026. Configurações: preferências pessoais acessíveis a ambos; dados comerciais da loja somente ao Administrador, conforme decisão do Integrante 1 em 15/10/2026. Futuras opções de catálogo/parâmetros ainda exigem definição específica. | Guia §§3, 4, 5.5, 9.3 e 17; RN-001, RN-002, RN-003 e RN-007. “Todas as telas” do administrador é sugestão em tensão com acessos explicitamente pendentes. |
+| <a id="pd-n02"></a>PD-N02 | Resolvido para troca da própria senha em 15/10/2026: exige senha atual, nova senha e confirmação; mantém política de 15–128 caracteres e invalida as sessões ativas após o sucesso. Recuperação de senha permanece pendente. | Guia §§5.1, 5.5 e 5.9; RN-004. Mecanismo técnico de armazenamento de senha em [PD-R04](requisitos.md#pd-r04). |
 | <a id="pd-n03"></a>PD-N03 | Resolvidos campos/obrigatoriedade e operações dos nove cadastros conforme modelo/API. Pendentes: vínculos Cliente–Venda e OS–Venda, autoedição por Funcionário comum não autorizada nesta etapa; demais cadastros auxiliares pendentes. | Guia §5 (validação exigida, detalhes sugeridos), §§5.3–5.4, 5.9, 10 e 17; RN-006 e RN-010. Listar um campo não o torna obrigatório. |
 | <a id="pd-n04"></a>PD-N04 | Resolvidos estados, transições, edição e cancelamento da OS. Prazo permanece opcional, sem cálculo automático; catálogo de serviços não definido. | Guia §§6.1 e 17; RN-010. O guia define apenas significados sugeridos, não transições ou duração. |
 | <a id="pd-n05"></a>PD-N05 | Formas aceitas resolvidas: PIX, crédito, débito, dinheiro. Pagamento opcional em OS, obrigatório em venda. Situações financeiras adicionais permanecem pendentes. | Guia §§5.4, 5.6, 6.1–6.2 e 17; RN-009 a RN-011. Não há política documentada de parcelamento ou pagamento parcial. |

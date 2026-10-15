@@ -14,6 +14,7 @@ import vendaRoutes from './src/routes/vendaRoutes';
 import movimentacaoEstoqueRoutes from './src/routes/movimentacaoEstoqueRoutes';
 import compraEstoqueRoutes from './src/routes/compraEstoqueRoutes';
 import importacaoEstoqueRoutes from './src/routes/importacaoEstoqueRoutes';
+import configuracaoRoutes from './src/routes/configuracaoRoutes';
 import { pool } from './src/config/db';
 import { armazenarSessoes, gerenciarSessao, producao } from './src/config/sessao';
 import { exigirLogin } from './src/middlewares/autenticacao';
@@ -52,6 +53,7 @@ app.use('/api/v1', gerenciarSessao);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/clientes', exigirLogin, verificarCsrf, clienteRoutes);
 app.use('/api/v1/funcionarios', exigirLogin, verificarCsrf, funcionarioRoutes);
+app.use('/api/v1/configuracoes', exigirLogin, verificarCsrf, configuracaoRoutes);
 
 // Ambos os perfis autenticados podem cadastrar, consultar e operar estas entidades.
 app.use('/api/v1/materiais', exigirLogin, verificarCsrf, materialRoutes);

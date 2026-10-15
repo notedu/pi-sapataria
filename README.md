@@ -4,7 +4,7 @@ Sistema web de gestão interna para a sapataria **Seda e Couro**, de Santa Cruz 
 
 Desenvolvido como Projeto Integrado do módulo **Desenvolvimento de Aplicação Web**, do **UNIFEOB**, no 2º semestre de 2026.
 
-> **Em desenvolvimento:** o front-end contém Login, Clientes, Funcionários, Dashboard, Busca, Estoque e telas de Ordens de Serviço integradas à API. Financeiro possui demonstração com dados fictícios, exclusiva do Administrador. O back-end possui login por usuário e senha, sessões no PostgreSQL e operações autenticadas de Clientes, Funcionários, Materiais, Produtos, OS, Vendas e Estoques. Configurações permanece desabilitada.
+> **Em desenvolvimento:** o front-end contém Login, Clientes, Funcionários, Dashboard, Busca, Estoque, Ordens de Serviço e Configurações integradas à API. Financeiro possui demonstração com dados fictícios, exclusiva do Administrador. Configurações oferece dados de acesso, troca de senha, preferências locais por usuário e endereço comercial somente ao Administrador. `backend/src/database/schema.sql` reúne o esquema completo para um banco novo; não o execute no banco já usado pelo projeto.
 
 ## Funcionalidades previstas
 
@@ -58,15 +58,15 @@ Outros comandos, executados dentro de `frontend/`:
 
 ## Navegação interna
 
-**Complemento de Estoque:** condições comerciais opcionais em campos separados por fornecedor (prazo, meios de pagamento, desconto e moeda), apenas informativas. A mesma migração `estoque-cadastros.sql` contém esses campos e foi reaplicada ao banco configurado. Botão Histórico consulta movimentos por item na API existente. Registrar Saída até zerar mantém o Material listado e seu histórico; isso não é exclusão de cadastro. Verificação integrada ampliada para 87 verificações HTTP, incluindo persistência das condições e preservação do item/histórico após saída total.
+**Complemento de Estoque:** condições comerciais opcionais em campos separados por fornecedor (prazo, meios de pagamento, desconto e moeda), apenas informativas. A definição desses campos está em `backend/src/database/schema.sql`; no banco configurado, a atualização foi aplicada e conferida. Botão Histórico consulta movimentos por item na API existente. Registrar Saída até zerar mantém o Material listado e seu histórico; isso não é exclusão de cadastro. Verificação integrada ampliada para 87 verificações HTTP, incluindo persistência das condições e preservação do item/histórico após saída total.
 
-**Estoque — compras, mínimos e CSV (15/10/2026):** Produtos têm mínimo por item e alertas visuais são recalculados a partir dos saldos atuais. Compras salvam fornecedor, itens e preço histórico e lançam entradas atomicamente, sem alterar o preço cadastrado. A tela permite consultar os dados completos dos fornecedores e importar o modelo `frontend/public/modelos/estoque-importacao.csv` com prévia, validação de duplicados e saldo inicial no histórico. A migração `backend/src/database/estoque-compras-importacao.sql` foi aplicada ao PostgreSQL configurado; em outros ambientes, aplique-a após `estoque-cadastros.sql`.
+**Estoque — compras, mínimos e CSV (15/10/2026):** Produtos têm mínimo por item e alertas visuais são recalculados a partir dos saldos atuais. Compras salvam fornecedor, itens e preço histórico e lançam entradas atomicamente, sem alterar o preço cadastrado. A tela permite consultar os dados completos dos fornecedores e importar o modelo `frontend/public/modelos/estoque-importacao.csv` com prévia, validação de duplicados e saldo inicial no histórico. A definição completa está em `backend/src/database/schema.sql`; essa instalação é destinada a banco novo, não ao PostgreSQL já configurado.
 
-**Melhorias de Estoque em 13/10/2026:** cadastro/edição sugere categorias, oferece kg/g para Cola e permite selecionar vários fornecedores opcionalmente na mesma operação do item. Fornecedores têm nome obrigatório e CNPJ, razão social, nome fantasia, CEP, número, e-mail e telefone opcionais, com consulta de CEP reutilizada. Materiais com saldo ou movimentações têm unidade bloqueada para proteger custo e histórico, mesmo com saldo novamente zero. Nenhuma conversão de unidades foi adicionada. A migração `backend/src/database/estoque-cadastros.sql` foi aplicada ao PostgreSQL configurado; em outro ambiente, aplicar após `fornecedores.sql` e `operacoes.sql`, antes de executar a API atualizada. Cadastros antigos foram preservados.
+**Melhorias de Estoque em 13/10/2026:** cadastro/edição sugere categorias, oferece kg/g para Cola e permite selecionar vários fornecedores opcionalmente na mesma operação do item. Fornecedores têm nome obrigatório e CNPJ, razão social, nome fantasia, CEP, número, e-mail e telefone opcionais, com consulta de CEP reutilizada. Materiais com saldo ou movimentações têm unidade bloqueada para proteger custo e histórico, mesmo com saldo novamente zero. Nenhuma conversão de unidades foi adicionada. A definição está em `backend/src/database/schema.sql`; a alteração foi aplicada ao PostgreSQL configurado em 13/10/2026, preservando cadastros antigos.
 
 Verificações desta melhoria: lint/build do front-end, tipos do back-end e 78 verificações HTTP/PostgreSQL, além de cálculos de CNPJ/formatadores/unidades; conta e dados fictícios usados em transação com rollback. Cenários incluem cadastro e edição atômicos com fornecedores, preservação de opcionais/vínculos omitidos, validação dos novos campos e bloqueio de unidade na API e direto no banco. O teste versionado permanece em `backend/scripts/verificarEstoque.cjs`.
 
-**Estoque funcional:** `/estoque` está ligado ao menu principal para Administrador e Funcionário. Oferece Produtos para venda e Materiais, cadastros, edição, exclusão conforme vínculos/saldo, entradas/saídas e fornecedores associados opcionalmente a vários itens. Lucro previsto por produto é venda menos compra, com percentual sobre o custo. A migração `backend/src/database/fornecedores.sql` foi aplicada ao banco configurado em 02/10/2026; em outro ambiente, aplicar após `entidades.sql`. Os trechos históricos que ainda indicam Estoque em construção foram superados por esta entrega.
+**Estoque funcional:** `/estoque` está ligado ao menu principal para Administrador e Funcionário. Oferece Produtos para venda e Materiais, cadastros, edição, exclusão conforme vínculos/saldo, entradas/saídas e fornecedores associados opcionalmente a vários itens. Lucro previsto por produto é venda menos compra, com percentual sobre o custo. A estrutura completa está em `backend/src/database/schema.sql`; no banco configurado, a relação com fornecedores foi aplicada em 02/10/2026. Os trechos históricos que ainda indicam Estoque em construção foram superados por esta entrega.
 
 Verificação integrada disponível em `backend/`: `node --import tsx scripts/verificarEstoque.cjs`. Usa PostgreSQL real com conta/dados fictícios em transação e rollback, cobrindo sessão/CSRF, cadastros, fornecedores múltiplos, movimentação e exclusões. Não usa contas existentes. Não executar junto a alterações de esquema. O modo `--navegador` mantém essa mesma aplicação na porta 3334 até encerrar o processo; para conferência visual, executar o front-end com `VITE_API_URL=http://localhost:3334/api/v1` e porta 5174. Essa configuração é exclusiva do teste e não altera os arquivos de ambiente normais.
 
@@ -79,7 +79,7 @@ No cadastro de OS, **Cadastrar cliente** abre o formulário de Clientes. Quando 
 O cliente também pode ser escolhido por busca de nome ou telefone com sugestões no próprio formulário de OS. O serviço solicitado oferece os valores já registrados em outras OS e **Outros** para texto livre; isso não cria um catálogo. O perfil do cliente mostra o nome e a situação ativa/inativa do funcionário responsável por cada OS. No detalhe da OS, **Imprimir** baixa um PDF A4 com as informações da ordem.
 
 O campo **Valor da OS** no cadastro e na edição formata a digitação em reais e centavos (`123456` → `R$ 1.234,56`). A interface envia `1234.56` à API, preservando o valor manual e a validação do servidor.
-Estoque possui a tela funcional descrita acima. Financeiro está habilitado somente para Administrador, com dados fictícios temporários autorizados. Configurações permanece desabilitada, com permissão pendente.
+Estoque possui a tela funcional descrita acima. Financeiro está habilitado somente para Administrador, com dados fictícios temporários autorizados. Configurações está disponível aos dois perfis para preferências pessoais; dados comerciais são exclusivos do Administrador. Catálogos e parâmetros financeiros continuam pendentes.
 
 Sem sessão válida, o acesso interno volta ao login. Falhas de conexão oferecem nova tentativa. “Sair” obtém CSRF e encerra a sessão na API; em caso de falha, mostra o erro sem afirmar que a sessão terminou. O menu se expande no celular e fecha ao navegar. A API continua responsável por validar todas as operações protegidas.
 
@@ -108,7 +108,7 @@ A lupa na lista abre `/funcionarios/:id`, com identificação, dados pessoais, i
 
 **Desativar funcionário** fica no perfil, com confirmação da senha própria; bloqueia desativar a própria conta e mantém as proteções/históricos existentes. A conta desativada permanece consultável pelo Administrador, mas perde o acesso. Sem reativação na interface.
 
-**Banco:** antes de usar o código atualizado, conferir/aplicar uma vez `backend/src/database/funcionarios-perfil.sql`, após `funcionarios.sql`. Preparado e testado em banco local descartável; **não aplicado ao banco existente**. Os registros antigos mantêm CPF/telefone desconhecidos e continuam desativáveis. Edição pessoal exige preencher os campos. O comando `npm run criar:admin` também passou a solicitá-los. Não há upload de foto; o avatar usa iniciais.
+**Banco:** `backend/src/database/schema.sql` inclui a estrutura de CPF e telefone para instalações novas. Essa parte ainda não foi aplicada ao banco existente; não execute o esquema completo nele. Os registros antigos mantêm CPF/telefone desconhecidos e continuam desativáveis. Edição pessoal exige preencher os campos. O comando `npm run criar:admin` também passou a solicitá-los. Não há upload de foto; o avatar usa iniciais.
 
 Verificado: lint/build/typecheck; 52 verificações HTTP de perfil/edição, 33 de desativação e 29 de Clientes em PostgreSQL local descartável, incluindo permissões, senha, CSRF, migração/legado, histórico, sessões e concorrência. Navegador com API simulada: cadastro, perfil, edição com senha, cancelamento, resultado incerto, ambos os perfis e responsividade. Esses testes foram executados durante o desenvolvimento; os scripts de `backend/tests` foram posteriormente removidos a pedido da equipe. Nenhuma conta real foi modificada.
 
@@ -210,7 +210,7 @@ Senhas recebem hash scrypt com salt individual e nunca são devolvidas. A sessã
 - `src/routes/authRoutes.ts` e `funcionarioRoutes.ts`: endereços da API.
 - `src/middlewares/`: verificação de login, perfil e token CSRF.
 - `src/config/sessao.ts`: cookie e sessões persistidas; `src/utils/senha.ts`: hash de senha.
-- `src/database/funcionarios.sql`: tabela de Funcionários e tabelas técnicas `sessoes` e `tentativas_login`, já aplicadas no Supabase. `versao_acesso` é um campo técnico para invalidar sessões antigas.
+- `src/database/schema.sql`: esquema completo ordenado para instalação em banco novo. As tabelas de Funcionários e de sessão foram aplicadas ao Supabase em etapas anteriores; não execute o arquivo completo nesse banco.
 
 `npm run typecheck` verifica os tipos usando `backend/tsconfig.json`, que também orienta o editor e inclui as declarações de sessão. A opção `noEmit` impede a geração de JavaScript ou da pasta `dist`. Foram executadas verificações HTTP com o PostgreSQL real, em uma transação desfeita ao final: cadastro, usuário duplicado, senha, login/logout, expiração, CSRF, permissões, inativação/reativação e limites de tentativas. Registros existentes de Clientes foram preservados; nenhum funcionário de teste permaneceu.
 
@@ -226,7 +226,7 @@ A listagem mantém nome, telefone e e-mail. Clique na lupa em Ações para abrir
 
 As páginas reutilizam `AppLayout`, `Sidebar`, `Button`, `InputField`, `TextareaField` e o serviço HTTP/CSRF. `EnderecoPorCep` compartilha consulta e apresentação entre cadastro e perfil; `FormularioCliente` compartilha campos/validações entre cadastro e edição. `CartaoInformacoes` organiza o novo perfil inspirado na referência visual, usando o tema existente. O perfil permite excluir com confirmação, cookie/CSRF e retorno à lista. Clientes com OS vinculadas são preservados (RN-020); resultado incerto orienta consultar a lista antes de repetir. O botão Editar abre `/clientes/:id/editar`, com campos preenchidos e formulário compartilhado com o cadastro. Permite editar nome, CPF, telefone, CEP, número, e-mail e observações, enviando PUT com CSRF e retornando ao perfil. Cancelar não grava alterações. Cadastro mantém proteção contra envio duplicado e resultado incerto.
 
-**Antes de executar o novo código com um banco existente:** conferir os registros e aplicar uma vez `backend/src/database/clientes-perfil.sql`, após os scripts anteriores. A migração está preparada, **não foi aplicada ao banco existente**. Não preenche CPF nem data fictícios. Registros antigos podem continuar sem os novos campos; uma edição exige completar os obrigatórios. Para instalação nova, executar também esse script após `clientes.sql`.
+**Banco:** `backend/src/database/schema.sql` inclui os campos novos para uma instalação limpa. Essa evolução ainda não foi aplicada ao banco existente; não execute o esquema completo nesse banco. Não preenche CPF nem data fictícios. Registros antigos podem continuar sem os novos campos; uma edição exige completar os obrigatórios.
 
 Verificado: lint/build/typecheck, 29 verificações HTTP com PostgreSQL local descartável e navegador com API/ViaCEP simulados, incluindo máscaras, validações, perfis, OS, legado, erros e responsividade. A integração com ViaCEP real e o banco remoto não foram exercitados nesta entrega.
 
@@ -266,7 +266,7 @@ O certificado foi obtido do [endereço usado pelo painel oficial](https://supaba
 
 ## Consultas de Materiais, Produtos, OS, Vendas e Movimentações
 
-As sete tabelas restantes foram aplicadas no Supabase pelo script `backend/src/database/entidades.sql`. Clientes, Funcionários e dados existentes foram preservados. Novos Models executam as consultas; Controllers validam o ID e respondem; Routes definem os endereços. Nenhuma dependência foi acrescentada nesta etapa.
+As sete tabelas restantes foram aplicadas no Supabase em etapa anterior; sua definição atual está em `backend/src/database/schema.sql`. Clientes, Funcionários e dados existentes foram preservados. Novos Models executam as consultas; Controllers validam o ID e respondem; Routes definem os endereços. Nenhuma dependência foi acrescentada nesta etapa.
 
 No Insomnia, faça login conforme explicado acima e mantenha o cookie. Todos os endereços abaixo são **GET** e começam com `http://localhost:3333/api/v1`:
 
@@ -288,7 +288,7 @@ As listagens não têm filtros/paginação nesta etapa. Retornam `{"dados": [...
 
 O saldo inicia em zero e muda somente por operações de estoque. Vendas e consumo usam transações: qualquer falta de saldo desfaz a operação inteira. Datas são automáticas. Preço da venda vem do produto e fica no histórico; total é calculado no back-end. Valor da OS continua manual.
 
-A alteração incremental `backend/src/database/operacoes.sql` já foi aplicada e conferida no Supabase. Para outro banco, aplicar uma vez, após `clientes.sql`, `funcionarios.sql` e `entidades.sql`. Ela acrescenta restrições e vínculos de cancelamento/reversão; não insere dados. Não execute novamente os scripts em um banco já atualizado.
+As restrições e vínculos de operações já foram aplicados e conferidos no Supabase; a definição atual está em `backend/src/database/schema.sql`. O arquivo completo destina-se a um banco novo e não deve ser executado em banco já atualizado.
 
 Verificação desta entrega: `npm run typecheck` e 190 verificações HTTP/PostgreSQL, incluindo concorrência real, CSRF, precisão decimal, rollback e histórico, em schema temporário removido ao final. Os registros existentes foram preservados. Não foi criada pasta de testes nem arquivos compilados.
 

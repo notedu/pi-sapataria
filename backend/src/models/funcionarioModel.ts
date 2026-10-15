@@ -2,6 +2,7 @@ import type { PoolClient } from 'pg';
 import { pool } from '../config/db';
 import { emTransacao } from '../config/transacao';
 import { ErroHttp } from '../utils/validacao';
+import { protegerSenha, verificarSenha } from '../utils/senha';
 
 export type Perfil = 'administrador' | 'funcionario';
 export interface Funcionario {
@@ -95,6 +96,28 @@ export async function editarDados(id: number, dados: DadosPessoais, autorizacao:
       `UPDATE sapataria.funcionarios SET nome=$1, email=$2, cpf=$3, telefone=$4 WHERE id=$5 RETURNING ${colunas}`,
       [dados.nome, dados.email, dados.cpf, dados.telefone, id],
     )).rows[0]!;
+  });
+}
+
+export async function trocarSenha(
+  id: number, versao: number, expiraEm: number, senhaAtual: string, senhaNova: string,
+): Promise<void> {
+  await emTransacao(async client => {
+    const funcionario = (await client.query<Credencial>(
+      `SELECT ${colunas}, senha_protegida, versao_acesso FROM sapataria.funcionarios WHERE id = $1 FOR UPDATE`, [id],
+    )).rows[0];
+    if (!funcionario?.ativo || funcionario.versao_acesso !== versao || expiraEm <= Date.now()) {
+      throw new ErroHttp(401, 'NAO_AUTENTICADO', 'Faça login novamente para alterar a senha.');
+    }
+    if (!await verificarSenha(senhaAtual, funcionario.senha_protegida)) {
+      throw new ErroHttp(403, 'SENHA_ATUAL_INVALIDA', 'A senha atual está incorreta.');
+    }
+    const senhaProtegida = await protegerSenha(senhaNova);
+    // A versão invalida todas as sessões existentes, inclusive a sessão atual.
+    await client.query(
+      'UPDATE sapataria.funcionarios SET senha_protegida = $1, versao_acesso = versao_acesso + 1 WHERE id = $2',
+      [senhaProtegida, id],
+    );
   });
 }
 
