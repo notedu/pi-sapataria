@@ -1,10 +1,20 @@
 # Contrato inicial da API — visão do sistema
 
-## Fornecedores — implementado em 02/10/2026
+## Fornecedores — implementado em 02/10/2026, ampliado em 13/10/2026
 
-Prefixo `/api/v1`, sessão de Administrador ou Funcionário; alterações exigem CSRF. `GET /fornecedores` retorna `200`, `{"dados":[{"id":1,"nome":"Fornecedor fictício"}]}`. `POST /fornecedores` e `PUT /fornecedores/:id` recebem somente `{"nome":"Fornecedor fictício"}`, texto não vazio, e retornam respectivamente `201`/`200`, com o cadastro em `dados`. `DELETE /fornecedores/:id` retorna `204`, `404` se ausente e `409` se associado a um item.
+**Complemento aprovado por João Franco nesta implementação:** fornecedores também aceitam `prazo_pagamento`, `meios_pagamento`, `desconto` e `moeda` como campos separados, textuais e opcionais. São condições informativas, sem prazo em dias obrigatório, enum de meios/moedas ou fórmula de desconto. Omitir preserva os dados na edição; null/vazio limpa; valores não textuais retornam `400` DADOS_INVALIDOS. GET e respostas de POST/PUT incluem esses quatro campos string/null. Não alteram automaticamente custos, preços, saldos ou as formas de pagamento aprovadas para Vendas/OS.
 
-`GET /fornecedores/vinculos/:tipo` aceita `produtos` ou `materiais` e retorna `200`, `{"dados":[{"item_id":1,"fornecedor_id":1}]}`. `PUT /fornecedores/vinculos/:tipo/:id` recebe `{"fornecedores_ids":[1,2]}`, substitui a seleção em uma transação e retorna `204`. Lista vazia remove associações; duplicados ou fornecedores inexistentes retornam `400`; item inexistente retorna `404`. Nenhum preço/saldo é alterado. Cadastro/edição dos itens mantém os contratos anteriores; associar fornecedores é uma ação separada na interface.
+**Estoque em 15/10/2026:** Produtos aceitam `quantidade_minima` inteiro não negativo em POST/PUT; registros legados podem retornar null até edição. `GET /compras-estoque` lista compras com fornecedor, data e linhas. POST exige `{fornecedor_id, itens:[{material_id, produto_id, quantidade, preco_unitario}]}`; cada linha seleciona exatamente um item. Compra, linhas, movimentações e saldo são confirmados em uma transação. A compra preserva o preço unitário e não altera os preços do cadastro. `POST /estoque/importacoes` aceita `{itens:[...]}` (até 500), usando o modelo em `frontend/public/modelos/estoque-importacao.csv`; valida nomes/categorias duplicados e dados, grava lote inteiro atomicamente e cria entrada para saldo inicial maior que zero. Ambos os perfis autenticados podem consultar e operar; POST exige CSRF.
+
+**Histórico por item:** `GET /movimentacoes-estoque?material_id=1` ou `?produto_id=1` retorna `200`, com as movimentações daquele item em `dados`, da mais recente para a mais antiga. Aceita no máximo um desses filtros; id inválido, filtros simultâneos ou desconhecidos retornam `400`. Sem filtro preserva a consulta geral em ordem de id. Item sem movimentações retorna []; saldo zero não remove cadastro nem movimentos. A consulta é somente leitura, com as permissões já existentes. A interface mostra data em Brasília, tipo, quantidade, origem (incluindo compra), e motivo.
+
+Prefixo `/api/v1`, sessão de Administrador ou Funcionário; alterações exigem CSRF. `GET /fornecedores` retorna `200`, com lista em `dados`: id, nome e os campos opcionais `cnpj`, `razao_social`, `nome_fantasia`, `cep`, `numero`, `email`, `telefone`, `prazo_pagamento`, `meios_pagamento`, `desconto` e `moeda` (string ou null). `POST /fornecedores` e `PUT /fornecedores/:id` aceitam nome obrigatório não vazio e esses opcionais. Retornam `201`/`200`, com cadastro em `dados`. Corpo antigo apenas com nome continua aceito; opcionais omitidos na edição são preservados; null/vazio limpa explicitamente o campo. `DELETE /fornecedores/:id` retorna `204`, `404` se ausente e `409` se associado a um item.
+
+CNPJ aceita numérico ou alfanumérico com 12 caracteres A–Z/0–9 e dois dígitos, valida os verificadores e normaliza maiúsculas/sem máscara, sem consulta de situação cadastral ou unicidade presumida. CEP tem 8 números e telefone com DDD tem 10 ou 11; máscaras usuais são removidas pela API. E-mail informado deve ter formato válido. Falhas retornam `400` com CNPJ_INVALIDO, CEP_INVALIDO, TELEFONE_INVALIDO ou EMAIL_INVALIDO; tipos/estrutura incorretos usam DADOS_INVALIDOS. Exemplo fictício: `{"nome":"Fornecedor exemplo","cnpj":"12.ABC.345/01DE-35","razao_social":"Fornecedor Exemplo Ltda.","nome_fantasia":null,"cep":"01001000","numero":"123A","email":"teste@example.invalid","telefone":"1112345678"}`. Fórmula do CNPJ conforme [manual da Receita Federal](https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/documentos-tecnicos/cnpj/manual-dv-cnpj.pdf).
+
+`GET /fornecedores/vinculos/:tipo` aceita `produtos` ou `materiais` e retorna `200`, `{"dados":[{"item_id":1,"fornecedor_id":1}]}`. `PUT /fornecedores/vinculos/:tipo/:id` recebe `{"fornecedores_ids":[1,2]}`, substitui a seleção em uma transação e retorna `204`. Lista vazia remove associações; duplicados ou fornecedores inexistentes retornam `400`; item inexistente retorna `404`. Nenhum preço/saldo é alterado.
+
+**Cadastro/edição dos itens, 13/10/2026:** POST/PUT de `/produtos` e `/materiais` aceitam também `fornecedores_ids` opcional. Criação/edição e vínculos confirmam juntos; qualquer erro desfaz tudo. Omitir mantém os vínculos existentes na edição, [] remove, null é inválido. Fornecedores inexistentes ou repetidos retornam `400` FORNECEDOR_INVALIDO. Não recebe saldo inicial. GET e respostas de Material incluem `unidade_bloqueada` booleano, derivado do saldo/histórico. PUT que troca unidade com saldo ou movimentações retorna `409` MATERIAL_UNIDADE_BLOQUEADA; manter a unidade permite editar outros campos. Categorias e unidades continuam textos livres, sem conversão automática; sugestões são de interface.
 
 [Índice](README.md) · [Modelo de dados](modelo-de-dados.md) · [Telas e fluxos](telas-e-fluxos.md)
 
@@ -14,12 +24,13 @@ Prefixo `/api/v1`, sessão de Administrador ou Funcionário; alterações exigem
 
 ## Operações e situação atual
 
-O contrato combina como front-end e back-end trocam pedidos e respostas. **Clientes, autenticação, Funcionários, Materiais, Produtos, OS, Vendas e Movimentações estão disponíveis nas operações indicadas abaixo**. O prefixo `/api/v1` foi adotado nas rotas implementadas; detalhes das rotas restantes continuam propostos (Guia §§9.2–9.4; RNF-009/RNF-010). Os caminhos da tabela recebem esse prefixo. Os objetivos das funcionalidades são definidos no guia; isso não aprova automaticamente seus detalhes.
+O contrato combina como front-end e back-end trocam pedidos e respostas. **Clientes, autenticação, Funcionários, Configurações comerciais, Materiais, Produtos, OS, Vendas e Movimentações estão disponíveis nas operações indicadas abaixo**. O prefixo `/api/v1` foi adotado nas rotas implementadas; detalhes das rotas restantes continuam propostos (Guia §§9.2–9.4; RNF-009/RNF-010). Os caminhos da tabela recebem esse prefixo. Os objetivos das funcionalidades são definidos no guia; isso não aprova automaticamente seus detalhes.
 
 | ID | Funcionalidade | Método e caminho após `/api/v1` | Finalidade | Permissão | Situação |
 |---|---|---|---|---|---|
 | A01 | Autenticação | `POST /auth/login` | Entrar | Público, com CSRF e limite de tentativas | Implementado |
 | A02 | Autenticação | `POST /auth/logout` | Sair | Sessão atual, com CSRF | Implementado |
+| A25 | Perfil | `PUT /auth/senha` | Alterar a própria senha e encerrar as sessões | Administrador ou Funcionário autenticado, com CSRF | Implementado |
 | A03 | Clientes | `GET /clientes` | Listar/buscar clientes | Administrador e funcionario autenticados | Implementado e verificado localmente |
 | A04 | Clientes | `POST /clientes` | Cadastrar cliente | Administrador e funcionario autenticados | Implementado e verificado localmente |
 | A05 | Clientes | `GET /clientes/{id}` | Consultar perfil do cliente | Administrador e funcionario autenticados | Implementado e verificado localmente |
@@ -41,13 +52,14 @@ O contrato combina como front-end e back-end trocam pedidos e respostas. **Clien
 | A16 | Produtos | `GET /produtos` | Consultar produtos e saldo | Ambos os perfis autenticados | Implementado — consulta |
 | A17 | Produtos | `POST /produtos` | Registrar cadastro de produto | Ambos os perfis autenticados, com CSRF | Implementado |
 | A18 | Estoques | `POST /movimentacoes-estoque` | Registrar entrada/reposição | Ambos os perfis autenticados, com CSRF | Implementado |
+| A32 | Estoques | `GET/POST /compras-estoque` | Consultar e registrar compras ligadas a entradas | Ambos os perfis autenticados; POST com CSRF | Implementado |
+| A33 | Estoques | `POST /estoque/importacoes` | Importar lote de estoque de CSV validado | Ambos os perfis autenticados, com CSRF | Implementado |
 | A19 | Vendas | `GET /vendas` | Consultar histórico de vendas independentes | Ambos os perfis autenticados | Implementado — consulta |
 | A20 | Vendas | `POST /vendas` | Registrar venda independente | Ambos os perfis autenticados, com CSRF | Implementado |
 | A23 | Perfil | `GET /perfil` | Consultar os próprios dados | Próprio usuário — RN-006; rota específica pendente | Proposto |
 | A24 | Perfil | `PUT /perfil` | Alterar os próprios dados | Próprio usuário; campos editáveis pendentes | Proposto |
-| A25 | Perfil | `PUT /perfil/senha` | Alterar a própria senha | Próprio usuário; política pendente | Proposto |
-| A27 | Configurações | `GET /configuracoes` | Consultar dados e parâmetros | Pendente — RN-003 | Proposto |
-| A28 | Configurações | `PUT /configuracoes` | Alterar dados e parâmetros | Pendente — RN-003 | Proposto |
+| A27 | Configurações da loja | `GET /configuracoes/loja` | Consultar o endereço comercial | Ambos os perfis autenticados — RN-003 | Implementado |
+| A28 | Configurações da loja | `PUT /configuracoes/loja` | Alterar o endereço comercial | Administrador, com CSRF — RN-003 | Implementado |
 | A29 | Configurações | `POST /configuracoes/{cadastro}` | Cadastrar item auxiliar | Pendente — RN-003 | Proposto |
 | A26 | Dashboard | `GET /dashboard` | Consultar resumo operacional | Pendente; acesso amplo é sugestão | Proposto |
 | A30 | Financeiro | `GET /financeiro` | Consultar painel financeiro | Administrador — RN-003 | Proposto; não implementado |
@@ -138,7 +150,7 @@ Retorna `200`, `{"dados": funcionario}` sem senha/hash/versão técnica. Sem ses
 - **Entrada:** `nome`, `telefone`, `cpf`, `cep` e `numero` obrigatórios; `email` e `observacoes` opcionais. Não aceita `id`, `criado_em`, `endereco` ou campos desconhecidos.
 - **Validação:** textos não vazios; telefone e CPF com 11 dígitos, CEP com 8, sem pontuação. CPF exige dígitos verificadores válidos e rejeita sequência repetida. Número é texto (ex.: `123A`, `S/N`). E-mail exige formato básico. Sem unicidade nova.
 - **Sucesso:** `201`, `{"dados": cliente}` com data e id gerados pelo banco. Campos retornados: id, nome, telefone, cpf, cep, numero, endereco legado, email, observacoes e criado_em. CPF/CEP/número/data podem ser nulos em registros anteriores à migração.
-- **Dependência:** aplicar `clientes-perfil.sql` antes de usar o novo contrato. Script preparado, não aplicado ao banco existente. RF-003/RF-017.
+- **Dependência:** `schema.sql` contém essa estrutura para banco novo. A evolução ainda não foi aplicada ao banco existente; não execute o esquema completo nesse banco. RF-003/RF-017.
 
 <a id="a05"></a>
 ### A05 — GET /clientes/{id}
@@ -186,9 +198,9 @@ Retorna `200`, `{"dados": funcionario}`. Não muda id, vínculos, credenciais ne
 
 ### GET /funcionarios/{id}/ordens-servico
 
-Mesma permissão de A21, conferida antes de consultar. Retorna `200`, `{"dados":[OS]}`, filtradas por `responsavel_id`, ordenadas por id. Sem vínculo retorna lista vazia; outro perfil sem permissão retorna `403`; funcionário inexistente para consulta autorizada retorna `404`. Não altera OS.
+Mesma permissão de A21, conferida antes de consultar. Retorna `200`, `{"dados":[OS]}`, filtradas por `responsavel_id`, ordenadas por id e incluindo `cliente_nome` para identificar o cliente no histórico do perfil. Sem vínculo retorna lista vazia; outro perfil sem permissão retorna `403`; funcionário inexistente para consulta autorizada retorna `404`. Não altera OS nem o modelo do banco.
 
-**Migração necessária:** aplicar `funcionarios-perfil.sql` uma única vez após `funcionarios.sql`, antes de iniciar o código atualizado. Preparada e testada apenas localmente, não aplicada ao banco existente.
+**Banco:** `schema.sql` contém essa estrutura para banco novo. A evolução ainda não foi aplicada ao banco existente; não execute o esquema completo nesse banco.
 
 <a id="a22"></a>
 ### A22 — PUT /funcionarios/{id}/acesso
@@ -253,12 +265,12 @@ Implementado. Campos obrigatórios: `nome`, `categoria`, `unidade`, `quantidade_
 <a id="a16"></a>
 ### A16 — GET /produtos
 
-Implementado: `200`, `{"dados": [...]}`, produtos para venda ordenados por id. Sem filtros/paginação. Consulta individual em `GET /produtos/:id`. RF-008/RF-022.
+Implementado: `200`, `{"dados": [...]}`, produtos para venda ordenados por id, incluindo mínimo configurado ou null para registros legados. Sem filtros/paginação. Consulta individual em `GET /produtos/:id`. RF-008/RF-022.
 
 <a id="a17"></a>
 ### A17 — POST /produtos
 
-Implementado. Campos obrigatórios: `nome`, `categoria`, `preco_custo`, `preco_venda`. Textos não vazios; preços não negativos com até duas casas. Retorna `201`, `{"dados": produto}`, saldo zero. Não aceita saldo no corpo.
+Implementado. Campos obrigatórios: `nome`, `categoria`, `quantidade_minima`, `preco_custo`, `preco_venda`. Mínimo inteiro não negativo; textos não vazios; preços não negativos com até duas casas. Retorna `201`, `{"dados": produto}`, saldo zero. Não aceita saldo no corpo.
 
 <a id="a18"></a>
 ### A18 — POST /movimentacoes-estoque
@@ -290,8 +302,17 @@ Todas as rotas desta seção exigem sessão e CSRF; ambos os perfis podem execut
 | DELETE /produtos/:id | Mesma regra de Materiais. |
 | PUT /ordens-servico/:id | Mesmo corpo de A10; apenas Aberta ou Em andamento. `200` ou `409` por estado. |
 | POST /ordens-servico/:id/materiais/:usoId/devolucoes | `{"quantidade":"0.05","motivo":"Sobra não utilizada"}`. Devolve parte não utilizada, até o uso menos devoluções anteriores. Funciona também após encerramento; nunca representa cola já consumida. `201`, `{"dados": movimentacao}`. |
+
 | POST /movimentacoes-estoque/:id/estorno | `{"motivo":"Correção de lançamento"}`. Inverte integralmente um movimento manual uma única vez, sem editar o original. Requer saldo se a reversão gerar saída. `201`, `{"dados": movimentacao}`. |
 | POST /vendas/:id/cancelamento | `{"itens_devolvidos":[{"item_venda_id":1,"quantidade":1}]}`. Lista explícita, podendo ser vazia. Cancela uma única vez (`200`); devolve somente as quantidades indicadas, limitadas às vendidas. Preserva itens, preços e total originais; preenche `cancelada_em`. |
+
+### Compras e importações de estoque
+
+`GET /compras-estoque` retorna as compras mais recentes, com fornecedor, data automática e linhas contendo item, quantidade e preço unitário histórico.
+
+`POST /compras-estoque` recebe `fornecedor_id` e uma lista `itens`; cada linha informa exatamente um de `material_id` ou `produto_id`, mais `quantidade` e `preco_unitario`. Exige fornecedor existente, ao menos uma linha e no máximo 100. Materiais aceitam frações; Produtos exigem quantidade inteira. Cada linha cria entrada vinculada, e compra, saldo e movimentações são transacionados juntos. Preços atuais do cadastro não mudam. Respostas `201`; item inexistente `404`; dados inválidos `400`.
+
+`POST /estoque/importacoes` recebe até 500 itens interpretados do modelo CSV em `frontend/public/modelos/estoque-importacao.csv`. Materiais usam `tipo`, `nome`, `categoria`, `unidade`, `quantidade`, `quantidade_minima`, `custo`; Produtos usam `tipo`, `nome`, `categoria`, `quantidade`, `quantidade_minima`, `preco_custo`, `preco_venda`. Quantidade é o saldo inicial; se positiva, gera movimento de entrada. Duplicados geram `409`; erro de linha ou limite gera `400`; nenhuma linha grava quando qualquer operação falha. `201` retorna os itens criados.
 
 Estorno genérico não se aplica a movimentos de venda, uso ou reversões: use a operação do módulo de origem. Devoluções não podem ultrapassar a quantidade de origem, mesmo em requisições simultâneas. Movimentações, usos, itens, OS e vendas não têm DELETE genérico; movimentações também não têm PUT. Para corrigir um lançamento manual, faça o estorno e registre o movimento correto.
 
@@ -314,25 +335,29 @@ Exemplo de sequência no Insomnia: login → cadastrar produto → registrar ent
 - **Erros, efeitos e origem:** E. Sem alteração de credencial por este comando. Guia §5.9; RN-006; PD-N01/PD-N03.
 
 <a id="a25"></a>
-### A25 — PUT /perfil/senha
+### A25 — PUT /auth/senha
 
-- **Entrada:** Credenciais transitórias conforme política a definir; nomes das chaves, confirmação de identidade e obrigatoriedade em PD-N02/PD-R04.
-- **Sucesso:** 204, sem corpo.
-- **Erros, efeitos e origem:** E. Não recebe nem devolve senha_protegida; efeitos sobre acessos iniciados pendentes. Guia §5.9; RF-023.
+- **Caminho implementado:** `PUT /api/v1/auth/senha`; exige sessão autenticada e token CSRF.
+- **Entrada:** `{ "senha_atual": "...", "senha_nova": "...", "confirmar_senha_nova": "..." }`. A nova senha deve ter 15–128 caracteres e a confirmação deve coincidir. Senhas nunca são devolvidas pela API.
+- **Sucesso:** `204`, sem corpo. Incrementa `versao_acesso`, encerra a sessão atual e invalida todas as demais; é necessário entrar novamente.
+- **Erros e efeitos:** `400` para campos inválidos, senha fora da política ou confirmação divergente; `401` para sessão inválida; `403 SENHA_ATUAL_INVALIDA` para senha atual incorreta; `429` após 10 tentativas por funcionário ou 50 por IP em 15 minutos. Contadores próprios não alteram os limites de login. Guia §5.9; RF-023; RN-004.
 
 <a id="a27"></a>
-### A27 — GET /configuracoes
+### A27 — GET /configuracoes/loja
 
+- **Caminho implementado:** `GET /api/v1/configuracoes/loja`; Administrador ou Funcionário autenticado.
 - **Entrada:** Sem corpo.
-- **Sucesso:** 200; dados da empresa, auxiliares e parâmetros aprovados; formato interno pendente.
-- **Erros, efeitos e origem:** E. Guia §5.10; RF-024; PD-N01/PD-N03/PD-N06. Não implica tabela Configuração.
+- **Sucesso:** `200`, `{"dados":{"endereco":"..."}}`.
+- **Erros, efeitos e origem:** `401` sem sessão. A consulta retorna somente o endereço comercial aprovado, sem expor outros parâmetros pendentes. RF-024; RN-003.
 
 <a id="a28"></a>
-### A28 — PUT /configuracoes
+### A28 — PUT /configuracoes/loja
 
-- **Entrada:** Somente dados e parâmetros aprovados; esquema, campos obrigatórios e semântica de substituição pendentes.
-- **Sucesso:** 200; configuração confirmada.
-- **Erros, efeitos e origem:** E + N. §5.10 respalda ajustes, não alíquota ou fórmula específica. Não habilitar gravação de objeto arbitrário; definir esquema antes (PD-N03/PD-N06).
+- **Caminho implementado:** `PUT /api/v1/configuracoes/loja`; Administrador autenticado e CSRF obrigatório.
+- **Entrada:** `{"endereco":"Texto de até 500 caracteres"}`. String vazia limpa o campo; campos extras ou tipos incompatíveis são rejeitados.
+- A interface monta essa string a partir do CEP consultado no ViaCEP e do número informado; a API e o banco continuam armazenando um único campo de endereço.
+- **Sucesso:** `200`, com endereço confirmado em `dados`.
+- **Erros, efeitos e origem:** `400` para corpo inválido, `401` sem sessão, `403` para Funcionário. Altera apenas o endereço, nunca catálogos ou parâmetros financeiros. RF-024; RN-003.
 
 <a id="a29"></a>
 ### A29 — POST /configuracoes/{cadastro}

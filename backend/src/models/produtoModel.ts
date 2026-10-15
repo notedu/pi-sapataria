@@ -1,6 +1,7 @@
 import { emTransacao } from '../config/transacao';
 import { ErroHttp } from '../utils/validacao';
 import { pool } from '../config/db';
+import { associarNaConexao } from './fornecedorModel';
 
 // O pg retorna numeric como texto para preservar a precisão dos valores.
 export interface Produto {
@@ -10,9 +11,10 @@ export interface Produto {
   quantidade: string;
   preco_custo: string;
   preco_venda: string;
+  quantidade_minima: string | null;
 }
 
-const colunas = `id, nome, categoria, quantidade, preco_custo, preco_venda`;
+const colunas = `id, nome, categoria, quantidade, quantidade_minima, preco_custo, preco_venda`;
 
 export async function listar(): Promise<Produto[]> {
   const resultado = await pool.query<Produto>(
@@ -28,22 +30,30 @@ export async function buscar(id: number): Promise<Produto | undefined> {
   return resultado.rows[0];
 }
 
-export type DadosProduto = Pick<Produto, 'nome' | 'categoria' | 'preco_custo' | 'preco_venda'>;
+export type DadosProduto = Pick<Produto, 'nome' | 'categoria' | 'preco_custo' | 'preco_venda' | 'quantidade_minima'> & { fornecedores_ids?: number[] };
 
 export async function criar(dados: DadosProduto): Promise<Produto> {
-  const resultado = await pool.query<Produto>(
-    `INSERT INTO sapataria.produtos (nome, categoria, preco_custo, preco_venda) VALUES ($1, $2, $3, $4) RETURNING ${colunas}`,
-    [dados.nome, dados.categoria, dados.preco_custo, dados.preco_venda],
-  );
-  return resultado.rows[0]!;
+  return emTransacao(async conexao => {
+    const resultado = await conexao.query<Produto>(
+      `INSERT INTO sapataria.produtos (nome, categoria, preco_custo, preco_venda, quantidade_minima) VALUES ($1, $2, $3, $4, $5) RETURNING ${colunas}`,
+      [dados.nome, dados.categoria, dados.preco_custo, dados.preco_venda, dados.quantidade_minima],
+    );
+    const item = resultado.rows[0]!;
+    if (dados.fornecedores_ids !== undefined) await associarNaConexao(conexao, 'produtos', item.id, dados.fornecedores_ids);
+    return item;
+  });
 }
 
 export async function atualizar(id: number, dados: DadosProduto): Promise<Produto | undefined> {
-  const resultado = await pool.query<Produto>(
-    `UPDATE sapataria.produtos SET nome = $1, categoria = $2, preco_custo = $3, preco_venda = $4 WHERE id = $5 RETURNING ${colunas}`,
-    [dados.nome, dados.categoria, dados.preco_custo, dados.preco_venda, id],
-  );
-  return resultado.rows[0];
+  return emTransacao(async conexao => {
+    const resultado = await conexao.query<Produto>(
+      `UPDATE sapataria.produtos SET nome = $1, categoria = $2, preco_custo = $3, preco_venda = $4, quantidade_minima = $5 WHERE id = $6 RETURNING ${colunas}`,
+      [dados.nome, dados.categoria, dados.preco_custo, dados.preco_venda, dados.quantidade_minima, id],
+    );
+    const item = resultado.rows[0];
+    if (item && dados.fornecedores_ids !== undefined) await associarNaConexao(conexao, 'produtos', id, dados.fornecedores_ids);
+    return item;
+  });
 }
 
 export async function excluir(id: number): Promise<void> {

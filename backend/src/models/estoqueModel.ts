@@ -11,6 +11,7 @@ export interface Movimento {
   item_venda_id?: number;
   material_os_id?: number;
   reversao_de_id?: number;
+  item_compra_id?: number;
 }
 
 // Único caminho usado por entradas, vendas, consumo e devoluções para alterar saldos.
@@ -29,10 +30,10 @@ export async function movimentar(conexao: PoolClient, dados: Movimento) {
   if (!saldo.rowCount) throw new ErroHttp(409, 'ESTOQUE_INSUFICIENTE', 'Saldo insuficiente para concluir a operação.');
   const movimento = await conexao.query(
     `INSERT INTO sapataria.movimentacoes_estoque
-     (tipo, material_id, produto_id, quantidade, motivo, item_venda_id, material_os_id, reversao_de_id)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+     (tipo, material_id, produto_id, quantidade, motivo, item_venda_id, material_os_id, reversao_de_id, item_compra_id)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
     [dados.tipo, dados.material_id, dados.produto_id, dados.quantidade, dados.motivo,
-      dados.item_venda_id ?? null, dados.material_os_id ?? null, dados.reversao_de_id ?? null],
+      dados.item_venda_id ?? null, dados.material_os_id ?? null, dados.reversao_de_id ?? null, dados.item_compra_id ?? null],
   );
   return movimento.rows[0];
 }

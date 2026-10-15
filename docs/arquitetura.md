@@ -4,6 +4,10 @@
 
 ## Implementação atual — autenticação, cadastros e consultas
 
+**Complemento de Estoque:** `HistoricoEstoque` consulta a API existente com filtro opcional por material/produto, sem duplicar históricos ou executar alterações. `FormularioFornecedor` contém condições comerciais opcionais em quatro campos textuais separados, persistidos junto aos demais dados do fornecedor. Sessão/CSRF e regras operacionais compartilhadas preservadas.
+
+**Estoque, 13/10/2026:** `FormularioFornecedor` e `SelecaoFornecedores` reutilizam componentes/tema atuais; consulta de CEP usa `EnderecoPorCep`. `config/estoque.ts` concentra sugestões locais de categorias/unidades, sem catálogo fechado. Models de itens reutilizam `associarNaConexao` do fornecedor na transação de criação/edição, preservando vínculo e cadastro juntos. API deriva `unidade_bloqueada`, e validação com bloqueio de linha + trigger protege unidade de materiais. Novos campos de fornecedor são opcionais e contratos antigos continuam aceitos. Sem novas dependências.
+
 **Estoque, 02/10/2026:** a rota principal `/estoque` usa `pages/Estoque.tsx`, o formulário reutilizável `FormularioItemEstoque`, `services/estoque.ts` e `utils/estoque.ts`, com componentes e tema existentes. Fornecedores seguem Routes → Controllers → Models; associações são substituídas em transação, sem alterar os contratos de cadastro de itens. As operações novas recebem sessão e CSRF no servidor. Sem novas dependências.
 
 A base Express usa `server.ts`, `src/routes`, `src/controllers`, `src/models` e `src/config`. `src/middlewares` verifica sessão, perfil e CSRF; `src/utils` reúne validação e hash de senha. O histórico de planejamento abaixo não representa a ausência desses módulos já implementados.
@@ -16,9 +20,9 @@ Materiais, Produtos, OS, Vendas e Movimentações possuem Models, Controllers e 
 
 Configuração de produção: HTTPS, APP_ORIGIN exata, NODE_ENV=production, HOST e proxies confiáveis conforme a infraestrutura. Recuperação/troca de senha e telas ainda não implementadas. Contratos e exemplos atuais estão em `api.md` e no README raiz.
 
-Clientes agora possui formulário e perfil em React, reutilizando os campos, botões e layout. `EnderecoPorCep` compartilha a consulta pública ViaCEP (somente CEP, sem cookies) entre as duas telas; detalhes do endereço não são persistidos. A API valida os dados independentemente das máscaras e usa o modelo de OS para consultar o histórico por cliente. Migração `clientes-perfil.sql` preparada; ainda não aplicada ao banco existente. Decisão do Integrante 1 em 29/09/2026 substitui a antiga pendência de provedor de CEP nas seções históricas abaixo.
+Clientes agora possui formulário e perfil em React, reutilizando os campos, botões e layout. `EnderecoPorCep` compartilha a consulta pública ViaCEP (somente CEP, sem cookies) entre as duas telas; detalhes do endereço não são persistidos. A API valida os dados independentemente das máscaras e usa o modelo de OS para consultar o histórico por cliente. A estrutura consolidada está em `backend/src/database/schema.sql` para banco novo; ainda não aplicada ao banco existente. Decisão do Integrante 1 em 29/09/2026 substitui a antiga pendência de provedor de CEP nas seções históricas abaixo.
 
-Funcionários: `funcionarios-perfil.sql` prepara CPF/telefone. `funcionarioRoutes` aplica permissão administrativa a cada operação de gestão; consultas individuais conferem Administrador ou próprio id. Edição e desativação compartilham confirmação, limites e bloqueio/revalidação do autor na transação. `FormularioFuncionario` é compartilhado entre cadastro/edição; confirmação usa o diálogo existente. Nenhum serviço de fotos foi adicionado. Migração não aplicada ao banco existente.
+Funcionários: `schema.sql` contém a estrutura de CPF/telefone para banco novo; ainda não aplicada ao banco existente. `funcionarioRoutes` aplica permissão administrativa a cada operação de gestão; consultas individuais conferem Administrador ou próprio id. Edição e desativação compartilham confirmação, limites e bloqueio/revalidação do autor na transação. `FormularioFuncionario` é compartilhado entre cadastro/edição; confirmação usa o diálogo existente. Nenhum serviço de fotos foi adicionado.
 
 ## 1. Objetivo e situação do documento
 
@@ -45,9 +49,9 @@ A inspeção foi estática: leitura dos arquivos, sem execução da aplicação 
 
 **Planejamento:** interface React, API RESTful em Node.js, persistência em PostgreSQL e integração de dados. A classificação individual dessas partes está nas seções seguintes; o desenho geral do Guia §7.2 continua sendo uma sugestão, não uma topologia de implantação aprovada. Topologia significa como os componentes ficam distribuídos e conectados no ambiente.
 
-**Implementação atual:** a entrada [frontend/index.html](../frontend/index.html) carrega [frontend/src/main.tsx](../frontend/src/main.tsx), que monta o componente [frontend/src/App.tsx](../frontend/src/App.tsx) com React e `StrictMode`. O componente exibe imagens, links e um contador mantido no estado local, sem chamadas à API ou persistência.
+**Implementação atual:** [frontend/index.html](../frontend/index.html) carrega [frontend/src/main.tsx](../frontend/src/main.tsx), que monta [frontend/src/App.tsx](../frontend/src/App.tsx) com React e `StrictMode`. A rota pública `/` apresenta a loja; `/login` e as rotas internas dão acesso ao sistema. A Landing Page usa imagens locais, links para contato e conteúdo estático, sem chamada à API nem persistência.
 
-O back-end contém somente [backend/.gitkeep](../backend/.gitkeep), arquivo usado para manter a pasta no Git. Não há servidor de negócio, autenticação, endpoints, conexão com banco, migrações ou integração implementados. Isso é coerente com o aviso inicial do [README do projeto](../README.md) e com o [CHANGELOG](../CHANGELOG.md), em “Não lançado”.
+O back-end contém API Express, autenticação, rotas de negócio e conexão PostgreSQL descritas nas seções abaixo; essa implementação substitui os parágrafos históricos de ausência que permanecem como contexto do planejamento original.
 
 ## 3. Restrições e exigências arquiteturais
 

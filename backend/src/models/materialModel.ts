@@ -1,6 +1,7 @@
 import { emTransacao } from '../config/transacao';
 import { ErroHttp } from '../utils/validacao';
 import { pool } from '../config/db';
+import { associarNaConexao } from './fornecedorModel';
 
 // O pg retorna numeric como texto para preservar a precisão dos valores.
 export interface Material {
@@ -11,40 +12,54 @@ export interface Material {
   quantidade: string;
   quantidade_minima: string;
   custo: string;
+  unidade_bloqueada?: boolean;
 }
 
 const colunas = `id, nome, categoria, unidade, quantidade, quantidade_minima, custo`;
+const consultaColunas = `${colunas}, (quantidade <> 0 OR EXISTS (SELECT 1 FROM sapataria.movimentacoes_estoque WHERE material_id = materiais.id)) AS unidade_bloqueada`;
 
 export async function listar(): Promise<Material[]> {
   const resultado = await pool.query<Material>(
-    `SELECT ${colunas} FROM sapataria.materiais ORDER BY id`,
+    `SELECT ${consultaColunas} FROM sapataria.materiais ORDER BY id`,
   );
   return resultado.rows;
 }
 
 export async function buscar(id: number): Promise<Material | undefined> {
   const resultado = await pool.query<Material>(
-    `SELECT ${colunas} FROM sapataria.materiais WHERE id = $1`, [id],
+    `SELECT ${consultaColunas} FROM sapataria.materiais WHERE id = $1`, [id],
   );
   return resultado.rows[0];
 }
 
-export type DadosMaterial = Pick<Material, 'nome' | 'categoria' | 'unidade' | 'quantidade_minima' | 'custo'>;
+export type DadosMaterial = Pick<Material, 'nome' | 'categoria' | 'unidade' | 'quantidade_minima' | 'custo'> & { fornecedores_ids?: number[] };
 
 export async function criar(dados: DadosMaterial): Promise<Material> {
-  const resultado = await pool.query<Material>(
-    `INSERT INTO sapataria.materiais (nome, categoria, unidade, quantidade_minima, custo) VALUES ($1, $2, $3, $4, $5) RETURNING ${colunas}`,
-    [dados.nome, dados.categoria, dados.unidade, dados.quantidade_minima, dados.custo],
-  );
-  return resultado.rows[0]!;
+  return emTransacao(async conexao => {
+    const resultado = await conexao.query<Material>(
+      `INSERT INTO sapataria.materiais (nome, categoria, unidade, quantidade_minima, custo) VALUES ($1, $2, $3, $4, $5) RETURNING ${colunas}`,
+      [dados.nome, dados.categoria, dados.unidade, dados.quantidade_minima, dados.custo],
+    );
+    const item = resultado.rows[0]!;
+    if (dados.fornecedores_ids !== undefined) await associarNaConexao(conexao, 'materiais', item.id, dados.fornecedores_ids);
+    return { ...item, unidade_bloqueada: false };
+  });
 }
 
 export async function atualizar(id: number, dados: DadosMaterial): Promise<Material | undefined> {
-  const resultado = await pool.query<Material>(
-    `UPDATE sapataria.materiais SET nome = $1, categoria = $2, unidade = $3, quantidade_minima = $4, custo = $5 WHERE id = $6 RETURNING ${colunas}`,
-    [dados.nome, dados.categoria, dados.unidade, dados.quantidade_minima, dados.custo, id],
-  );
-  return resultado.rows[0];
+  return emTransacao(async conexao => {
+    // Mesmo bloqueio usado nas movimentações: a verificação não disputa o saldo.
+    const atual = await conexao.query<Material>(`SELECT ${consultaColunas} FROM sapataria.materiais WHERE id = $1 FOR UPDATE`, [id]);
+    const item = atual.rows[0];
+    if (!item) return undefined;
+    if (item.unidade !== dados.unidade && item.unidade_bloqueada) throw new ErroHttp(409, 'MATERIAL_UNIDADE_BLOQUEADA', 'Não é permitido trocar a unidade de material com saldo ou movimentações.');
+    const resultado = await conexao.query<Material>(
+      `UPDATE sapataria.materiais SET nome = $1, categoria = $2, unidade = $3, quantidade_minima = $4, custo = $5 WHERE id = $6 RETURNING ${colunas}`,
+      [dados.nome, dados.categoria, dados.unidade, dados.quantidade_minima, dados.custo, id],
+    );
+    if (dados.fornecedores_ids !== undefined) await associarNaConexao(conexao, 'materiais', id, dados.fornecedores_ids);
+    return { ...resultado.rows[0]!, unidade_bloqueada: item.unidade_bloqueada };
+  });
 }
 
 export async function excluir(id: number): Promise<void> {

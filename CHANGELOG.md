@@ -8,10 +8,25 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Corrigido
 
+- Contraste dos ícones nas ações rápidas da Busca no tema escuro.
+- Troca de unidade de Material com saldo ou movimentações bloqueada na interface, API e PostgreSQL, inclusive quando o saldo retorna a zero, preservando a interpretação de custo e histórico.
+
 - Rotas internas após a integração das branches: removidos trechos provisórios que impediam a compilação e a abertura do front-end.
 - Configuração TypeScript compartilhada entre editor e `typecheck` no back-end, incluindo os tipos de sessão sem gerar arquivos compilados.
 
 ### Adicionado
+
+- Nome do cliente nas ordens de serviço exibidas no perfil do funcionário, incluído pela consulta da API sem alteração no banco.
+- Landing Page pública em `/` para a Seda e Couro, com serviços, carrossel automático de fotos a cada cinco segundos com setas laterais, controle de tema claro/escuro, rolagem suave, endereço, Instagram, telefone/WhatsApp e atalho `/login`. Endereço fornecido estático nesta etapa; sem mudanças na API ou no banco.
+- A tela `/login` agora verifica se já existe sessão válida e redireciona diretamente ao dashboard, sem pedir credenciais novamente.
+- Esquema SQL consolidado em `backend/src/database/schema.sql`, ordenado para instalar toda a estrutura em um banco novo. Os scripts SQL separados foram reunidos; o consolidado não deve ser executado em banco existente.
+- Configurações para os dois perfis: consulta de usuário/e-mail e do endereço comercial da loja, troca própria de senha com invalidação de sessões, notificações visuais e modo escuro salvos localmente por usuário. Somente Administrador altera o endereço informando CEP e número com consulta ViaCEP; API e banco mantêm um único campo formatado. A configuração comercial está no esquema consolidado, ainda não aplicada ao banco existente.
+
+- Estoque: alertas visuais por mínimo de materiais/produtos, cadastro do mínimo inteiro por Produto, compras por fornecedor com preço histórico e entrada atômica, consulta completa de fornecedores e importação de CSV com modelo, prévia e validação. O esquema consolidado preserva produtos legados sem mínimo e registra compras junto às movimentações.
+
+- Fornecedores: condições comerciais opcionais em campos separados para prazo de pagamento, meios de pagamento, desconto e moeda, sem aplicação automática. Histórico de movimentações por item na tela de Estoque, incluindo entradas e saídas de Materiais com saldo zero.
+
+- Estoque: categorias sugeridas, unidades kg/g para Cola, seleção opcional de fornecedores no cadastro/edição e gravação conjunta com o item. Fornecedores com CNPJ numérico/alfanumérico, razão social, nome fantasia, CEP, número, e-mail e telefone opcionais; consulta de CEP reutilizada. Migração aplicada preservando os cadastros antigos.
 
 - Busca de páginas e perfis disponíveis conforme permissão; seleção de cliente por sugestões e serviços já registrados com opção Outros na OS; responsável e situação no histórico do cliente; botão Imprimir com PDF A4 da OS.
 u- Dashboard operacional com contagens de OS, busca de clientes/OS/páginas e telas de listagem, cadastro, edição e detalhes de OS. Fluxo de status e uso de material conectados à API existente, sem cálculos financeiros novos.
@@ -44,7 +59,7 @@ u- Dashboard operacional com contagens de OS, busca de clientes/OS/páginas e te
 - Cadastros/edição/exclusão de Materiais e Produtos e exclusão de Clientes sem vínculos.
 - Abertura, edição, sequência de estados, cancelamento, consumo e devolução de materiais de OS.
 - Vendas com preço histórico, total calculado no PostgreSQL, baixa atômica e cancelamento com devoluções explícitas.
-- Entradas, saídas e estornos com histórico, validação de quantidades/valores e proteção contra concorrência; alteração incremental em `operacoes.sql` aplicada ao Supabase sem inserir dados.
+- Entradas, saídas e estornos com histórico, validação de quantidades/valores e proteção contra concorrência; estruturas e restrições de operações reunidas no esquema consolidado, preservando os dados existentes.
 
 - Sete tabelas restantes de negócio aplicadas no Supabase, com obrigatoriedade confirmada, nove relacionamentos, estoque inicial zero e vínculo exclusivo nas movimentações.
 - Consultas autenticadas de Materiais, Produtos, OS, Vendas, itens/usos vinculados e Movimentações; ampliadas pelas operações registradas acima.

@@ -13,4 +13,5 @@ export const areas: Area[] = [
   { titulo: 'Financeiro', caminho: '/financeiro', icone: 'financeiro', administrador: true },
   { titulo: 'Funcionários', caminho: '/funcionarios', icone: 'funcionarios', administrador: true },
   { titulo: 'Estoque', caminho: '/estoque', icone: 'estoque' },
+  { titulo: 'Configurações', caminho: '/configuracoes', icone: 'configuracoes' },
 ]

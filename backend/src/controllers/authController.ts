@@ -2,9 +2,9 @@ import type { Request, Response } from 'express';
 import { duracaoSessao, nomeCookie, opcoesCookie } from '../config/sessao';
 import { encerrarSessao } from '../middlewares/autenticacao';
 import { novoTokenCsrf } from '../middlewares/csrf';
-import { buscarCredencial, dadosPublicos } from '../models/funcionarioModel';
-import { limitarTentativas, limparTentativasUsuario } from '../models/loginModel';
-import { verificarSenha } from '../utils/senha';
+import { buscarCredencial, dadosPublicos, trocarSenha as salvarNovaSenha } from '../models/funcionarioModel';
+import { limitarTentativas, limitarTrocasSenha, limparTentativasUsuario } from '../models/loginModel';
+import { validarSenha, verificarSenha } from '../utils/senha';
 import { ErroHttp, objeto, texto } from '../utils/validacao';
 
 export async function login(request: Request, response: Response): Promise<void> {
@@ -35,6 +35,24 @@ export async function login(request: Request, response: Response): Promise<void>
 }
 
 export async function logout(request: Request, response: Response): Promise<void> {
+  await encerrarSessao(request);
+  response.clearCookie(nomeCookie, opcoesCookie);
+  response.status(204).end();
+}
+
+export async function alterarSenha(request: Request, response: Response): Promise<void> {
+  const dados = objeto(request.body, ['senha_atual', 'senha_nova', 'confirmar_senha_nova']);
+  const sessao = request.session.autenticacao;
+  if (!sessao) throw new ErroHttp(401, 'NAO_AUTENTICADO', 'Faça login para continuar.');
+  if (typeof dados.senha_atual !== 'string' || !dados.senha_atual || [...dados.senha_atual].length > 128) {
+    throw new ErroHttp(400, 'DADOS_INVALIDOS', 'Informe sua senha atual.');
+  }
+  const senhaNova = validarSenha(dados.senha_nova);
+  if (dados.confirmar_senha_nova !== senhaNova) {
+    throw new ErroHttp(400, 'CONFIRMACAO_SENHA_DIVERGENTE', 'A confirmação deve ser igual à nova senha.');
+  }
+  await limitarTrocasSenha(sessao.funcionarioId, request.ip ?? 'desconhecido');
+  await salvarNovaSenha(sessao.funcionarioId, sessao.versao, sessao.expiraEm, dados.senha_atual, senhaNova);
   await encerrarSessao(request);
   response.clearCookie(nomeCookie, opcoesCookie);
   response.status(204).end();

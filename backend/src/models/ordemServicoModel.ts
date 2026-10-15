@@ -31,6 +31,23 @@ export async function listar(clienteId?: number, responsavelId?: number): Promis
   return resultado.rows;
 }
 
+export type OrdemFuncionarioComCliente = OrdemServico & { cliente_nome: string };
+
+export async function listarPorResponsavelComCliente(responsavelId: number): Promise<OrdemFuncionarioComCliente[]> {
+  const resultado = await pool.query<OrdemFuncionarioComCliente>(
+    `SELECT os.id, os.cliente_id, os.responsavel_id, os.descricao_calcado, os.servico,
+            os.valor, to_char(os.data_entrada, 'YYYY-MM-DD') AS data_entrada,
+            to_char(os.prazo_entrega, 'YYYY-MM-DD') AS prazo_entrega,
+            os.status, os.forma_pagamento, os.observacoes,
+            c.nome AS cliente_nome
+       FROM sapataria.ordens_servico AS os
+       JOIN sapataria.clientes AS c ON c.id = os.cliente_id
+      WHERE os.responsavel_id = $1 ORDER BY os.id`,
+    [responsavelId],
+  );
+  return resultado.rows;
+}
+
 export type OrdemClienteComResponsavel = OrdemServico & {
   responsavel_nome: string;
   responsavel_ativo: boolean;

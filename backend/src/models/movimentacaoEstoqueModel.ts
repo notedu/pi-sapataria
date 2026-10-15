@@ -15,13 +15,15 @@ export interface MovimentacaoEstoque {
   item_venda_id: number | null;
   material_os_id: number | null;
   reversao_de_id: number | null;
+  item_compra_id: number | null;
 }
 
-const colunas = `id, tipo, material_id, produto_id, quantidade, data, motivo, item_venda_id, material_os_id, reversao_de_id`;
+const colunas = `id, tipo, material_id, produto_id, quantidade, data, motivo, item_venda_id, material_os_id, reversao_de_id, item_compra_id`;
 
-export async function listar(): Promise<MovimentacaoEstoque[]> {
+export async function listar(filtro?: { campo: 'material_id' | 'produto_id'; id: number }): Promise<MovimentacaoEstoque[]> {
   const resultado = await pool.query<MovimentacaoEstoque>(
-    `SELECT ${colunas} FROM sapataria.movimentacoes_estoque ORDER BY id`,
+    `SELECT ${colunas} FROM sapataria.movimentacoes_estoque ${filtro ? `WHERE ${filtro.campo} = $1 ORDER BY id DESC` : 'ORDER BY id'}`,
+    filtro ? [filtro.id] : [],
   );
   return resultado.rows;
 }

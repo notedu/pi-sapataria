@@ -119,7 +119,58 @@
   --container-container-max: 1200px;
 }
 
+/* Os utilitários Tailwind usam estas variáveis; substituí-las no elemento
+ * raiz permite que o controle de tema atualize todas as telas de uma vez. */
+.dark {
+  color-scheme: dark;
+  --color-surface: #10131b;
+  --color-surface-dim: #10131b;
+  --color-surface-bright: #383b45;
+  --color-surface-container-lowest: #0b0e15;
+  --color-surface-container-low: #191c25;
+  --color-surface-container: #20232d;
+  --color-surface-container-high: #292c36;
+  --color-surface-container-highest: #333640;
+  --color-on-surface: #e1e2eb;
+  --color-on-surface-variant: #c4c6d2;
+  --color-inverse-surface: #e1e2eb;
+  --color-inverse-on-surface: #2c3038;
+  --color-outline: #9093a2;
+  --color-outline-variant: #444754;
+  --color-surface-tint: #b4c5ff;
+  --color-primary: #b4c5ff;
+  --color-on-primary: #08245e;
+  --color-primary-container: #1d439c;
+  --color-on-primary-container: #dbe1ff;
+  --color-inverse-primary: #3759b3;
+  --color-secondary: #c9c6bf;
+  --color-on-secondary: #302f2a;
+  --color-secondary-container: #34332f;
+  --color-on-secondary-container: #d0cdc6;
+  --color-tertiary: #afc7fa;
+  --color-on-tertiary: #10294f;
+  --color-tertiary-container: #314974;
+  --color-on-tertiary-container: #d7e2ff;
+  --color-success: #85d99b;
+  --color-success-container: #154b27;
+  --color-on-success-container: #b9f1c3;
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+  --color-background: #10131b;
+  --color-on-background: #e1e2eb;
+  --color-surface-variant: #333640;
+  --color-on-secondary-fixed: #e6e2db;
+  --color-on-secondary-fixed-variant: #c9c6bf;
+}
+
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
+  }
+
   body {
     font-family: var(--font-sans);
     font-size: var(--text-body-md);
@@ -128,6 +179,25 @@
     color: var(--color-on-background);
     background-color: var(--color-background);
   }
+}
+
+.galeria-faixa {
+  scrollbar-width: none;
+}
+
+.galeria-faixa::-webkit-scrollbar {
+  display: none;
+}
+
+.theme-transition,
+.theme-transition * {
+  transition-property: background-color, color, border-color, fill, stroke;
+  transition-duration: 250ms;
+  transition-timing-function: ease-in-out;
+}
+
+.interruptor-tema-thumb {
+  transition: transform 250ms ease-in-out;
 }
 
 button {
@@ -145,5 +215,8 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
   .alerta-progresso { animation-timing-function: steps(5, end); }
+  .theme-transition,
+  .theme-transition * { transition-duration: 0ms !important; }
 }

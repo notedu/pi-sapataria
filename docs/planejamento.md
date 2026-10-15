@@ -40,7 +40,9 @@ Referência inicial: 25/09/2026. Faixas são janelas de demonstração e podem s
 | 17 a 20/10 | Reserva para integração final, correções e conferência da cobertura. Demonstração do conjunto e registro objetivo do que está concluído ou ainda falta. | Equipe; não reservar a primeira integração ou hospedagem para essa janela. |
 | Após 20/10 até a apresentação | Revisar, corrigir, preparar demonstração e materiais acadêmicos; confirmar data oficial de novembro. | Participação da equipe conforme exigências; coordenação das entregas ainda a definir. |
 
-Risco de prazo: o código está na base inicial e há módulos sem responsável e regras de estoque/financeiro em aberto. Não há evidência para garantir que todo o escopo caiba no prazo. Se um marco não for demonstrado, revisar capacidade e cobertura com a equipe, sem excluir exigências silenciosamente nem deslocar toda a integração para depois de 20/10.
+Registro de risco feito antes da conclusão das telas e módulos. Em 15/10/2026, Estoque está integrado conforme a atualização abaixo; continuam módulos sem cobertura completa e regras financeiras/de prazo em aberto. Não há evidência para garantir que todo o escopo caiba no prazo. Se um marco não for demonstrado, revisar capacidade e cobertura com a equipe, sem excluir exigências silenciosamente nem deslocar toda a integração para depois de 20/10.
+
+**Atualização de 15/10/2026:** João Franco integrou na tela `/estoque` o mínimo e alertas de Produtos, compras por fornecedor com entradas atômicas, consulta completa de fornecedores e importação de Estoque CSV. Rotas Express e migração versionada foram conectadas ao PostgreSQL; compra/importação usam as movimentações já centralizadas, mantendo RN-018/RN-019. Importação de Clientes, alertas de prazo e indicadores financeiros continuam pendentes em seus módulos correspondentes.
 
 
 ---
