@@ -12,6 +12,8 @@ Este catálogo organiza as funcionalidades e restrições extraídas das fontes.
 
 **Situação da implementação:** API de autenticação, Clientes, Funcionários, Materiais, Produtos, OS, Vendas e Estoque implementada nas operações de `api.md`. Telas, filtros, alertas e indicadores financeiros não estão concluídos. Os requisitos de módulos que incluem essas partes continuam parcialmente atendidos.
 
+**Atualização de 15/10/2026:** por solicitação de João Contin, registro de atividades e notificações individuais implementados e documentados em `api.md` e `telas-e-fluxos.md`. As atividades cobrem operações atuais de API; os alertas automáticos de estoque e prazo permanecem pendentes em RN-013/PD-N08.
+
 ## Atualização — operações de negócio
 
 RF-017/RF-018/RF-020/RF-021/RF-022: cadastros e operações aprovadas disponíveis na API, incluindo exclusões sem histórico, sequência de OS, consumo, estoque e venda/cancelamento. RN-018/RN-019: transações e bloqueios impedem registros parciais e saldo negativo, verificados por HTTP e concorrência real. Cálculo da OS e financeiro, filtros, alertas e telas continuam pendentes.

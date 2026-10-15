@@ -6,6 +6,8 @@ import { areas } from '../config/navegacao'
 import Button from './Button'
 import Icon from './Icon'
 import Sidebar from './Sidebar'
+import BotaoNotificacoes from './BotaoNotificacoes'
+import { contarNotificacoesNaoLidas } from '../services/atividades'
 
 // Uma nova rota verifica novamente a sessão e o perfil na API.
 export default function AppLayout() {
@@ -20,6 +22,7 @@ function LayoutComSessao({ caminho }: { caminho: string }) {
   const [tentativa, setTentativa] = useState(0)
   const [carregando, setCarregando] = useState(true)
   const [saindo, setSaindo] = useState(false)
+  const [notificacoesNaoLidas, setNotificacoesNaoLidas] = useState(0)
   const [menuAberto, setMenuAberto] = useState(false)
   const envioEmCurso = useRef(false)
 
@@ -34,6 +37,15 @@ function LayoutComSessao({ caminho }: { caminho: string }) {
     }).finally(() => { if (ativo) setCarregando(false) })
     return () => { ativo = false }
   }, [tentativa, navigate])
+
+  useEffect(() => {
+    let ativo = true
+    const atualizar = () => contarNotificacoesNaoLidas().then(total => { if (ativo) setNotificacoesNaoLidas(total) }).catch(() => undefined)
+    void atualizar()
+    const intervalo = window.setInterval(atualizar, 60000)
+    window.addEventListener('notificacoes-atualizadas', atualizar)
+    return () => { ativo = false; window.clearInterval(intervalo); window.removeEventListener('notificacoes-atualizadas', atualizar) }
+  }, [caminho])
 
   async function encerrarSessao() {
     if (envioEmCurso.current) return
@@ -61,9 +73,12 @@ function LayoutComSessao({ caminho }: { caminho: string }) {
   return (
     <div className="min-h-dvh bg-surface">
       <a href="#conteudo" className="sr-only z-50 rounded-default bg-primary p-3 text-on-primary focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Pular para o conteúdo</a>
-      <header className="flex items-center justify-between bg-secondary-container p-4 md:hidden">
-        <span className="text-headline-md text-primary">Seda e Couro</span>
-        <button type="button" aria-expanded={menuAberto} aria-controls="menu-sistema" aria-label={menuAberto ? 'Fechar menu' : 'Abrir menu'} onClick={() => setMenuAberto(valor => !valor)} className="rounded-default p-3 text-primary focus-visible:outline-2"><Icon name={menuAberto ? 'fechar' : 'menu'} /></button>
+      <header className="flex items-center justify-between bg-secondary-container p-4 md:ml-64 md:justify-end md:bg-surface md:px-8 md:py-3 lg:px-12">
+        <span className="text-headline-md text-primary md:hidden">Seda e Couro</span>
+        <div className="flex items-center gap-2">
+          <BotaoNotificacoes naoLidas={notificacoesNaoLidas} />
+          <button type="button" aria-expanded={menuAberto} aria-controls="menu-sistema" aria-label={menuAberto ? 'Fechar menu' : 'Abrir menu'} onClick={() => setMenuAberto(valor => !valor)} className="rounded-default p-3 text-primary focus-visible:outline-2 md:hidden"><Icon name={menuAberto ? 'fechar' : 'menu'} /></button>
+        </div>
       </header>
       <div id="menu-sistema" className={`${menuAberto ? 'block' : 'hidden'} md:fixed md:inset-y-0 md:block md:w-64 md:overflow-y-auto`}>
         <Sidebar usuario={usuario} onSair={encerrarSessao} saindo={saindo} />

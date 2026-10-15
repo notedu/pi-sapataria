@@ -37,7 +37,14 @@ Essas decisões atualizam as pendências correspondentes de RN-001/RN-002/RN-004
 - Correções preservam a origem e registram movimento inverso. Um movimento manual pode ser estornado integralmente uma vez; venda usa cancelamento próprio e consumo usa devolução própria. Venda cancelada repõe somente quantidades efetivamente devolvidas, informadas no cancelamento. Não se edita/apaga movimento original.
 - RN-020: Clientes somente sem vínculos; Materiais/Produtos somente sem vínculos e com saldo zero. OS/Vendas são canceladas, funcionários desativados; histórico preservado.
 
-Estas confirmações substituem as pendências correspondentes das sugestões originais abaixo. Financeiro, alertas, cadastro auxiliar de configurações e telas continuam fora desta etapa.
+### Registro de atividades e notificações — decisão de João Contin em 15/10/2026
+
+- O Administrador pode consultar todas as atividades. O Funcionário consulta as ações próprias e atividades de OS atualmente atribuídas a ele. Cada pessoa consulta e atualiza somente as próprias notificações.
+- O histórico registra eventos operacionais de OS, autenticação bem-sucedida, Clientes, Funcionários, materiais/produtos/fornecedores, movimentações de estoque e vendas. Senhas e dados pessoais dos formulários não são copiados. Não se registra tentativa de login inválida nesta entrega.
+- Notificações: Administradores ativos recebem novas OS e cancelamentos de OS/venda; o Funcionário responsável ativo recebe atribuição de OS e mudanças de status da OS atualmente atribuída. O autor da ação não recebe aviso da própria ação.
+- Alertas automáticos de prazo e estoque ficam pendentes conforme RN-013/PD-N08. A lista de atividades é limitada a 250 resultados por consulta e notificações a 100; filtros permitem localizar eventos anteriores.
+
+Estas confirmações substituem as pendências correspondentes das sugestões originais abaixo. Financeiro, alertas automáticos e cadastro auxiliar de configurações continuam fora desta etapa.
 
 ### RN-001
 

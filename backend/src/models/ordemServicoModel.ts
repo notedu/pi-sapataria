@@ -4,6 +4,7 @@ import { ErroHttp } from '../utils/validacao';
 import { dadosOs } from '../utils/operacoes';
 import { movimentar, reverter } from './estoqueModel';
 import { pool } from '../config/db';
+import { registrarNaConexao, type NovaAtividade } from './atividadeModel';
 
 // O pg retorna numeric como texto para preservar a precisão dos valores.
 export interface OrdemServico {
@@ -98,7 +99,7 @@ function valores(d: DadosOs) {
   return [d.cliente_id, d.responsavel_id, d.descricao_calcado, d.servico, d.valor, d.prazo_entrega, d.forma_pagamento, d.observacoes];
 }
 
-export async function criar(dados: DadosOs) {
+export async function criar(dados: DadosOs, ator?: { id: number; nome: string }) {
   return emTransacao(async (conexao) => {
     await validarReferencias(conexao, dados);
     const resultado = await conexao.query<OrdemServico>(
@@ -106,24 +107,42 @@ export async function criar(dados: DadosOs) {
        (cliente_id,responsavel_id,descricao_calcado,servico,valor,prazo_entrega,forma_pagamento,observacoes)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING ${colunas}`, valores(dados),
     );
-    return resultado.rows[0]!;
+    const ordem = resultado.rows[0]!;
+    if (ator) await registrarNaConexao(conexao, {
+      atorId: ator.id, atorNome: ator.nome, acao: 'ordem_servico.criada', entidadeTipo: 'ordem_servico', entidadeId: ordem.id,
+      detalhes: { status: ordem.status, responsavelId: ordem.responsavel_id }, notificarFuncionarios: [ordem.responsavel_id],
+      notificarAdministradores: true, mensagem: `Nova OS #${ordem.id} criada.`,
+    });
+    return ordem;
   });
 }
 
-export async function atualizar(id: number, dados: DadosOs) {
+export async function atualizar(id: number, dados: DadosOs, ator?: { id: number; nome: string }) {
   return emTransacao(async (conexao) => {
-    exigirEditavel(await bloquear(conexao, id));
+    const anterior = await bloquear(conexao, id);
+    exigirEditavel(anterior);
     await validarReferencias(conexao, dados);
     const resultado = await conexao.query<OrdemServico>(
       `UPDATE sapataria.ordens_servico SET cliente_id=$1,responsavel_id=$2,descricao_calcado=$3,
        servico=$4,valor=$5,prazo_entrega=$6,forma_pagamento=$7,observacoes=$8
        WHERE id=$9 RETURNING ${colunas}`, [...valores(dados), id],
     );
-    return resultado.rows[0]!;
+    const ordem = resultado.rows[0]!;
+    if (ator) await registrarNaConexao(conexao, {
+      atorId: ator.id, atorNome: ator.nome, acao: 'ordem_servico.atualizada', entidadeTipo: 'ordem_servico', entidadeId: ordem.id,
+      detalhes: {
+        camposAlterados: (['cliente_id', 'responsavel_id', 'descricao_calcado', 'servico', 'valor', 'prazo_entrega', 'forma_pagamento', 'observacoes'] as const)
+          .filter(campo => anterior[campo] !== ordem[campo]),
+        responsavelAnteriorId: anterior.responsavel_id, responsavelNovoId: ordem.responsavel_id,
+      },
+      notificarFuncionarios: anterior.responsavel_id !== ordem.responsavel_id ? [ordem.responsavel_id] : [],
+      mensagem: `A OS #${ordem.id} foi atribuída a você.`,
+    });
+    return ordem;
   });
 }
 
-export async function mudarStatus(id: number, status: string) {
+export async function mudarStatus(id: number, status: string, ator?: { id: number; nome: string }) {
   return emTransacao(async (conexao) => {
     const os = await bloquear(conexao, id);
     const proximo: Record<string, string> = { Aberta: 'Em andamento', 'Em andamento': 'Pronta', Pronta: 'Entregue' };
@@ -133,11 +152,18 @@ export async function mudarStatus(id: number, status: string) {
     }
     // Cancelar a OS não devolve materiais já consumidos.
     const resultado = await conexao.query<OrdemServico>(`UPDATE sapataria.ordens_servico SET status=$2 WHERE id=$1 RETURNING ${colunas}`, [id, status]);
-    return resultado.rows[0]!;
+    const atualizada = resultado.rows[0]!;
+    if (ator) await registrarNaConexao(conexao, {
+      atorId: ator.id, atorNome: ator.nome, acao: status === 'Cancelada' ? 'ordem_servico.cancelada' : 'ordem_servico.status_alterado',
+      entidadeTipo: 'ordem_servico', entidadeId: atualizada.id, detalhes: { statusAnterior: os.status, statusNovo: status },
+      notificarFuncionarios: [atualizada.responsavel_id], notificarAdministradores: status === 'Cancelada',
+      mensagem: status === 'Pronta' ? `A OS #${id} está pronta para entrega.` : `A OS #${id} mudou para ${status}.`,
+    });
+    return atualizada;
   });
 }
 
-export async function consumir(id: number, materialId: number, quantidade: string) {
+export async function consumir(id: number, materialId: number, quantidade: string, ator?: { id: number; nome: string }) {
   return emTransacao(async (conexao) => {
     exigirEditavel(await bloquear(conexao, id));
     const material = await conexao.query('SELECT id FROM sapataria.materiais WHERE id=$1 FOR UPDATE', [materialId]);
@@ -148,17 +174,26 @@ export async function consumir(id: number, materialId: number, quantidade: strin
     );
     await movimentar(conexao, { tipo: 'saida', material_id: materialId, produto_id: null, quantidade,
       motivo: `Uso de material na OS ${id}`, material_os_id: resultado.rows[0].id });
+    if (ator) await registrarNaConexao(conexao, {
+      atorId: ator.id, atorNome: ator.nome, acao: 'ordem_servico.material_utilizado', entidadeTipo: 'ordem_servico', entidadeId: id,
+      detalhes: { materialId, quantidade },
+    });
     return resultado.rows[0];
   });
 }
 
-export async function devolverMaterial(id: number, usoId: number, quantidade: string, motivo: string) {
+export async function devolverMaterial(id: number, usoId: number, quantidade: string, motivo: string, ator?: { id: number; nome: string }) {
   return emTransacao(async (conexao) => {
     await bloquear(conexao, id);
     const uso = await conexao.query('SELECT id FROM sapataria.materiais_os WHERE id=$1 AND ordem_servico_id=$2', [usoId, id]);
     if (!uso.rowCount) throw new ErroHttp(404, 'USO_NAO_ENCONTRADO', 'Uso de material não encontrado nesta OS.');
     const origem = await conexao.query('SELECT id FROM sapataria.movimentacoes_estoque WHERE material_os_id=$1', [usoId]);
     if (!origem.rowCount) throw new ErroHttp(409, 'ORIGEM_AUSENTE', 'O uso não possui movimentação de origem para devolução.');
-    return reverter(conexao, origem.rows[0].id, quantidade, motivo);
+    const resultado = await reverter(conexao, origem.rows[0].id, quantidade, motivo);
+    if (ator) await registrarNaConexao(conexao, {
+      atorId: ator.id, atorNome: ator.nome, acao: 'ordem_servico.material_devolvido', entidadeTipo: 'ordem_servico', entidadeId: id,
+      detalhes: { quantidade },
+    });
+    return resultado;
   });
 }

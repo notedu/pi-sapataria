@@ -5,6 +5,8 @@ type Area = { titulo: string; caminho?: string; icone: IconName; administrador?:
 // Menu e rotas usam a mesma lista. Áreas sem caminho ainda não têm acesso definido.
 export const areas: Area[] = [
   { titulo: 'Dashboard', caminho: '/dashboard', icone: 'dashboard' },
+  { titulo: 'Notificações', caminho: '/notificacoes', icone: 'notificacoes' },
+  { titulo: 'Atividades', caminho: '/atividades', icone: 'atividades' },
   { titulo: 'Busca', caminho: '/busca', icone: 'busca' },
   { titulo: 'Clientes', caminho: '/clientes', icone: 'clientes' },
   { titulo: 'Ordens de Serviço', caminho: '/ordens-servico', icone: 'servicos' },

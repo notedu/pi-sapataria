@@ -10,6 +10,8 @@ const caminhos = {
   financeiro: 'M2 5h20v14H2z M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M5 12h1 M18 12h1',
   funcionarios: 'M9 3h6v5H9z M9 5H3v16h18V5h-6 M8 12h2 M7 17h4 M15 12h3 M15 16h3',
   estoque: 'M3 3h18v5H3z M5 8v13h14V8 M10 12h4',
+  notificacoes: 'M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9 M10 21h4',
+  atividades: 'M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0 M12 7v5l3 2',
   configuracoes: 'M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1z M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8',
   sair: 'M9 3H3v18h6 M9 12h12 M17 8l4 4-4 4',
   menu: 'M3 6h18 M3 12h18 M3 18h18',
