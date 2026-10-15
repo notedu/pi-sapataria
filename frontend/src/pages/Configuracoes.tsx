@@ -54,7 +54,7 @@ export default function Configuracoes() {
   const [numero, setNumero] = useState('')
   const [resultadoCep, setResultadoCep] = useState<ResultadoCep | null>(null)
   const [tentativaCep, setTentativaCep] = useState(0)
-  const [carregandoEndereco, setCarregandoEndereco] = useState(administrador)
+  const [carregandoEndereco, setCarregandoEndereco] = useState(true)
   const [editarEndereco, setEditarEndereco] = useState(false)
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [enviando, setEnviando] = useState(false)
@@ -68,13 +68,11 @@ export default function Configuracoes() {
       if (error instanceof ErroApi && error.status === 401) navigate('/login', { replace: true })
       else setErro(error instanceof Error ? error.message : 'Não foi possível carregar seus dados.')
     })
-    if (administrador) {
-      consultarDadosLoja().then(dados => { if (ativo) setEndereco(dados.endereco) }).catch(error => {
-        if (ativo) setErro(error instanceof Error ? error.message : 'Não foi possível carregar os dados da loja.')
-      }).finally(() => { if (ativo) setCarregandoEndereco(false) })
-    }
+    consultarDadosLoja().then(dados => { if (ativo) setEndereco(dados.endereco) }).catch(error => {
+      if (ativo) setErro(error instanceof Error ? error.message : 'Não foi possível carregar os dados da loja.')
+    }).finally(() => { if (ativo) setCarregandoEndereco(false) })
     return () => { ativo = false }
-  }, [administrador, navigate, usuario.id])
+  }, [navigate, usuario.id])
 
   useEffect(() => {
     if (!editarEndereco || cep.length !== 8) return
@@ -179,8 +177,8 @@ export default function Configuracoes() {
           <p className="mt-2 text-label-sm text-on-surface-variant">As notificações ainda não enviam alertas. As preferências ficam salvas neste navegador, separadas por usuário.</p>
         </Cartao>
       </div>
-      {administrador && <Cartao titulo="Dados da sapataria" icone="endereco">
-        {carregandoEndereco ? <p role="status">Carregando dados da loja…</p> : editarEndereco ? <form onSubmit={submeterEndereco} className="space-y-4" aria-busy={enviando || resultadoCep?.carregando}>
+      <Cartao titulo="Dados da sapataria" icone="endereco">
+        {carregandoEndereco ? <p role="status">Carregando dados da loja…</p> : administrador && editarEndereco ? <form onSubmit={submeterEndereco} className="space-y-4" aria-busy={enviando || resultadoCep?.carregando}>
           <p className="text-label-sm text-on-surface-variant">Endereço salvo: {endereco || 'ainda não informado'}</p>
           <div className="grid gap-4 sm:grid-cols-2">
             <InputField id="cep-loja" label="CEP" autoComplete="postal-code" inputMode="numeric" value={formatarCep(cep)} onChange={event => { const novoCep = digitos(event.target.value, 8); setCep(novoCep); if (novoCep !== cep) setResultadoCep(novoCep.length === 8 ? { cep: novoCep, carregando: true } : null); setErro('') }} maxLength={9} disabled={enviando} />
@@ -199,9 +197,9 @@ export default function Configuracoes() {
           <div className="flex flex-wrap gap-3"><Button type="submit" disabled={enviando || resultadoCep?.carregando}>{enviando ? 'Salvando…' : 'Salvar endereço'}</Button><Button variant="secondary" disabled={enviando} onClick={() => { setEditarEndereco(false); setCep(''); setNumero(''); setResultadoCep(null); setErro('') }}>Cancelar</Button></div>
         </form> : <>
           <p className="whitespace-pre-line text-body-md">{endereco || 'Endereço ainda não informado.'}</p>
-          <Button variant="secondary" size="compact" className="mt-5 w-full" onClick={() => setEditarEndereco(true)}>Editar endereço</Button>
+          {administrador && <Button variant="secondary" size="compact" className="mt-5 w-full" onClick={() => setEditarEndereco(true)}>Editar endereço</Button>}
         </>}
-      </Cartao>}
+      </Cartao>
     </div>
   </div>
 }

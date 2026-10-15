@@ -36,7 +36,7 @@ function Historico({ caminho }: { caminho: string }) {
       : ordens === null ? <p role="status" className="p-6">Carregando ordens de serviço…</p>
         : ordens.length === 0 ? <p className="p-6 text-on-surface-variant">Nenhuma ordem de serviço vinculada.</p>
           : <ul className="divide-y divide-outline-variant">{ordens.map(os => <li key={os.id} className="flex flex-wrap items-center justify-between gap-4 px-5 py-5 md:px-6">
-            <div className="min-w-0 flex-1"><h3 className="break-words text-label-md">OS #{os.id} — {os.servico}</h3><p className="mt-2 text-label-sm text-on-surface-variant">Entrada: {data(os.data_entrada)}</p><p className="mt-1 text-label-sm text-on-surface-variant">Entrega: {os.prazo_entrega ? data(os.prazo_entrega) : 'Prazo não informado'}</p></div>
+            <div className="min-w-0 flex-1"><h3 className="break-words text-label-md">OS #{os.id} — {os.servico}</h3>{os.cliente_nome && <p className="mt-2 text-label-sm text-on-surface-variant">Cliente: {os.cliente_nome}</p>}<p className="mt-2 flex items-center gap-2 text-label-sm text-on-surface-variant"><Icon name="calendario" className="h-4 w-4" />Entrada: {data(os.data_entrada)}</p><p className="mt-1 text-label-sm text-on-surface-variant">Entrega: {os.prazo_entrega ? data(os.prazo_entrega) : 'Prazo não informado'}</p></div>
             <div className="space-y-2 text-right"><p className="text-label-md">{dinheiro(os.valor)}</p><span className="inline-block rounded-full bg-primary-fixed px-3 py-1 text-label-sm text-on-primary-fixed">{os.status}</span></div>
           </li>)}</ul>}
   </section>

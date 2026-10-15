@@ -80,7 +80,7 @@ O arquivo consolidado `backend/src/database/schema.sql` é a única definição 
 
 ### Dados comerciais da loja — `sapataria.configuracoes_loja`
 
-Decisão do Integrante 1 em 15/10/2026: manter o endereço da loja para uso administrativo e futura Landing Page. A tabela tem um único registro (`id = 1`) e um campo `endereco text` editável apenas pelo Administrador; texto vazio é permitido para não inventar obrigatoriedade, e o limite é 500 caracteres. A interface consulta rua, bairro, cidade e UF pelo ViaCEP a partir do CEP informado, solicita também o número e persiste um único endereço formatado; indisponibilidade do ViaCEP permite salvar CEP e número sem os demais dados. Preferências de notificações e tema são específicas por funcionário, ficam no `localStorage` deste navegador e não criam colunas nem API.
+Decisão do Integrante 1 em 15/10/2026: manter o endereço da loja para consulta por ambos os perfis e uso na futura Landing Page; somente Administrador pode alterá-lo. A tabela tem um único registro (`id = 1`) e um campo `endereco text`; texto vazio é permitido para não inventar obrigatoriedade, e o limite é 500 caracteres. A interface consulta rua, bairro, cidade e UF pelo ViaCEP a partir do CEP informado, solicita também o número e persiste um único endereço formatado; indisponibilidade do ViaCEP permite salvar CEP e número sem os demais dados. Preferências de notificações e tema são específicas por funcionário, ficam no `localStorage` deste navegador e não criam colunas nem API.
 
 `backend/src/database/schema.sql` cria a tabela e seu registro inicial sem apagar dados em uma instalação nova. **Essa estrutura ainda não foi aplicada ao banco existente.** A seção comercial da tela dependerá da atualização do esquema desse banco. RF-024; RN-003.
 
