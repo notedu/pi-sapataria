@@ -26,8 +26,16 @@ export async function quantidadeNaoLidas(request: Request, response: Response): 
   response.json({ dados: { quantidade: await atividadeModel.contarNaoLidas(request.funcionario!.id) } });
 }
 
+function idNotificacaoValido(valor: unknown): string {
+  if (typeof valor !== 'string' || !/^[1-9]\d*$/.test(valor)
+      || valor.length > 19 || (valor.length === 19 && valor > '9223372036854775807')) {
+    throw new ErroHttp(400, 'ID_INVALIDO', 'Informe um ID de notificação inteiro positivo válido.');
+  }
+  return valor;
+}
+
 export async function marcarLida(request: Request, response: Response): Promise<void> {
-  if (!await atividadeModel.marcarLida(idValido(request.params.id), request.funcionario!.id)) {
+  if (!await atividadeModel.marcarLida(idNotificacaoValido(request.params.id), request.funcionario!.id)) {
     throw new ErroHttp(404, 'NOTIFICACAO_NAO_ENCONTRADA', 'Notificação não encontrada ou já lida.');
   }
   response.status(204).end();
