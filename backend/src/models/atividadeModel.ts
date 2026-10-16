@@ -87,7 +87,7 @@ export async function contarNaoLidas(destinatarioId: number): Promise<number> {
   return Number(resultado.rows[0]?.quantidade ?? 0);
 }
 
-export async function marcarLida(id: number, destinatarioId: number): Promise<boolean> {
+export async function marcarLida(id: string, destinatarioId: number): Promise<boolean> {
   const resultado = await pool.query(
     'UPDATE sapataria.notificacoes SET lida_em=CURRENT_TIMESTAMP WHERE id=$1 AND destinatario_id=$2 AND lida_em IS NULL RETURNING id', [id, destinatarioId],
   );
