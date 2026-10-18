@@ -128,6 +128,16 @@ CREATE TABLE IF NOT EXISTS sapataria.produtos (
   preco_venda numeric NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS sapataria.categorias_estoque (
+  id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  tipo text NOT NULL CHECK (tipo IN ('produtos', 'materiais')),
+  nome text NOT NULL CHECK (length(trim(nome)) > 0 AND length(nome) <= 100)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS categorias_estoque_tipo_nome_unico
+  ON sapataria.categorias_estoque (tipo, lower(nome));
+CREATE INDEX IF NOT EXISTS categorias_estoque_tipo_nome
+  ON sapataria.categorias_estoque (tipo, nome);
+
 CREATE TABLE IF NOT EXISTS sapataria.ordens_servico (
   id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   cliente_id integer NOT NULL REFERENCES sapataria.clientes (id),
@@ -181,7 +191,7 @@ CREATE TABLE IF NOT EXISTS sapataria.movimentacoes_estoque (
 CREATE INDEX IF NOT EXISTS itens_venda_venda_id ON sapataria.itens_venda (venda_id);
 CREATE INDEX IF NOT EXISTS materiais_os_ordem_servico_id ON sapataria.materiais_os (ordem_servico_id);
 
-REVOKE ALL ON TABLE sapataria.materiais, sapataria.produtos, sapataria.ordens_servico,
+REVOKE ALL ON TABLE sapataria.materiais, sapataria.produtos, sapataria.categorias_estoque, sapataria.ordens_servico,
   sapataria.vendas, sapataria.itens_venda, sapataria.materiais_os, sapataria.movimentacoes_estoque FROM PUBLIC;
 
 -- Mantém o acesso pela aplicação. Os papéis abaixo só existem no Supabase.
@@ -190,7 +200,7 @@ DECLARE papel text;
 BEGIN
   FOREACH papel IN ARRAY ARRAY['anon', 'authenticated'] LOOP
     IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = papel) THEN
-      EXECUTE format('REVOKE ALL ON TABLE sapataria.materiais, sapataria.produtos, sapataria.ordens_servico, sapataria.vendas, sapataria.itens_venda, sapataria.materiais_os, sapataria.movimentacoes_estoque FROM %I', papel);
+      EXECUTE format('REVOKE ALL ON TABLE sapataria.materiais, sapataria.produtos, sapataria.categorias_estoque, sapataria.ordens_servico, sapataria.vendas, sapataria.itens_venda, sapataria.materiais_os, sapataria.movimentacoes_estoque FROM %I', papel);
     END IF;
   END LOOP;
 END $$;

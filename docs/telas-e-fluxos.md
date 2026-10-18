@@ -8,11 +8,13 @@ Em `/estoque`, cadastro/edição oferece sugestões de categorias existentes e e
 
 `FormularioFornecedor` serve cadastro/edição com nome de exibição obrigatório e CNPJ, razão social, nome fantasia, CEP, número, e-mail e telefone opcionais. CEP reutiliza consulta existente e falha não impede salvar. Dados antigos são editáveis sem preencher novos campos. Máscaras não substituem validações na API e banco. Dados bancários, busca de fornecedores e melhoria de falhas parciais continuam fora desta etapa. Condições comerciais e histórico foram incluídos no complemento acima.
 
-## Estoque — compras, alertas e importação em 15/10/2026
+## Estoque — compras, alertas e histórico geral em 15/10/2026
 
 Produtos aceitam mínimo inteiro por item. A visão geral e a tabela sinalizam saldos abaixo do mínimo de Materiais ou Produtos; cadastros legados sem mínimo são indicados para configuração. O diálogo de fornecedores permite consultar os dados cadastrais e condições comerciais completos.
 
-O fluxo Compras registra fornecedor, data automática, vários itens, quantidades e preços unitários históricos. A gravação cria compra, linhas, movimentações de entrada e atualiza saldos em uma transação; custo/preço cadastrado não muda. Histórico de compra é somente consulta nesta etapa. Importar CSV oferece modelo para download, prévia, identificação de linhas inválidas/duplicadas e confirmação atômica. Cada linha contém tipo, nome, categoria, unidade se Material, saldo inicial, mínimo, custo ou preço de compra/venda; saldo inicial cria entrada identificada no histórico. Limite atual: 500 linhas e arquivo de até 1 MB na interface.
+O fluxo Compras registra fornecedor, data automática, vários itens, quantidades e preços unitários históricos. A gravação cria compra, linhas, movimentações de entrada e atualiza saldos em uma transação; custo/preço cadastrado não muda. Histórico de compra é somente consulta nesta etapa. A opção de importação CSV foi retirada da interface; a rota legada permanece preservada para compatibilidade.
+
+O cadastro de Produto ou Material aceita opcionalmente o estoque atual. Um saldo inicial positivo cria uma entrada com o motivo `Saldo inicial do cadastro`, na mesma transação do item e dos vínculos de fornecedores. A edição não altera saldo. O botão Histórico geral reúne cadastros e movimentações e usa amarelo para cadastros, verde para entradas e vermelho para saídas. Categorias podem ser cadastradas por tipo e aparecem como sugestões nos formulários; continuam sendo textos no item, sem conversão automática. A tabela centraliza as colunas de informações e o alerta de mínimo mantém sua caixa com texto em negrito.
 
 ## Estoque implementado em 02/10/2026
 

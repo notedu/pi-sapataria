@@ -11,6 +11,10 @@ export async function listar(request: Request, response: Response): Promise<void
   response.json({ dados: await movimentacaoEstoqueModel.listar(filtro) });
 }
 
+export async function listarGeral(_request: Request, response: Response): Promise<void> {
+  response.json({ dados: await movimentacaoEstoqueModel.listarGeral() });
+}
+
 export async function buscarPorId(request: Request, response: Response): Promise<void> {
   const registro = await movimentacaoEstoqueModel.buscar(idValido(request.params.id));
   if (!registro) throw new ErroHttp(404, 'MOVIMENTACAO_NAO_ENCONTRADA', 'Movimentação não encontrada.');

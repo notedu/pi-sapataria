@@ -42,7 +42,7 @@ Referência inicial: 25/09/2026. Faixas são janelas de demonstração e podem s
 
 Registro de risco feito antes da conclusão das telas e módulos. Em 15/10/2026, Estoque está integrado conforme a atualização abaixo; continuam módulos sem cobertura completa e regras financeiras/de prazo em aberto. Não há evidência para garantir que todo o escopo caiba no prazo. Se um marco não for demonstrado, revisar capacidade e cobertura com a equipe, sem excluir exigências silenciosamente nem deslocar toda a integração para depois de 20/10.
 
-**Atualização de 15/10/2026:** João Franco integrou na tela `/estoque` o mínimo e alertas de Produtos, compras por fornecedor com entradas atômicas, consulta completa de fornecedores e importação de Estoque CSV. Rotas Express e migração versionada foram conectadas ao PostgreSQL; compra/importação usam as movimentações já centralizadas, mantendo RN-018/RN-019. Importação de Clientes, alertas de prazo e indicadores financeiros continuam pendentes em seus módulos correspondentes.
+**Atualização de 15/10/2026:** João Franco integrou na tela `/estoque` o mínimo e alertas de Produtos, compras por fornecedor com entradas atômicas, consulta completa de fornecedores, saldo inicial transacionado, categorias e histórico geral colorido. A opção CSV foi retirada da interface; sua rota permanece preservada. Rotas Express e migração versionada foram conectadas ao PostgreSQL; compras e saldos iniciais usam as movimentações já centralizadas, mantendo RN-018/RN-019. Importação de Clientes, alertas de prazo e indicadores financeiros continuam pendentes em seus módulos correspondentes.
 
 
 ---

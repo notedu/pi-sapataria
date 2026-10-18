@@ -14,6 +14,11 @@ export type MovimentoEstoque = {
   id: number; tipo: 'entrada' | 'saida'; material_id: number | null; produto_id: number | null
   quantidade: string; data: string; motivo: string; item_venda_id: number | null; material_os_id: number | null; reversao_de_id: number | null; item_compra_id: number | null
 }
+export type HistoricoGeralEstoque = {
+  chave: string; tipo: 'entrada' | 'saida' | 'cadastro'; item_id: number; item_tipo: 'material' | 'produto'; item_nome: string
+  quantidade: string | null; data: string; motivo: string; ator_nome: string | null
+}
+export type CategoriaEstoque = { id: number; tipo: TipoEstoque; nome: string }
 export type ItemCompraEstoque = { id: number; material_id: number | null; produto_id: number | null; item_nome: string; quantidade: string; preco_unitario: string }
 export type CompraEstoque = { id: number; fornecedor_id: number; fornecedor_nome: string; registrada_em: string; itens: ItemCompraEstoque[] }
 export type LinhaImportacaoEstoque =
@@ -51,6 +56,26 @@ export async function listarHistoricoEstoque(tipo: TipoEstoque, id: number): Pro
     && v[campo] === id
     && ['material_id', 'produto_id', 'item_venda_id', 'material_os_id', 'reversao_de_id', 'item_compra_id'].every(c => v[c] === null || Number.isInteger(v[c])))) throw new Error('Não foi possível interpretar o histórico deste item.')
   return r.dados as MovimentoEstoque[]
+}
+export async function listarHistoricoGeralEstoque(): Promise<HistoricoGeralEstoque[]> {
+  const r = await requisitar('/movimentacoes-estoque/historico-geral')
+  if (!objeto(r) || !Array.isArray(r.dados) || !r.dados.every(v => objeto(v) && typeof v.chave === 'string'
+    && ['entrada', 'saida', 'cadastro'].includes(String(v.tipo)) && Number.isInteger(v.item_id)
+    && ['material', 'produto'].includes(String(v.item_tipo)) && typeof v.item_nome === 'string'
+    && (v.quantidade === null || decimal(v.quantidade)) && typeof v.data === 'string' && Number.isFinite(Date.parse(v.data))
+    && typeof v.motivo === 'string' && (v.ator_nome === null || typeof v.ator_nome === 'string'))) throw new Error('Não foi possível interpretar o histórico geral.')
+  return r.dados as HistoricoGeralEstoque[]
+}
+export async function listarCategoriasEstoque(tipo?: TipoEstoque): Promise<CategoriaEstoque[]> {
+  const r = await requisitar(`/categorias-estoque${tipo ? `?tipo=${tipo}` : ''}`)
+  if (!objeto(r) || !Array.isArray(r.dados) || !r.dados.every(v => objeto(v) && Number.isInteger(v.id)
+    && ['produtos', 'materiais'].includes(String(v.tipo)) && typeof v.nome === 'string')) throw new Error('Não foi possível interpretar as categorias.')
+  return r.dados as CategoriaEstoque[]
+}
+export async function criarCategoriaEstoque(tipo: TipoEstoque, nome: string) {
+  const r = await enviarComCsrf('/categorias-estoque', { tipo, nome })
+  if (!objeto(r) || !objeto(r.dados) || !Number.isInteger(r.dados.id)) throw new ResultadoIncerto('Atualize as categorias antes de repetir o cadastro.')
+  return r.dados as CategoriaEstoque
 }
 export async function listarComprasEstoque(): Promise<CompraEstoque[]> {
   const r = await requisitar('/compras-estoque')

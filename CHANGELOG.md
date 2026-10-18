@@ -8,6 +8,8 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Corrigido
 
+- Estoque: corrigida a validação HTML de quantidade em compras, removida a opção de importação CSV da tela, centralizadas as colunas e destacado em negrito o alerta de mínimo.
+
 - Contraste dos ícones nas ações rápidas da Busca no tema escuro.
 - Troca de unidade de Material com saldo ou movimentações bloqueada na interface, API e PostgreSQL, inclusive quando o saldo retorna a zero, preservando a interpretação de custo e histórico.
 
@@ -15,6 +17,8 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 - Configuração TypeScript compartilhada entre editor e `typecheck` no back-end, incluindo os tipos de sessão sem gerar arquivos compilados.
 
 ### Adicionado
+
+- Estoque: cadastro opcional de saldo inicial com entrada histórica transacionada, histórico geral colorido para cadastros/entradas/saídas e cadastro de categorias por tipo. Migração `estoque-categorias.sql` aplicada ao banco configurado.
 
 - Nome do cliente nas ordens de serviço exibidas no perfil do funcionário, incluído pela consulta da API sem alteração no banco.
 - Landing Page pública em `/` para a Seda e Couro, com serviços, carrossel automático de fotos a cada cinco segundos com setas laterais, controle de tema claro/escuro, rolagem suave, endereço, Instagram, telefone/WhatsApp e atalho `/login`. Endereço fornecido estático nesta etapa; sem mudanças na API ou no banco.

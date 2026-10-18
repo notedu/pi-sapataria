@@ -8,7 +8,7 @@
 
 O status dessa entrega é histórico; as decisões de 15/10/2026 abaixo acrescentam o mínimo de Produtos e os alertas de estoque.
 
-**Decisão de João Franco em 15/10/2026:** Produtos passam a ter mínimo por item e alerta quando o saldo ficar abaixo dele. Compras registram fornecedor, data automática, itens, quantidade e preço unitário histórico; cada item cria entrada de estoque na mesma transação, sem atualizar automaticamente o custo/preço cadastrado. Importação de estoque usa CSV com modelo fornecido, prévia, validação de colunas/duplicados e saldo inicial registrado como entrada. Fornecedor ganha consulta dos dados completos. RF-021/RF-022/RF-027.
+**Decisão de João Franco em 15/10/2026:** Produtos passam a ter mínimo por item e alerta quando o saldo ficar abaixo dele. Compras registram fornecedor, data automática, itens, quantidade e preço unitário histórico; cada item cria entrada de estoque na mesma transação, sem atualizar automaticamente o custo/preço cadastrado. Fornecedor ganha consulta dos dados completos. A tela também permite saldo inicial no cadastro, categorias por tipo e histórico geral de cadastros e movimentações; a opção de importação CSV foi retirada da interface. RF-021/RF-022.
 
 **Decisão do Integrante 1 em 15/10/2026 — Configurações:** a página está disponível aos dois perfis para dados de acesso e preferências pessoais. Ambos podem consultar seu usuário/e-mail, trocar a própria senha, alterar sua preferência visual de notificações e ativar modo escuro. Preferências ficam neste navegador por usuário; notificações ainda não disparam alertas. Ambos os perfis consultam o endereço comercial da loja; somente Administrador pode alterá-lo. No formulário comercial, informa CEP e número; o ViaCEP preenche a prévia dos demais dados e, se a consulta falhar, ainda é possível salvar CEP e número. A API e o banco armazenam o endereço em um único campo formatado. As demais opções sugeridas em RF-024 (catálogos e parâmetros financeiros) continuam pendentes. Implementação registrada em RF-009/RF-010/RF-023/RF-024/RF-026 e RN-003.
 
@@ -20,7 +20,7 @@ Este catálogo organiza as funcionalidades e restrições extraídas das fontes.
 
 “Guia §…” indica a seção de origem no Guia do Projeto. Os critérios são somente desdobramentos do conteúdo indicado, sem acrescentar campos, permissões ou parâmetros. Nas tabelas de sugestões, todos os critérios são propostos. A aprovação da documentação não os aprova como comportamento.
 
-**Situação da implementação:** API e tela de Estoque integradas ao PostgreSQL. A tela inclui alertas por mínimo, compras, fornecedores, histórico e importação de CSV conforme as decisões acima. Dashboard financeiro, apuração financeira, alertas de prazo de OS e importação de clientes permanecem fora desta implementação.
+**Situação da implementação:** API e tela de Estoque integradas ao PostgreSQL. A tela inclui alertas por mínimo, compras, fornecedores, categorias, saldo inicial e histórico geral. A importação CSV permanece disponível apenas como rota legada, sem opção na interface. Dashboard financeiro, apuração financeira, alertas de prazo de OS e importação de clientes permanecem fora desta implementação.
 
 **Atualização de 15/10/2026:** por solicitação de João Contin, registro de atividades e notificações individuais implementados e documentados em `api.md` e `telas-e-fluxos.md`. As atividades cobrem operações atuais de API; os alertas automáticos de estoque e prazo permanecem pendentes em RN-013/PD-N08.
 

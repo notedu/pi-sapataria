@@ -8,11 +8,12 @@ import FormularioItemEstoque from '../components/FormularioItemEstoque'
 import FormularioFornecedor from '../components/FormularioFornecedor'
 import SelecaoFornecedores from '../components/SelecaoFornecedores'
 import HistoricoEstoque from '../components/HistoricoEstoque'
-import ImportacaoEstoque from '../components/ImportacaoEstoque'
+import HistoricoGeralEstoque from '../components/HistoricoGeralEstoque'
+import CategoriasEstoque from '../components/CategoriasEstoque'
 import ComprasEstoque from '../components/ComprasEstoque'
 import { ErroApi, ResultadoIncerto } from '../services/api'
-import { alterarEstoque, listarFornecedores, listarItens, listarVinculos } from '../services/estoque'
-import type { Fornecedor, ItemEstoque, TipoEstoque, Vinculo } from '../services/estoque'
+import { alterarEstoque, listarCategoriasEstoque, listarFornecedores, listarItens, listarVinculos } from '../services/estoque'
+import type { CategoriaEstoque, Fornecedor, ItemEstoque, TipoEstoque, Vinculo } from '../services/estoque'
 import { lucroProduto } from '../utils/estoque'
 
 type Modal = { acao: 'cadastro' | 'editar' | 'excluir' | 'entrada' | 'saida' | 'associar' | 'historico'; item?: ItemEstoque }
@@ -25,6 +26,7 @@ export default function Estoque() {
   const [produtos, setProdutos] = useState<ItemEstoque[]>([])
   const [materiais, setMateriais] = useState<ItemEstoque[]>([])
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([])
+  const [categorias, setCategorias] = useState<CategoriaEstoque[]>([])
   const [vinculos, setVinculos] = useState<Record<TipoEstoque, Vinculo[]>>({ produtos: [], materiais: [] })
   const [busca, setBusca] = useState('')
   const [categoria, setCategoria] = useState('')
@@ -42,20 +44,22 @@ export default function Estoque() {
   const [fornecedorExcluir, setFornecedorExcluir] = useState<Fornecedor | null>(null)
   const [fornecedorDetalhes, setFornecedorDetalhes] = useState<number | null>(null)
   const [comprasAbertas, setComprasAbertas] = useState(false)
-  const [importacaoAberta, setImportacaoAberta] = useState(false)
+  const [historicoGeralAberto, setHistoricoGeralAberto] = useState(false)
+  const [categoriasAbertas, setCategoriasAbertas] = useState(false)
   const [selecionados, setSelecionados] = useState<number[]>([])
   const [quantidade, setQuantidade] = useState('')
   const [motivo, setMotivo] = useState('')
 
   useEffect(() => {
     let ativo = true
-    Promise.allSettled([listarItens('produtos'), listarItens('materiais'), listarFornecedores(), listarVinculos('produtos'), listarVinculos('materiais')]).then(resultados => {
+    Promise.allSettled([listarItens('produtos'), listarItens('materiais'), listarFornecedores(), listarVinculos('produtos'), listarVinculos('materiais'), listarCategoriasEstoque()]).then(resultados => {
       if (!ativo) return
-      const [p, m, f, vp, vm] = resultados
+      const [p, m, f, vp, vm, c] = resultados
       if (p.status === 'fulfilled') setProdutos(p.value as ItemEstoque[])
       if (m.status === 'fulfilled') setMateriais(m.value as ItemEstoque[])
       if (f.status === 'fulfilled') setFornecedores(f.value as Fornecedor[])
       if (vp.status === 'fulfilled' && vm.status === 'fulfilled') setVinculos({ produtos: vp.value as Vinculo[], materiais: vm.value as Vinculo[] })
+      if (c.status === 'fulfilled') setCategorias(c.value as CategoriaEstoque[])
       const falha = resultados.find(r => r.status === 'rejected')
       if (falha?.status === 'rejected') {
         if (falha.reason instanceof ErroApi && falha.reason.status === 401) navigate('/login', { replace: true })
@@ -106,8 +110,9 @@ export default function Estoque() {
         <p className="mt-2 text-body-md text-on-surface-variant">Produtos para venda e materiais utilizados nos serviços.</p></div>
       <div className="flex flex-wrap gap-2">
         <Button variant="secondary" disabled={bloqueado} onClick={() => { setGerenciar(true); setErroModal(''); setFornecedorEditado(null); setFornecedorDetalhes(null) }}>Fornecedores</Button>
+        <Button variant="secondary" disabled={bloqueado} onClick={() => setCategoriasAbertas(true)}>Categorias</Button>
+        <Button variant="secondary" disabled={bloqueado} onClick={() => setHistoricoGeralAberto(true)}>Histórico geral</Button>
         <Button variant="secondary" disabled={bloqueado} onClick={() => setComprasAbertas(true)}>Compras</Button>
-        <Button variant="secondary" disabled={bloqueado} onClick={() => setImportacaoAberta(true)}>Importar CSV</Button>
       </div>
     </div>
     {erro && <p role="alert" className="rounded-default bg-error-container p-4 text-on-error-container">{erro}</p>}
@@ -119,8 +124,8 @@ export default function Estoque() {
         <div key={titulo} className="rounded-lg bg-surface-container p-5"><p className="text-label-md text-on-surface-variant">{titulo}</p><p className="mt-3 text-headline-md">{carregando || erro ? '—' : valor}</p></div>)}
     </div>
     {!carregando && !erro && (alertasMateriais.length > 0 || alertasProdutos.length > 0) && <section role="alert" className="rounded-lg border border-error/30 bg-error-container p-5 text-on-error-container">
-      <h2 className="text-title-md">Estoque abaixo do mínimo</h2>
-      <ul className="mt-2 grid gap-1 sm:grid-cols-2">{[...alertasMateriais.map(item => ({ ...item, tipo: 'Material' })), ...alertasProdutos.map(item => ({ ...item, tipo: 'Produto' }))].map(item => <li key={`${item.tipo}-${item.id}`}>{item.tipo}: {item.nome} — {numero(item.quantidade)} {item.unidade ?? 'un'} / mínimo {numero(item.quantidade_minima ?? 0)}</li>)}</ul>
+      <h2 className="font-bold text-title-md">Estoque abaixo do mínimo</h2>
+      <ul className="mt-2 grid gap-1 font-bold sm:grid-cols-2">{[...alertasMateriais.map(item => ({ ...item, tipo: 'Material' })), ...alertasProdutos.map(item => ({ ...item, tipo: 'Produto' }))].map(item => <li key={`${item.tipo}-${item.id}`}>{item.tipo}: {item.nome} — {numero(item.quantidade)} {item.unidade ?? 'un'} / mínimo {numero(item.quantidade_minima ?? 0)}</li>)}</ul>
     </section>}
     <div className="rounded-lg border border-outline-variant bg-surface-container-lowest p-4 md:p-6">
       <div className="mb-6 flex flex-wrap gap-3" aria-label="Tipo de estoque">
@@ -132,17 +137,17 @@ export default function Estoque() {
         <Button disabled={bloqueado} onClick={() => abrir('cadastro')}>Adicionar {tipo === 'produtos' ? 'produto' : 'material'}</Button>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-body-sm"><caption className="sr-only">Estoque de {tipo === 'produtos' ? 'produtos para venda' : 'materiais'}</caption>
-          <thead className="text-label-sm text-on-surface-variant"><tr>{['Item / Fornecedores', 'Categoria', 'Quantidade', ...(tipo === 'produtos' ? ['Mínimo', 'Compra', 'Venda', 'Lucro unitário', 'Lucro sobre custo', 'Situação'] : ['Mínimo', 'Custo unitário', 'Situação']), 'Ações'].map(c => <th key={c} scope="col" className="whitespace-nowrap px-3 py-4">{c}</th>)}</tr></thead>
+        <table className="w-full text-body-sm"><caption className="sr-only">Estoque de {tipo === 'produtos' ? 'produtos para venda' : 'materiais'}</caption>
+          <thead className="text-label-sm text-on-surface-variant"><tr>{['Item / Fornecedores', 'Categoria', 'Quantidade', ...(tipo === 'produtos' ? ['Mínimo', 'Compra', 'Venda', 'Lucro unitário', 'Lucro sobre custo', 'Situação'] : ['Mínimo', 'Custo unitário', 'Situação']), 'Ações'].map(c => <th key={c} scope="col" className="whitespace-nowrap px-3 py-4 text-center">{c}</th>)}</tr></thead>
           <tbody>{filtrados.map(item => {
             const lucro = tipo === 'produtos' ? lucroProduto(item.preco_custo!, item.preco_venda!) : null
             const baixo = item.quantidade_minima !== null && item.quantidade_minima !== undefined && Number(item.quantidade) < Number(item.quantidade_minima)
             return <tr key={item.id} className="border-t border-outline-variant/40">
               <td className="min-w-44 p-3"><p className="font-semibold text-primary">{item.nome}</p><p className="mt-1 text-on-surface-variant">{nomesFornecedores(item.id) || 'Sem fornecedor associado'}</p></td>
-              <td className="p-3">{item.categoria}</td><td className="whitespace-nowrap p-3">{numero(item.quantidade)} {item.unidade ?? 'un'}</td>
-              {lucro ? <><td className="whitespace-nowrap p-3">{item.quantidade_minima ?? 'Não definido'}</td><td className="whitespace-nowrap p-3">{moeda(Number(item.preco_custo))}</td><td className="whitespace-nowrap p-3">{moeda(Number(item.preco_venda))}</td><td className="whitespace-nowrap p-3">{moeda(lucro.valor)}</td><td className="p-3">{lucro.percentual === null ? 'Não calculável (custo zero)' : `${numero(lucro.percentual)}%`}</td><td className="p-3"><span className={`whitespace-nowrap rounded-full px-3 py-1 ${baixo ? 'bg-error-container text-on-error-container' : 'bg-surface-container text-on-surface'}`}>{baixo ? 'Abaixo do mínimo' : item.quantidade_minima == null ? 'Defina o mínimo' : 'Em dia'}</span></td></>
-                : <><td className="whitespace-nowrap p-3">{numero(item.quantidade_minima!)} {item.unidade}</td><td className="whitespace-nowrap p-3">{moeda(Number(item.custo))}</td><td className="p-3"><span className={`whitespace-nowrap rounded-full px-3 py-1 ${baixo ? 'bg-error-container text-on-error-container' : 'bg-surface-container text-on-surface'}`}>{baixo ? 'Abaixo do mínimo' : 'Em dia'}</span></td></>}
-              <td className="min-w-64 p-3"><div className="flex flex-wrap gap-2">{(['editar', 'entrada', 'saida', 'historico', 'associar', 'excluir'] as const).map(acao => <Button key={acao} size="compact" variant={acao === 'excluir' ? 'dangerOutline' : 'secondary'} disabled={bloqueado} aria-label={`${{ editar: 'Editar', entrada: 'Entrada', saida: 'Saída', historico: 'Histórico', associar: 'Fornecedores', excluir: 'Excluir' }[acao]}: ${item.nome}`} onClick={() => abrir(acao, item)}>{{ editar: 'Editar', entrada: 'Entrada', saida: 'Saída', historico: 'Histórico', associar: 'Fornecedores', excluir: 'Excluir' }[acao]}</Button>)}</div></td>
+              <td className="p-3 text-center">{item.categoria}</td><td className="whitespace-nowrap p-3 text-center">{numero(item.quantidade)} {item.unidade ?? 'un'}</td>
+              {lucro ? <><td className="whitespace-nowrap p-3 text-center">{item.quantidade_minima ?? 'Não definido'}</td><td className="whitespace-nowrap p-3 text-center">{moeda(Number(item.preco_custo))}</td><td className="whitespace-nowrap p-3 text-center">{moeda(Number(item.preco_venda))}</td><td className="whitespace-nowrap p-3 text-center">{moeda(lucro.valor)}</td><td className="p-3 text-center">{lucro.percentual === null ? 'Não calculável (custo zero)' : `${numero(lucro.percentual)}%`}</td><td className="p-3 text-center"><span className={`whitespace-nowrap rounded-full px-3 py-1 ${baixo ? 'bg-error-container text-on-error-container' : 'bg-surface-container text-on-surface'}`}>{baixo ? 'Abaixo do mínimo' : item.quantidade_minima == null ? 'Defina o mínimo' : 'Em dia'}</span></td></>
+                : <><td className="whitespace-nowrap p-3 text-center">{numero(item.quantidade_minima!)} {item.unidade}</td><td className="whitespace-nowrap p-3 text-center">{moeda(Number(item.custo))}</td><td className="p-3 text-center"><span className={`whitespace-nowrap rounded-full px-3 py-1 ${baixo ? 'bg-error-container text-on-error-container' : 'bg-surface-container text-on-surface'}`}>{baixo ? 'Abaixo do mínimo' : 'Em dia'}</span></td></>}
+              <td className="min-w-64 p-3 text-center"><div className="flex flex-wrap justify-center gap-2">{(['editar', 'entrada', 'saida', 'historico', 'associar', 'excluir'] as const).map(acao => <Button key={acao} size="compact" variant={acao === 'excluir' ? 'dangerOutline' : 'secondary'} disabled={bloqueado} aria-label={`${{ editar: 'Editar', entrada: 'Entrada', saida: 'Saída', historico: 'Histórico', associar: 'Fornecedores', excluir: 'Excluir' }[acao]}: ${item.nome}`} onClick={() => abrir(acao, item)}>{{ editar: 'Editar', entrada: 'Entrada', saida: 'Saída', historico: 'Histórico', associar: 'Fornecedores', excluir: 'Excluir' }[acao]}</Button>)}</div></td>
             </tr>
           })}</tbody>
         </table>
@@ -154,7 +159,7 @@ export default function Estoque() {
       {erroModal && <p role="alert" className="mb-4 rounded-default bg-error-container p-4 text-on-error-container">{erroModal}</p>}
       {modal.acao === 'historico' && <HistoricoEstoque tipo={tipo} item={modal.item!} onFechar={fechar} />}
       {(modal.acao === 'cadastro' || modal.acao === 'editar') && <FormularioItemEstoque tipo={tipo} item={modal.item} ocupado={ocupado} bloqueado={bloqueado} onCancelar={fechar}
-        categorias={itens.map(i => i.categoria)} fornecedores={fornecedores} fornecedoresIniciais={selecionados}
+        categorias={[...categorias.filter(c => c.tipo === tipo).map(c => c.nome), ...itens.map(i => i.categoria)]} fornecedores={fornecedores} fornecedoresIniciais={selecionados}
         onSalvar={dados => void executar(`/${tipo}${modal.item ? `/${modal.item.id}` : ''}`, dados, modal.item ? 'PUT' : 'POST')} />}
       {modal.acao === 'excluir' && <div className="space-y-4"><p>Confirmar exclusão de {modal.item?.nome}? Só é permitido excluir itens com saldo zero e sem vínculos com movimentações, vendas ou OS.</p><Button variant="danger" disabled={bloqueado} onClick={() => void executar(`/${tipo}/${modal.item!.id}`, undefined, 'DELETE')}>Confirmar exclusão</Button> <Button variant="secondary" disabled={ocupado} onClick={fechar}>Cancelar</Button></div>}
       {(modal.acao === 'entrada' || modal.acao === 'saida') && <form className="space-y-4" onSubmit={e => { e.preventDefault(); void executar('/movimentacoes-estoque', { tipo: modal.acao, [tipo === 'produtos' ? 'produto_id' : 'material_id']: modal.item!.id, quantidade, motivo }) }}>
@@ -186,6 +191,7 @@ export default function Estoque() {
       <Button className="mt-4" variant="secondary" disabled={ocupado} onClick={fechar}>Fechar</Button>
     </Dialog>}
     {comprasAbertas && <ComprasEstoque produtos={produtos} materiais={materiais} fornecedores={fornecedores} onFechar={() => setComprasAbertas(false)} onConcluida={() => { setComprasAbertas(false); setAviso('Compra registrada e saldo atualizado.'); atualizar() }} />}
-    {importacaoAberta && <ImportacaoEstoque produtos={produtos} materiais={materiais} onFechar={() => setImportacaoAberta(false)} onConcluida={() => { setImportacaoAberta(false); setAviso('Arquivo importado e saldos iniciais registrados.'); atualizar() }} />}
+    {historicoGeralAberto && <Dialog titulo="Histórico geral do estoque" largura="ampla" onCancelar={() => setHistoricoGeralAberto(false)}><HistoricoGeralEstoque onFechar={() => setHistoricoGeralAberto(false)} /></Dialog>}
+    {categoriasAbertas && <Dialog titulo="Categorias de estoque" largura="ampla" onCancelar={() => setCategoriasAbertas(false)}><CategoriasEstoque categorias={categorias} onFechar={() => setCategoriasAbertas(false)} onConcluida={() => { setAviso('Categoria cadastrada.'); atualizar() }} /></Dialog>}
   </section>
 }

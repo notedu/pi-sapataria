@@ -2,6 +2,7 @@ import { emTransacao } from '../config/transacao';
 import { ErroHttp } from '../utils/validacao';
 import { pool } from '../config/db';
 import { associarNaConexao } from './fornecedorModel';
+import { movimentar } from './estoqueModel';
 
 // O pg retorna numeric como texto para preservar a precisão dos valores.
 export interface Produto {
@@ -30,7 +31,7 @@ export async function buscar(id: number): Promise<Produto | undefined> {
   return resultado.rows[0];
 }
 
-export type DadosProduto = Pick<Produto, 'nome' | 'categoria' | 'preco_custo' | 'preco_venda' | 'quantidade_minima'> & { fornecedores_ids?: number[] };
+export type DadosProduto = Pick<Produto, 'nome' | 'categoria' | 'preco_custo' | 'preco_venda' | 'quantidade_minima'> & { fornecedores_ids?: number[]; quantidade_inicial?: string };
 
 export async function criar(dados: DadosProduto): Promise<Produto> {
   return emTransacao(async conexao => {
@@ -40,6 +41,11 @@ export async function criar(dados: DadosProduto): Promise<Produto> {
     );
     const item = resultado.rows[0]!;
     if (dados.fornecedores_ids !== undefined) await associarNaConexao(conexao, 'produtos', item.id, dados.fornecedores_ids);
+    if (dados.quantidade_inicial && dados.quantidade_inicial !== '0') {
+      await movimentar(conexao, { tipo: 'entrada', material_id: null, produto_id: item.id, quantidade: dados.quantidade_inicial, motivo: 'Saldo inicial do cadastro' });
+      const atualizado = await conexao.query<Produto>(`SELECT ${colunas} FROM sapataria.produtos WHERE id = $1`, [item.id]);
+      return atualizado.rows[0]!;
+    }
     return item;
   });
 }
