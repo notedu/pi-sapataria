@@ -406,12 +406,12 @@ Todos os endpoints abaixo exigem sessão válida. Alterações usam CSRF. Datas 
 ### A33 — GET /notificacoes e GET /notificacoes/nao-lidas
 
 - **Entrada:** sem corpo; retorna notificações destinadas somente ao usuário autenticado, ou sua quantidade não lida.
-- **Sucesso:** 200 com mensagem, origem, instante e situação de leitura.
+- **Sucesso:** 200 com ID como texto decimal (a chave é `bigint`), mensagem, origem, instante e situação de leitura.
 - **Erros, efeitos e origem:** 401 sem sessão. Não expõe notificações de outras pessoas.
 
 ### A34 — POST /notificacoes/{id}/lida e POST /notificacoes/lidas
 
-- **Entrada:** ID da notificação no primeiro caminho; sem corpo para marcar todas como lidas no segundo. Exige CSRF.
+- **Entrada:** ID positivo da notificação como sequência decimal no primeiro caminho; sem corpo para marcar todas como lidas no segundo. Exige CSRF.
 - **Sucesso:** 204. Uma pessoa só pode atualizar as próprias notificações.
 - **Erros, efeitos e origem:** 400 para ID inválido; 401 sem sessão; 404 para notificação inexistente, de outra pessoa ou já lida.
 

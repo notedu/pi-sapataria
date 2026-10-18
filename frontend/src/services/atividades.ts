@@ -12,7 +12,7 @@ export type Atividade = {
 }
 
 export type Notificacao = {
-  id: number
+  id: string
   mensagem: string
   criada_em: string
   lida_em: string | null
@@ -36,7 +36,8 @@ function atividadeValida(valor: unknown): valor is Atividade {
 }
 
 function notificacaoValida(valor: unknown): valor is Notificacao {
-  return objeto(valor) && Number.isInteger(valor.id) && typeof valor.mensagem === 'string' && typeof valor.criada_em === 'string'
+  return objeto(valor) && typeof valor.id === 'string' && /^[1-9]\d*$/.test(valor.id)
+    && typeof valor.mensagem === 'string' && typeof valor.criada_em === 'string'
     && (valor.lida_em === null || typeof valor.lida_em === 'string') && typeof valor.acao === 'string'
     && typeof valor.entidade_tipo === 'string' && (valor.entidade_id === null || Number.isInteger(valor.entidade_id))
     && typeof valor.ator_nome === 'string'
@@ -60,7 +61,7 @@ export async function contarNotificacoesNaoLidas(): Promise<number> {
   return dados.quantidade as number
 }
 
-export async function marcarNotificacaoLida(id: number): Promise<void> {
+export async function marcarNotificacaoLida(id: string): Promise<void> {
   await enviarComCsrf(`/notificacoes/${id}/lida`)
   window.dispatchEvent(new Event('notificacoes-atualizadas'))
 }
