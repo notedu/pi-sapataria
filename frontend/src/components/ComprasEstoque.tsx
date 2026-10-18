@@ -70,7 +70,7 @@ export default function ComprasEstoque({ produtos, materiais, fornecedores, onFe
           <optgroup label="Produtos para venda">{produtos.map(item => <option key={item.id} value={`produtos:${item.id}`}>{rotuloItem('produtos', item)}</option>)}</optgroup>
           <optgroup label="Materiais">{materiais.map(item => <option key={item.id} value={`materiais:${item.id}`}>{rotuloItem('materiais', item)}</option>)}</optgroup>
         </SelectField>
-        <InputField id={`compra-quantidade-${indice}`} label="Quantidade" type="number" min="0.01" step={linha.selecao.startsWith('produtos:') ? '1' : 'any'} required value={linha.quantidade} disabled={ocupado || incerto} onChange={event => campo(indice, 'quantidade', event.target.value)} />
+        <InputField id={`compra-quantidade-${indice}`} label="Quantidade" type="number" min={linha.selecao.startsWith('produtos:') ? '1' : '0.01'} step={linha.selecao.startsWith('produtos:') ? '1' : 'any'} required value={linha.quantidade} disabled={ocupado || incerto} onChange={event => campo(indice, 'quantidade', event.target.value)} />
         <InputField id={`compra-preco-${indice}`} label="Preço unitário na compra (R$)" type="number" min="0" step="0.01" required value={linha.preco_unitario} disabled={ocupado || incerto} onChange={event => campo(indice, 'preco_unitario', event.target.value)} />
         <div className="flex items-end">{linhas.length > 1 && <Button variant="dangerOutline" size="compact" disabled={ocupado} aria-label={`Remover linha ${indice + 1}`} onClick={() => setLinhas(atuais => atuais.filter((_, i) => i !== indice))}>Remover</Button>}</div>
       </fieldset>)}</div>

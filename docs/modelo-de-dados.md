@@ -138,6 +138,8 @@ Usos de materiais ficam em `materiais_os`. Cadastro, edição, avanço de status
 
 **15/10/2026 — Compras e importação aplicadas:** `produtos.quantidade_minima numeric` nullable para preservar cadastros anteriores; novos cadastros exigem mínimo inteiro não negativo. `compras_estoque` guarda fornecedor e instante; `itens_compra_estoque` guarda Produto/Material, quantidade e preço unitário. `movimentacoes_estoque.item_compra_id` liga cada linha da compra à sua entrada. Chaves, trigger e restrições garantem que a origem corresponda ao item, quantidade inteira para Produto, entrada como movimento de compra e apenas uma origem por movimento. O esquema consolidado preserva o histórico.
 
+**15/10/2026 — Correções da tela aplicadas:** `categorias_estoque` guarda sugestões por tipo (`produtos` ou `materiais`) com nome único dentro do tipo. O saldo inicial opcional informado no POST de Produto/Material é gravado como entrada `Saldo inicial do cadastro` junto ao cadastro e aos vínculos; saldo zero não cria movimento. A migração aditiva está em `backend/src/database/estoque-categorias.sql` e foi aplicada ao PostgreSQL configurado.
+
 **13/10/2026 — Cadastros de estoque aplicados ao PostgreSQL:** adiciona `cnpj`, `razao_social`, `nome_fantasia`, `cep`, `numero`, `email` e `telefone` como text nullable em fornecedores, com CHECK de formato; registros antigos mantêm null, sem preenchimento inventado ou unicidade nova. CNPJ armazenado sem máscara em maiúsculas, com 12 caracteres alfanuméricos e dois dígitos; CEP e telefone somente números. Nome continua obrigatório. Trigger `materiais_proteger_unidade` rejeita mudança de unidade com saldo antigo/novo não zero ou movimentações existentes, sem modificar saldos ou históricos. Categorias/unidades continuam textos, sem catálogo obrigatório ou conversão. `unidade_bloqueada` é informação derivada na API, não coluna do banco.
 
 **Atualização de 02/10/2026, aprovada por João Franco:** fornecedores cadastrados pelo nome, associação opcional de vários fornecedores a cada Produto para venda ou Material. A estrutura foi aplicada ao PostgreSQL nesta entrega e está representada em `schema.sql`. `fornecedores` possui `id` gerado e `nome text NOT NULL` não vazio; `produtos_fornecedores` e `materiais_fornecedores` usam chave primária composta (item, fornecedor) e FKs. A exclusão de fornecedor associado é bloqueada. Excluir um item permitido pelas regras existentes remove apenas suas associações de fornecedores.
@@ -153,9 +155,13 @@ RF-007/RF-008, RF-021/RF-022. Materiais têm os campos listados obrigatórios. P
 | materiais | nome text, categoria text, unidade text, quantidade numeric, quantidade_minima numeric, custo numeric |
 | produtos | nome text, categoria text, quantidade numeric, quantidade_minima numeric nullable para legado, preco_custo numeric, preco_venda numeric |
 
-Categoria e unidade são textos nesta etapa. Sem catálogo ou lista fechada. O nome/categoria não é globalmente único; importação rejeita duplicados no lote ou já cadastrados. Saldos começam em zero. Novos Produtos exigem mínimo inteiro; Produtos legados permanecem null até edição. Mínimos de Materiais aceitam frações. Valores monetários não negativos, com até duas casas. Cadastro/edição não alteram saldo. Compras e importações, além de entradas, saídas, consumo, venda e reversões, atualizam movimentos e saldos juntos (RN-018). Alertas abaixo de mínimos cadastrados estão implementados.
+Categorias cadastradas servem como sugestões por tipo; o item continua armazenando texto de categoria e não há conversão de unidade. O nome/categoria não é globalmente único. Saldos começam em zero quando o saldo inicial é omitido; saldo inicial positivo cria entrada histórica no cadastro. Novos Produtos exigem mínimo inteiro; Produtos legados permanecem null até edição. Mínimos de Materiais aceitam frações. Valores monetários não negativos, com até duas casas. Edição não altera saldo. Compras, saldo inicial e entradas, saídas, consumo, venda e reversões atualizam movimentos e saldos juntos (RN-018). Alertas abaixo de mínimos cadastrados estão implementados.
 
 CSV inicial não inclui fornecedor; vínculos de fornecedores podem ser associados após a importação pela tela. O lote não altera o custo/preço atual de cadastros existentes, pois duplicados são rejeitados.
+
+## Categorias — `categorias_estoque`
+
+RF-021/RF-022. Cada registro possui `tipo` (`produtos` ou `materiais`) e `nome` não vazio. O índice único por tipo e nome minúsculo evita duplicações. A categoria auxilia os formulários e não é uma FK obrigatória dos itens existentes.
 
 ## Compras — `compras_estoque` e `itens_compra_estoque`
 
@@ -210,7 +216,7 @@ O Guia §5.10 sugere cadastros auxiliares, mas ainda não resolve seu formato. A
 |---|---|
 | Tipos de serviço | Se a Configuração administrar um catálogo, considerar `tipos_servico` com `id` PK e `nome text` (obrigatoriedade pendente). Um ou vários serviços por OS precisa ser definido antes de escolher FK única ou tabela de ligação (PD-N03/PD-N04). |
 | Formas de pagamento | Se houver catálogo administrável, considerar `formas_pagamento` com `id` PK e `nome text` (obrigatoriedade pendente), referenciado por OS/Venda. As quatro opções atuais foram confirmadas; um catálogo administrável permanece pendente. |
-| Categorias de produtos e materiais | Se forem administradas em Configuração, considerar cadastro com `id` PK e `nome text` (obrigatoriedade pendente). Catálogo compartilhado ou separado ainda não definido; não duplicar tabelas nem fixar uma categoria obrigatória por item (PD-N03). |
+| Categorias auxiliares de outros módulos | Catálogo de categorias de Produtos e Materiais foi implementado em `categorias_estoque`; demais catálogos previstos em Configuração continuam pendentes (PD-N03). |
 | Dados da empresa e parâmetros financeiros | Previstos em §5.10, mas sem campos ou regras suficientes. Representação pendente; não criar tabela genérica de configurações nem fixar alíquota (PD-N03/PD-N06). |
 
 Login, Perfil e Dashboard não são novas entidades só por serem telas. Faturamento, lucro, imposto e gastos são indicadores previstos (§5.11); propõe-se obtê-los dos registros operacionais quando fórmulas e datas forem aprovadas, sem tabelas espelhando cada indicador. Histórico de custos/recebimentos poderá exigir dados adicionais conforme PD-N05/PD-N06; os campos atuais não garantem cálculo financeiro correto.

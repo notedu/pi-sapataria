@@ -14,6 +14,7 @@ export default function FormularioItemEstoque({ tipo, item, ocupado, bloqueado, 
 }) {
   const [dados, setDados] = useState<Record<string, string>>({
     nome: item?.nome ?? '', categoria: item?.categoria ?? '',
+    ...(!item ? { quantidade_inicial: '' } : {}),
     ...(tipo === 'produtos' ? { quantidade_minima: item?.quantidade_minima ?? '', preco_custo: item?.preco_custo ?? '', preco_venda: item?.preco_venda ?? '' }
       : { unidade: item?.unidade ?? '', quantidade_minima: item?.quantidade_minima ?? '', custo: item?.custo ?? '' }),
   })
@@ -44,6 +45,7 @@ export default function FormularioItemEstoque({ tipo, item, ocupado, bloqueado, 
         </>}
         <p className="text-body-sm text-on-surface-variant">{unidadeBloqueada ? 'A unidade está bloqueada para preservar saldo e histórico.' : 'Quantidade, mínimo, custo e consumo usarão esta unidade. Não há conversão automática entre unidades.'}</p>
       </>}
+      {!item && <InputField id="item-quantidade-inicial" label={tipo === 'produtos' ? 'Estoque atual (unidades)' : `Estoque atual${dados.unidade ? ` em ${dados.unidade}` : ''}`} type="number" min="0" step={tipo === 'produtos' ? '1' : 'any'} value={dados.quantidade_inicial} onChange={event => setDados({ ...dados, quantidade_inicial: event.target.value })} />}
       {campos.map(([campo, label]) => {
         const numerico = !['nome', 'categoria', 'unidade'].includes(campo)
         return <InputField key={campo} id={`item-${campo}`} label={label} required value={dados[campo]}
@@ -52,7 +54,7 @@ export default function FormularioItemEstoque({ tipo, item, ocupado, bloqueado, 
           onChange={event => setDados({ ...dados, [campo]: event.target.value })} />
       })}
       <SelecaoFornecedores fornecedores={fornecedores} selecionados={selecionados} onChange={setSelecionados} disabled={ocupado || bloqueado} />
-      <p className="text-body-sm text-on-surface-variant">O cadastro começa com saldo zero. Use Entrada para registrar a reposição. A edição não altera o saldo nem o limite mínimo.</p>
+      <p className="text-body-sm text-on-surface-variant">{item ? 'A edição não altera o saldo nem o limite mínimo.' : 'O estoque atual é opcional e será registrado como uma entrada inicial no histórico.'}</p>
       <Button type="submit" disabled={ocupado || bloqueado}>{ocupado ? 'Salvando…' : 'Salvar'}</Button>
     </fieldset>
     <Button variant="secondary" disabled={ocupado} onClick={onCancelar}>Cancelar</Button>

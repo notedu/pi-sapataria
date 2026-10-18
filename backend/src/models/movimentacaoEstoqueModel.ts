@@ -18,12 +18,51 @@ export interface MovimentacaoEstoque {
   item_compra_id: number | null;
 }
 
+export type HistoricoGeralEstoque = {
+  chave: string;
+  tipo: 'entrada' | 'saida' | 'cadastro';
+  item_id: number;
+  item_tipo: 'material' | 'produto';
+  item_nome: string;
+  quantidade: string | null;
+  data: Date;
+  motivo: string;
+  ator_nome: string | null;
+};
+
 const colunas = `id, tipo, material_id, produto_id, quantidade, data, motivo, item_venda_id, material_os_id, reversao_de_id, item_compra_id`;
 
 export async function listar(filtro?: { campo: 'material_id' | 'produto_id'; id: number }): Promise<MovimentacaoEstoque[]> {
   const resultado = await pool.query<MovimentacaoEstoque>(
     `SELECT ${colunas} FROM sapataria.movimentacoes_estoque ${filtro ? `WHERE ${filtro.campo} = $1 ORDER BY id DESC` : 'ORDER BY id'}`,
     filtro ? [filtro.id] : [],
+  );
+  return resultado.rows;
+}
+
+export async function listarGeral(): Promise<HistoricoGeralEstoque[]> {
+  const resultado = await pool.query<HistoricoGeralEstoque>(
+    `SELECT m.id::text AS chave, m.tipo AS tipo,
+            COALESCE(m.material_id, m.produto_id) AS item_id,
+            CASE WHEN m.material_id IS NULL THEN 'produto' ELSE 'material' END AS item_tipo,
+            COALESCE(mat.nome, prod.nome) AS item_nome,
+            m.quantidade::text AS quantidade, m.data, m.motivo, NULL::text AS ator_nome
+       FROM sapataria.movimentacoes_estoque m
+       LEFT JOIN sapataria.materiais mat ON mat.id = m.material_id
+       LEFT JOIN sapataria.produtos prod ON prod.id = m.produto_id
+     UNION ALL
+     SELECT ('cadastro-' || a.id)::text AS chave, 'cadastro' AS tipo,
+            a.entidade_id AS item_id,
+            a.entidade_tipo AS item_tipo,
+            COALESCE(mat.nome, prod.nome, 'Item de estoque') AS item_nome,
+            NULL::text AS quantidade, a.criado_em AS data,
+            CASE WHEN a.entidade_tipo = 'material' THEN 'Cadastro de material' ELSE 'Cadastro de produto' END AS motivo,
+            a.ator_nome
+       FROM sapataria.atividades a
+       LEFT JOIN sapataria.materiais mat ON a.entidade_tipo = 'material' AND mat.id = a.entidade_id
+       LEFT JOIN sapataria.produtos prod ON a.entidade_tipo = 'produto' AND prod.id = a.entidade_id
+      WHERE a.acao IN ('material.criado', 'produto.criado')
+     ORDER BY data DESC, chave DESC LIMIT 500`,
   );
   return resultado.rows;
 }

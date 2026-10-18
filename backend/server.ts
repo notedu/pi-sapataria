@@ -15,6 +15,7 @@ import movimentacaoEstoqueRoutes from './src/routes/movimentacaoEstoqueRoutes';
 import atividadeRoutes from './src/routes/atividadeRoutes';
 import compraEstoqueRoutes from './src/routes/compraEstoqueRoutes';
 import importacaoEstoqueRoutes from './src/routes/importacaoEstoqueRoutes';
+import categoriaEstoqueRoutes from './src/routes/categoriaEstoqueRoutes';
 import configuracaoRoutes from './src/routes/configuracaoRoutes';
 import { pool } from './src/config/db';
 import { armazenarSessoes, gerenciarSessao, producao } from './src/config/sessao';
@@ -62,6 +63,7 @@ app.use('/api/v1/configuracoes', exigirLogin, verificarCsrf, configuracaoRoutes)
 app.use('/api/v1/materiais', exigirLogin, verificarCsrf, materialRoutes);
 app.use('/api/v1/produtos', exigirLogin, verificarCsrf, produtoRoutes);
 app.use('/api/v1/fornecedores', exigirLogin, verificarCsrf, fornecedorRoutes);
+app.use('/api/v1/categorias-estoque', exigirLogin, verificarCsrf, categoriaEstoqueRoutes);
 app.use('/api/v1/ordens-servico', exigirLogin, verificarCsrf, ordemServicoRoutes);
 app.use('/api/v1/vendas', exigirLogin, verificarCsrf, vendaRoutes);
 app.use('/api/v1/movimentacoes-estoque', exigirLogin, verificarCsrf, movimentacaoEstoqueRoutes);
@@ -82,6 +84,10 @@ const tratarErro: ErrorRequestHandler = (error, _request, response, _next) => {
   }
   if (error.code === '23503') {
     response.status(409).json({ erro: { codigo: 'REGISTRO_VINCULADO', mensagem: 'A operação conflita com um vínculo do cadastro. Preserve os registros usados no histórico.' } });
+    return;
+  }
+  if (error.code === '23505' && error.constraint === 'categorias_estoque_tipo_nome_unico') {
+    response.status(409).json({ erro: { codigo: 'CATEGORIA_JA_CADASTRADA', mensagem: 'Esta categoria já foi cadastrada para o tipo de estoque.' } });
     return;
   }
   if (error.code === '23514' && error.constraint === 'materiais_unidade_com_historico') {

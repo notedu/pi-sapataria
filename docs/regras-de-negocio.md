@@ -8,7 +8,7 @@ Este documento registra permissões, condições e relações entre os módulos 
 
 Cada RN informa origem, classificação, situação da definição e limite do critério de aceitação. “Guia §…” remete à seção do Guia do Projeto. **Sugestão significa proposta não aprovada**, inclusive quando a fonte usa verbos afirmativos. As marcações dos §§3, 5, 6, 9.3 e 10 também abrangem tabelas e listas internas, conforme a [legenda documental](README.md#como-interpretar-as-classificacoes).
 
-**Situação atual:** autenticação e operações descritas nas decisões abaixo estão implementadas. Regras financeiras, alertas e telas não são consideradas concluídas.
+**Situação atual:** autenticação e operações descritas nas decisões abaixo estão implementadas. Regras financeiras e alertas de prazo continuam pendentes; alertas de estoque por mínimo cadastrado estão implementados.
 
 Critérios de sugestões são propostos e condicionados à aprovação. Quando falta decisão, o texto registra **Pendente de definição**. A autorização de criação destes documentos não altera a classificação original.
 
@@ -32,7 +32,7 @@ Essas decisões atualizam as pendências correspondentes de RN-001/RN-002/RN-004
 - RN-010: OS nasce Aberta; sequência Aberta → Em andamento → Pronta → Entregue. Responsável ativo escolhido no cadastro. Edição e novos usos somente Aberta/Em andamento. Cancelamento permitido até Pronta; Entregue/Cancelada finais. Valor manual; cálculo automático adiado.
 - RN-011: venda com pelo menos um produto, vendedor da sessão, preço do cadastro preservado em cada item e total calculado pela soma de quantidade × preço. Cadastro da venda e baixa são uma transação. Preço não pode ser sobrescrito na venda.
 - RN-012: baixa no registro do uso efetivo, uma linha por uso. Cancelamento de OS não repõe materiais. Devolução de material não utilizado é registrada separadamente e limitada ao consumo ainda não revertido. Indicadores de custo/financeiro permanecem pendentes.
-- RN-018/RN-019: materiais fracionáveis; produtos inteiros; valores monetários com até duas casas, zero permitido, negativos recusados. Saldos começam em zero, nunca negativos; quantidade mínima não negativa. Entrada, uso, saída e venda exigem quantidade positiva. Custo do material corresponde à unidade informada.
+- RN-018/RN-019: materiais fracionáveis; produtos inteiros; valores monetários com até duas casas, zero permitido, negativos recusados. Saldos começam em zero quando o cadastro não informa saldo inicial, nunca ficam negativos; quantidade mínima não negativa. Entrada, uso, saída e venda exigem quantidade positiva. Custo do material corresponde à unidade informada. Saldo inicial positivo no cadastro cria uma entrada histórica na mesma transação.
 - Entradas e saídas manuais registram motivo, data automática e saldo na mesma transação. Não há edição direta de saldo. OS e vendas também têm data automática.
 - Correções preservam a origem e registram movimento inverso. Um movimento manual pode ser estornado integralmente uma vez; venda usa cancelamento próprio e consumo usa devolução própria. Venda cancelada repõe somente quantidades efetivamente devolvidas, informadas no cancelamento. Não se edita/apaga movimento original.
 - RN-020: Clientes somente sem vínculos; Materiais/Produtos somente sem vínculos e com saldo zero. OS/Vendas são canceladas, funcionários desativados; histórico preservado.
@@ -42,7 +42,7 @@ Essas decisões atualizam as pendências correspondentes de RN-001/RN-002/RN-004
 - O Administrador pode consultar todas as atividades. O Funcionário consulta as ações próprias e atividades de OS atualmente atribuídas a ele. Cada pessoa consulta e atualiza somente as próprias notificações.
 - O histórico registra eventos operacionais de OS, autenticação bem-sucedida, Clientes, Funcionários, materiais/produtos/fornecedores, movimentações de estoque e vendas. Senhas e dados pessoais dos formulários não são copiados. Não se registra tentativa de login inválida nesta entrega.
 - Notificações: Administradores ativos recebem novas OS e cancelamentos de OS/venda; o Funcionário responsável ativo recebe atribuição de OS e mudanças de status da OS atualmente atribuída. O autor da ação não recebe aviso da própria ação.
-- Alertas automáticos de prazo e estoque ficam pendentes conforme RN-013/PD-N08. A lista de atividades é limitada a 250 resultados por consulta e notificações a 100; filtros permitem localizar eventos anteriores.
+- Alertas automáticos de prazo continuam pendentes conforme RN-013/PD-N08. O alerta de estoque abaixo do mínimo considera Materiais e Produtos com mínimo cadastrado e é atualizado junto aos dados da tela. A lista de atividades é limitada a 250 resultados por consulta e notificações a 100; filtros permitem localizar eventos anteriores.
 
 Estas confirmações substituem as pendências correspondentes das sugestões originais abaixo. Financeiro, alertas automáticos e cadastro auxiliar de configurações continuam fora desta etapa.
 

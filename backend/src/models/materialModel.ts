@@ -2,6 +2,7 @@ import { emTransacao } from '../config/transacao';
 import { ErroHttp } from '../utils/validacao';
 import { pool } from '../config/db';
 import { associarNaConexao } from './fornecedorModel';
+import { movimentar } from './estoqueModel';
 
 // O pg retorna numeric como texto para preservar a precisão dos valores.
 export interface Material {
@@ -32,7 +33,7 @@ export async function buscar(id: number): Promise<Material | undefined> {
   return resultado.rows[0];
 }
 
-export type DadosMaterial = Pick<Material, 'nome' | 'categoria' | 'unidade' | 'quantidade_minima' | 'custo'> & { fornecedores_ids?: number[] };
+export type DadosMaterial = Pick<Material, 'nome' | 'categoria' | 'unidade' | 'quantidade_minima' | 'custo'> & { fornecedores_ids?: number[]; quantidade_inicial?: string };
 
 export async function criar(dados: DadosMaterial): Promise<Material> {
   return emTransacao(async conexao => {
@@ -42,6 +43,11 @@ export async function criar(dados: DadosMaterial): Promise<Material> {
     );
     const item = resultado.rows[0]!;
     if (dados.fornecedores_ids !== undefined) await associarNaConexao(conexao, 'materiais', item.id, dados.fornecedores_ids);
+    if (dados.quantidade_inicial && dados.quantidade_inicial !== '0') {
+      await movimentar(conexao, { tipo: 'entrada', material_id: item.id, produto_id: null, quantidade: dados.quantidade_inicial, motivo: 'Saldo inicial do cadastro' });
+      const atualizado = await conexao.query<Material>(`SELECT ${consultaColunas} FROM sapataria.materiais WHERE id = $1`, [item.id]);
+      return { ...atualizado.rows[0]!, unidade_bloqueada: true };
+    }
     return { ...item, unidade_bloqueada: false };
   });
 }
