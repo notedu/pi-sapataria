@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { consultarUsuario, ErroApi, sair } from '../services/auth'
 import type { Usuario } from '../services/auth'
@@ -13,15 +13,18 @@ import { aplicarTemaEscuro, lerPreferencias } from '../services/preferencias'
 // Uma nova rota verifica novamente a sessão e o perfil na API.
 export default function AppLayout() {
   const { pathname } = useLocation()
-  return <LayoutComSessao key={pathname} caminho={pathname} />
+  return <LayoutComSessao caminho={pathname} />
 }
 
 function LayoutComSessao({ caminho }: { caminho: string }) {
   const navigate = useNavigate()
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [erro, setErro] = useState('')
+  const [erroSessao, setErroSessao] = useState<{ chave: string; mensagem: string } | null>(null)
   const [tentativa, setTentativa] = useState(0)
   const [carregando, setCarregando] = useState(true)
+  const chaveVerificacao = `${caminho}:${tentativa}`
+  const [verificacaoConcluida, setVerificacaoConcluida] = useState<string | null>(null)
   const [saindo, setSaindo] = useState(false)
   const [notificacoesNaoLidas, setNotificacoesNaoLidas] = useState(0)
   const [menuAberto, setMenuAberto] = useState(false)
@@ -33,14 +36,21 @@ function LayoutComSessao({ caminho }: { caminho: string }) {
       if (ativo) {
         aplicarTemaEscuro(lerPreferencias(dados.id).modoEscuro)
         setUsuario(dados)
+        setErro('')
+        setErroSessao(null)
       }
     }).catch(error => {
       if (!ativo) return
       if (error instanceof ErroApi && error.status === 401) navigate('/login', { replace: true })
-      else setErro(error instanceof Error ? error.message : 'Não foi possível verificar a sessão.')
-    }).finally(() => { if (ativo) setCarregando(false) })
+      else setErroSessao({ chave: chaveVerificacao, mensagem: error instanceof Error ? error.message : 'Não foi possível verificar a sessão.' })
+    }).finally(() => {
+      if (ativo) {
+        setCarregando(false)
+        setVerificacaoConcluida(chaveVerificacao)
+      }
+    })
     return () => { ativo = false }
-  }, [tentativa, navigate])
+  }, [chaveVerificacao, navigate])
 
   useEffect(() => {
     let ativo = true
@@ -68,8 +78,8 @@ function LayoutComSessao({ caminho }: { caminho: string }) {
     }
   }
 
-  if (carregando) return <main className="flex min-h-dvh items-center justify-center p-6"><p role="status">Verificando sessão…</p></main>
-  if (!usuario) return <main className="flex min-h-dvh flex-col items-center justify-center gap-6 p-6"><p role="alert">{erro || 'Sessão indisponível.'}</p><Button onClick={() => { setErro(''); setCarregando(true); setTentativa(valor => valor + 1) }}>Tentar novamente</Button></main>
+  if (!usuario && (carregando || verificacaoConcluida !== chaveVerificacao)) return <main className="flex min-h-dvh items-center justify-center p-6"><p role="status">Verificando sessão…</p></main>
+  if (!usuario) return <main className="flex min-h-dvh flex-col items-center justify-center gap-6 p-6"><p role="alert">{erroSessao?.chave === chaveVerificacao ? erroSessao.mensagem : 'Sessão indisponível.'}</p><Button onClick={() => setTentativa(valor => valor + 1)}>Tentar novamente</Button></main>
 
   const area = areas.find(item => item.caminho && (item.caminho === caminho || caminho.startsWith(`${item.caminho}/`)))
   if (area?.administrador && usuario.perfil !== 'administrador') return <Navigate to="/dashboard" replace />
@@ -90,7 +100,11 @@ function LayoutComSessao({ caminho }: { caminho: string }) {
       <main id="conteudo" tabIndex={-1} className="min-w-0 px-margin-mobile py-8 outline-none md:ml-64 md:p-8 lg:p-12">
         {erro && <p role="alert" className="mb-6 rounded-default bg-error-container p-4 text-on-error-container">{erro}</p>}
         <div className="page-transition">
-          <Outlet context={usuario} />
+          {carregando || verificacaoConcluida !== chaveVerificacao
+            ? <p role="status" className="py-8 text-center">Verificando sessão…</p>
+            : erroSessao?.chave === chaveVerificacao
+              ? <div className="space-y-4"><p role="alert" className="rounded-default bg-error-container p-4 text-on-error-container">{erroSessao.mensagem}</p><Button onClick={() => setTentativa(valor => valor + 1)}>Tentar novamente</Button></div>
+              : <Suspense fallback={<p role="status" className="py-8 text-center">Carregando tela…</p>}><Outlet context={usuario} /></Suspense>}
         </div>
       </main>
     </div>

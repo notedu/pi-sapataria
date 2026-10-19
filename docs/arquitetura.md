@@ -49,7 +49,7 @@ A inspeção foi estática: leitura dos arquivos, sem execução da aplicação 
 
 **Planejamento:** interface React, API RESTful em Node.js, persistência em PostgreSQL e integração de dados. A classificação individual dessas partes está nas seções seguintes; o desenho geral do Guia §7.2 continua sendo uma sugestão, não uma topologia de implantação aprovada. Topologia significa como os componentes ficam distribuídos e conectados no ambiente.
 
-**Implementação atual:** [frontend/index.html](../frontend/index.html) carrega [frontend/src/main.tsx](../frontend/src/main.tsx), que monta [frontend/src/App.tsx](../frontend/src/App.tsx) com React e `StrictMode`. A rota pública `/` apresenta a loja; `/login` e as rotas internas dão acesso ao sistema. A Landing Page usa imagens locais, links para contato e conteúdo estático, sem chamada à API nem persistência.
+**Implementação atual:** [frontend/index.html](../frontend/index.html) carrega [frontend/src/main.tsx](../frontend/src/main.tsx), que monta [frontend/src/App.tsx](../frontend/src/App.tsx) com React e `StrictMode`. A rota pública `/` apresenta a loja; `/login` e as rotas internas dão acesso ao sistema. As páginas usam divisão de código por rota e carregamento sob demanda; `AppLayout` e `Sidebar` persistem nas navegações internas, enquanto a checagem de sessão continua por rota. A Landing Page usa imagens locais, links para contato e conteúdo estático, sem chamada à API nem persistência.
 
 O back-end contém API Express, autenticação, rotas de negócio e conexão PostgreSQL descritas nas seções abaixo; essa implementação substitui os parágrafos históricos de ausência que permanecem como contexto do planejamento original.
 
