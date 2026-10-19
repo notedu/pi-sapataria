@@ -9,7 +9,7 @@ const variantes = {
   danger: 'bg-error text-on-error hover:bg-error/90',
 }
 
-const tamanhos = { default: 'px-6 py-4', compact: 'px-4 py-2 min-h-11', icon: 'p-3 min-h-11 min-w-11' }
+const tamanhos = { default: 'min-h-11 px-5 py-3', compact: 'min-h-11 px-4 py-2', icon: 'min-h-11 min-w-11 p-3' }
 
 export default function Button({ className = '', type = 'button', variant = 'primary', size = 'default', ...props }: ButtonProps) {
   return (

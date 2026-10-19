@@ -25,8 +25,8 @@ export default function HistoricoEstoque({ tipo, item, onFechar }: { tipo: TipoE
     <p className="text-body-sm">Saldo atual: {Number(item.quantidade).toLocaleString('pt-BR', { maximumFractionDigits: 10 })} {unidade}. O cadastro e as movimentações permanecem mesmo quando o saldo chega a zero.</p>
     {carregando && <p role="status">Carregando histórico…</p>}
     {erro && <div className="space-y-3"><p role="alert" className="rounded-default bg-error-container p-4 text-on-error-container">{erro}</p><Button variant="secondary" onClick={() => { setCarregando(true); setTentativa(v => v + 1) }}>Tentar novamente</Button></div>}
-    {!carregando && !erro && (movimentos.length ? <div className="overflow-x-auto">
-      <table className="w-full text-left text-body-sm"><caption className="sr-only">Movimentações de {item.nome}</caption>
+    {!carregando && !erro && (movimentos.length ? <div className="table-scroll" role="region" aria-label={`Movimentações de ${item.nome}; deslize horizontalmente para ver todas as colunas`} tabIndex={0}>
+      <table className="w-full min-w-[620px] text-left text-body-sm"><caption className="sr-only">Movimentações de {item.nome}</caption>
         <thead><tr>{['Data (Brasília)', 'Tipo', 'Quantidade', 'Origem', 'Motivo'].map(c => <th key={c} scope="col" className="whitespace-nowrap p-3 text-label-sm text-on-surface-variant">{c}</th>)}</tr></thead>
         <tbody>{movimentos.map(m => <tr key={m.id} className="border-t border-outline-variant/50">
           <td className="whitespace-nowrap p-3">{new Date(m.data).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}</td>

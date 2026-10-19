@@ -20,7 +20,7 @@ export default function Dialog({ titulo, children, onCancelar, ocupado = false, 
   return (
     <dialog ref={ref} aria-labelledby={tituloId} aria-busy={ocupado}
       onCancel={event => { event.preventDefault(); if (!ocupado) onCancelar() }}
-      className={`m-auto max-h-[90dvh] w-[calc(100%-2rem)] ${largura === 'ampla' ? 'max-w-4xl' : 'max-w-lg'} overflow-y-auto rounded-lg border border-outline-variant bg-surface p-6 text-on-surface shadow-xl backdrop:bg-black/40 md:p-8`}>
+      className={`dialog-responsive m-auto ${largura === 'ampla' ? 'max-w-4xl' : 'max-w-lg'} overflow-y-auto rounded-lg border border-outline-variant bg-surface p-4 text-on-surface shadow-xl backdrop:bg-black/40 sm:p-6 md:p-8`}>
       <h2 id={tituloId} className="mb-4 text-headline-md">{titulo}</h2>
       {children}
     </dialog>

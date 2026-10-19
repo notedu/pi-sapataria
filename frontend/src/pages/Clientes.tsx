@@ -38,8 +38,8 @@ export default function Clientes() {
       {carregando ? <p role="status">Carregando clientes…</p> : erro ? (
         <div className="space-y-4"><p role="alert" className="rounded-default bg-error-container p-4 text-on-error-container">{erro}</p><Button onClick={() => { setErro(''); setCarregando(true); setTentativa(valor => valor + 1) }}>Tentar novamente</Button></div>
       ) : lista.length === 0 ? <p className="rounded-lg border border-outline-variant p-8">Nenhum cliente cadastrado.</p> : (
-        <div className="overflow-x-auto rounded-lg border border-outline-variant bg-surface-container-lowest" role="region" aria-label="Lista de clientes" tabIndex={0}>
-          <table className="w-full text-left text-body-md">
+        <div className="table-scroll rounded-lg border border-outline-variant bg-surface-container-lowest" role="region" aria-label="Lista de clientes; deslize horizontalmente para ver todas as colunas" tabIndex={0}>
+          <table className="w-full min-w-[640px] text-left text-body-md">
             <caption className="sr-only">Clientes cadastrados e contatos</caption>
             <thead className="bg-surface-container-low text-label-md text-on-surface-variant"><tr>{['Nome', 'Telefone', 'E-mail', 'Ações'].map(titulo => <th key={titulo} scope="col" className="px-5 py-4">{titulo}</th>)}</tr></thead>
             <tbody>{lista.map(pessoa => <tr key={pessoa.id} className="border-t border-outline-variant/50"><td className="min-w-40 px-5 py-5 font-medium text-on-surface">{pessoa.nome}</td><td className="px-5 py-5">{/^\d{11}$/.test(pessoa.telefone) ? formatarTelefone(pessoa.telefone) : pessoa.telefone}</td><td className="px-5 py-5">{pessoa.email ?? 'Não informado'}</td><td className="px-5 py-5"><Button variant="secondary" size="icon" title="Ver perfil" aria-label={`Ver perfil de ${pessoa.nome}`} onClick={() => navigate(`/clientes/${pessoa.id}`)}><Icon name="busca" /></Button></td></tr>)}</tbody>

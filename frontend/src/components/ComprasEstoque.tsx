@@ -53,7 +53,7 @@ export default function ComprasEstoque({ produtos, materiais, fornecedores, onFe
   }
   const rotuloItem = (tipo: TipoEstoque, item: ItemEstoque) => `${item.nome} · ${item.quantidade} ${tipo === 'materiais' ? item.unidade : 'un'}`
   return <Dialog titulo="Compras de estoque" largura="ampla" ocupado={ocupado} onCancelar={onFechar}>
-    <div className="mb-5 flex gap-3">
+    <div className="mb-5 flex flex-wrap gap-3">
       <Button variant={aba === 'nova' ? 'primary' : 'secondary'} onClick={() => { setAba('nova'); setErro('') }}>Registrar compra</Button>
       <Button variant={aba === 'historico' ? 'primary' : 'secondary'} onClick={() => setAba('historico')}>Histórico de compras</Button>
     </div>
@@ -76,7 +76,7 @@ export default function ComprasEstoque({ produtos, materiais, fornecedores, onFe
       </fieldset>)}</div>
       <Button variant="secondary" disabled={ocupado || incerto || linhas.length >= 100} onClick={() => setLinhas(atuais => [...atuais, { selecao: '', quantidade: '', preco_unitario: '' }])}>Adicionar item</Button>
       {incerto && <p role="alert">O resultado da requisição é incerto. Atualize os dados antes de tentar novamente.</p>}
-      <div className="flex gap-3"><Button type="submit" disabled={ocupado || incerto || !fornecedorId || !linhas.length || linhas.some(l => !l.selecao || Number(l.quantidade) <= 0 || !l.preco_unitario)}>{ocupado ? 'Salvando…' : 'Registrar compra e entradas'}</Button><Button variant="secondary" disabled={ocupado} onClick={onFechar}>Fechar</Button></div>
+      <div className="flex flex-wrap gap-3"><Button type="submit" disabled={ocupado || incerto || !fornecedorId || !linhas.length || linhas.some(l => !l.selecao || Number(l.quantidade) <= 0 || !l.preco_unitario)}>{ocupado ? 'Salvando…' : 'Registrar compra e entradas'}</Button><Button variant="secondary" disabled={ocupado} onClick={onFechar}>Fechar</Button></div>
     </form> : <div className="space-y-4">
       {!historicoCarregado && <p role="status">Carregando compras…</p>}
       {historicoCarregado && !compras.length && !erro && <p>Nenhuma compra registrada.</p>}

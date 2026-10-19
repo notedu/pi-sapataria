@@ -28,7 +28,7 @@ function Historico({ caminho }: { caminho: string }) {
     return () => { ativo = false }
   }, [caminho, tentativa, navigate])
   return <section aria-label="Ordens de serviço" className="overflow-hidden rounded-default border border-outline-variant">
-    <header className="flex items-center justify-between gap-3 border-b border-outline-variant bg-surface-container-low px-5 py-4 md:px-6">
+    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-outline-variant bg-surface-container-low px-4 py-4 sm:px-5 md:px-6">
       <h2 className="flex items-center gap-3 text-body-lg font-semibold text-primary"><Icon name="servicos" />Ordens de serviço</h2>
       {ordens && <span className="text-label-sm text-on-surface-variant">{ordens.length} {ordens.length === 1 ? 'registro' : 'registros'}</span>}
     </header>

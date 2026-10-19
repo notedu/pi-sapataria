@@ -84,12 +84,14 @@ function LayoutComSessao({ caminho }: { caminho: string }) {
           <button type="button" aria-expanded={menuAberto} aria-controls="menu-sistema" aria-label={menuAberto ? 'Fechar menu' : 'Abrir menu'} onClick={() => setMenuAberto(valor => !valor)} className="rounded-default p-3 text-primary focus-visible:outline-2 md:hidden"><Icon name={menuAberto ? 'fechar' : 'menu'} /></button>
         </div>
       </header>
-      <div id="menu-sistema" className={`${menuAberto ? 'block' : 'hidden'} md:fixed md:inset-y-0 md:block md:w-64 md:overflow-y-auto`}>
+      <div id="menu-sistema" className={`${menuAberto ? 'block' : 'hidden'} max-h-[calc(100dvh-4.5rem)] overflow-y-auto md:fixed md:inset-y-0 md:block md:max-h-none md:w-64 md:overflow-y-auto`}>
         <Sidebar usuario={usuario} onSair={encerrarSessao} saindo={saindo} />
       </div>
       <main id="conteudo" tabIndex={-1} className="min-w-0 px-margin-mobile py-8 outline-none md:ml-64 md:p-8 lg:p-12">
         {erro && <p role="alert" className="mb-6 rounded-default bg-error-container p-4 text-on-error-container">{erro}</p>}
-        <Outlet context={usuario} />
+        <div className="page-transition">
+          <Outlet context={usuario} />
+        </div>
       </main>
     </div>
   )

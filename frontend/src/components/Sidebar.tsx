@@ -8,7 +8,7 @@ export default function Sidebar({ usuario, onSair, saindo }: { usuario: Usuario;
   const iniciais = usuario.nome.trim().split(/\s+/).slice(0, 2).map(parte => parte[0]).join('').toUpperCase()
   const configuracoes = areas.find(area => area.caminho === '/configuracoes')
   return (
-    <aside className="flex h-full flex-col bg-secondary-container p-4">
+    <aside className="flex min-h-full flex-col bg-secondary-container p-4 md:min-h-dvh">
       <div className="mb-10 flex items-center gap-2 pt-2">
         <img src={logo} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
         <div className="min-w-0">
@@ -16,7 +16,7 @@ export default function Sidebar({ usuario, onSair, saindo }: { usuario: Usuario;
           <p className="text-label-sm text-on-secondary-fixed-variant">Sapataria Profissional</p>
         </div>
       </div>
-      <nav aria-label="Navegação principal" className="flex-1">
+      <nav aria-label="Navegação principal" className="min-h-0 flex-1 overflow-y-auto">
         <ul className="space-y-2">
           {areas.filter(area => !['/notificacoes', '/atividades', '/configuracoes'].includes(area.caminho ?? '') && (!area.administrador || usuario.perfil === 'administrador')).map(area => (
             <li key={area.titulo}>
