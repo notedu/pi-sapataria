@@ -25,6 +25,11 @@ export const movimentosDemonstracao: MovimentoDemonstracao[] = [
   { id: 'demo-12', data: '2026-09-30', descricao: 'Conserto de salto', origem: 'OS', referencia: 'OS demonstrativa 105', tipo: 'entrada', valorCentavos: 8000 },
 ]
 
+export const intervaloDemonstracao = {
+  inicio: movimentosDemonstracao.reduce((menor, item) => item.data < menor ? item.data : menor, movimentosDemonstracao[0].data),
+  fim: movimentosDemonstracao.reduce((maior, item) => item.data > maior ? item.data : maior, movimentosDemonstracao[0].data),
+}
+
 export const formatarDinheiro = (centavos: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(centavos / 100)
 export const formatarData = (data: string) => data.split('-').reverse().join('/')
 
