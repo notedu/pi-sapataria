@@ -22,7 +22,7 @@ export default function GraficoEvolucao({ grupos }: { grupos: ReturnType<typeof 
         </div>
         <details className="mt-4">
           <summary className="cursor-pointer text-label-md text-primary">Ver valores do gráfico</summary>
-          <table className="mt-3 w-full text-left text-label-sm">
+          <table className="mt-3 w-full min-w-[420px] text-left text-label-sm">
             <caption className="sr-only">Valores por intervalo, correspondentes às barras</caption>
             <thead><tr><th scope="col" className="py-2">Intervalo</th><th scope="col">Entradas</th><th scope="col">Saídas</th></tr></thead>
             <tbody>{grupos.map(grupo => <tr key={grupo.de} className="border-t border-outline-variant/40"><th scope="row" className="py-2 font-normal">{formatarData(grupo.de)} a {formatarData(grupo.ate)}</th><td>{formatarDinheiro(grupo.entradas)}</td><td>{formatarDinheiro(grupo.saidas)}</td></tr>)}</tbody>

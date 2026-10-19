@@ -32,6 +32,10 @@ A rota `/login` oferece usuário/senha, layout responsivo conforme a referência
 
 ## Estrutura interna implementada
 
+**Padrão visual e movimento — melhoria de 18/10/2026:** telas internas usam a escala comum de título de página e o tema/tokens de `index.css`; botões compartilhados têm altura mínima de 44 px. Links e controles recebem foco visível e transições curtas. A troca entre rotas internas usa uma entrada discreta por opacidade, desativada quando o navegador informa preferência por movimento reduzido. A referência de cores e tipografia continua sendo `design/seda_e_couro_system/DESIGN.md`.
+
+**Ajustes responsivos — 18/10/2026:** tabelas extensas preservam suas colunas e oferecem rolagem horizontal por toque ou teclado. Diálogos respeitam a área visível e as margens seguras do dispositivo; menu móvel tem altura limitada com rolagem, e agrupamentos de ações quebram linha quando necessário. Esses ajustes melhoram a adaptação da interface e não certificam compatibilidade com todo aparelho ou navegador.
+
 ### Página pública da loja
 
 A rota `/` apresenta a Seda e Couro sem autenticação, com atalho **Acessar o sistema** para `/login`, serviços informados pelo Integrante 1, carrossel de fotos locais (troca automática a cada cinco segundos e setas laterais para navegação), Instagram, telefone/WhatsApp, endereço fornecido e controle de tema claro/escuro no rodapé. A escolha de tema da página pública fica salva neste navegador, separada da preferência por usuário dentro do sistema. Os links internos rolam suavemente e respeitam a preferência por movimento reduzido. O endereço é estático nesta entrega; não consulta Configurações nem altera API ou banco. A página é institucional, sem venda, agendamento ou portal do cliente, conforme planejamento.

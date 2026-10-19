@@ -43,8 +43,8 @@ export default function ImportacaoEstoque({ produtos, materiais, onFechar, onCon
       <input id="arquivo-estoque" type="file" accept=".csv,text/csv" disabled={ocupado} onChange={event => void selecionar(event.target.files?.[0])} className="block w-full rounded-default border border-outline-variant p-3" />
       {nomeArquivo && <p className="text-body-sm">{nomeArquivo}: {linhas.length} linha(s)</p>}
       {erro && <p role="alert" className="rounded-default bg-error-container p-4 text-on-error-container">{erro}{incerto && ' Atualize o estoque antes de tentar novamente.'}</p>}
-      {!!linhas.length && <div className="max-h-80 overflow-auto rounded-default border border-outline-variant">
-        <table className="w-full text-left text-body-sm"><caption className="sr-only">Prévia da importação</caption>
+      {!!linhas.length && <div className="table-scroll max-h-80 overflow-y-auto rounded-default border border-outline-variant" role="region" aria-label="Prévia da importação; deslize horizontalmente e verticalmente para revisar as linhas" tabIndex={0}>
+        <table className="w-full min-w-[620px] text-left text-body-sm"><caption className="sr-only">Prévia da importação</caption>
           <thead><tr>{['Linha', 'Item', 'Tipo', 'Saldo inicial', 'Validação'].map(c => <th key={c} className="whitespace-nowrap p-3 text-label-sm">{c}</th>)}</tr></thead>
           <tbody>{linhas.map(linha => <tr key={linha.numero} className="border-t border-outline-variant/50">
             <td className="p-3">{linha.numero}</td><td className="p-3">{linha.dados?.nome ?? '—'}</td><td className="p-3">{linha.dados?.tipo ?? '—'}</td><td className="p-3">{linha.dados?.quantidade ?? '—'}</td>

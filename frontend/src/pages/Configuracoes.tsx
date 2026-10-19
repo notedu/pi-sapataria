@@ -30,8 +30,8 @@ function Interruptor({ id, texto, descricao, marcado, aoAlterar }: {
   return <div className="flex items-center justify-between gap-5 py-3">
     <div><label htmlFor={id} className="text-label-md text-on-surface">{texto}</label><p className="text-label-sm text-on-surface-variant">{descricao}</p></div>
     <button id={id} type="button" role="switch" aria-checked={marcado} aria-label={texto} onClick={() => aoAlterar(!marcado)}
-      className={`relative h-7 w-12 shrink-0 rounded-full p-1 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${marcado ? 'bg-primary' : 'bg-outline-variant'}`}>
-      <span aria-hidden="true" className={`block h-5 w-5 rounded-full bg-surface transition-transform ${marcado ? 'translate-x-5' : 'translate-x-0'}`} />
+      className={`relative h-11 w-14 shrink-0 rounded-full p-1 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${marcado ? 'bg-primary' : 'bg-outline-variant'}`}>
+      <span aria-hidden="true" className={`block h-5 w-5 rounded-full bg-surface transition-transform ${marcado ? 'translate-x-7' : 'translate-x-0'}`} />
     </button>
   </div>
 }

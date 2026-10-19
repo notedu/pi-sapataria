@@ -104,7 +104,7 @@ export default function LandingPage() {
     }, 300)
   }
 
-  return <div className="min-h-screen bg-surface text-on-surface">
+  return <div className="landing-root min-h-screen bg-surface text-on-surface">
     <header className="sticky top-0 z-20 border-b border-outline-variant/60 bg-surface/95 backdrop-blur">
       <div className="mx-auto flex max-w-container-max items-center justify-between gap-4 px-5 py-3 md:px-8">
         <a href="#inicio" className="flex min-w-0 items-center gap-3" aria-label="Seda e Couro, início">
