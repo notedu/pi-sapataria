@@ -31,15 +31,15 @@ export default function DetalhesCategoriaFinanceira({ categoria, movimentos, per
   return <Dialog titulo={`Detalhes de ${titulo}`} onCancelar={onFechar}>
     <p className="text-label-sm text-on-surface-variant">{formatarData(periodo.inicio)} a {formatarData(periodo.fim)}</p>
     <p className="mt-4 text-body-md">{descricao}</p>
-    {temValores && <>
-      <p className="mt-5 text-headline-md tabular-nums">{formatarDinheiro(total)}</p>
+    {temValores && <section aria-label={`Resumo de ${titulo}`} className="mt-5">
+      <p className="text-headline-md tabular-nums">{formatarDinheiro(total)}</p>
       <p className="mt-1 text-label-sm text-on-surface-variant">Total demonstrativo · {registros.length} registros fictícios</p>
-      {categoria === 'caixa' && <dl className="mt-4 grid grid-cols-2 gap-3 text-body-md"><div><dt>Entradas</dt><dd className="font-semibold tabular-nums">{formatarDinheiro(resumo.entradas)}</dd></div><div><dt>Saídas</dt><dd className="font-semibold tabular-nums">{formatarDinheiro(resumo.saidas)}</dd></div></dl>}
-      {registros.length === 0 ? <p className="mt-5">Nenhum registro demonstrativo nesta categoria para o período selecionado.</p> : <ul className="mt-5 divide-y divide-outline-variant">
+      {categoria === 'caixa' && <dl className="mt-4 grid grid-cols-2 gap-3 text-body-md"><div><dt className="text-label-sm text-on-surface-variant">Entradas</dt><dd className="font-semibold tabular-nums">{formatarDinheiro(resumo.entradas)}</dd></div><div><dt className="text-label-sm text-on-surface-variant">Saídas</dt><dd className="font-semibold tabular-nums">{formatarDinheiro(resumo.saidas)}</dd></div></dl>}
+      {registros.length === 0 ? <p role="status" className="mt-5 rounded-default bg-surface-container-low p-4 text-body-md">Nenhum registro demonstrativo nesta categoria para o período e os filtros selecionados.</p> : <ul aria-label={`Registros de ${titulo}`} className="mt-5 divide-y divide-outline-variant">
         {registros.map(item => <li key={item.id} className="py-4"><p className="font-semibold">{item.descricao}</p><p className="mt-1 text-label-sm text-on-surface-variant">{item.referencia} · {formatarData(item.data)}</p><p className="mt-2 text-body-md tabular-nums">{item.tipo === 'entrada' ? 'Entrada' : 'Saída'}: {formatarDinheiro(item.valorCentavos)}</p></li>)}
       </ul>}
-    </>}
-    {!temValores && <p className="mt-5 rounded-default bg-secondary-container p-4 text-body-md">Nenhum valor é apresentado enquanto esta apuração não estiver disponível.</p>}
+    </section>}
+    {!temValores && <section aria-label={`Apuração de ${titulo}`} className="mt-5 rounded-default bg-secondary-container p-4 text-body-md"><p className="font-semibold">Apuração ainda não disponível</p><p className="mt-2">Nenhum valor é apresentado enquanto as regras e os dados necessários não estiverem definidos.</p></section>}
     <Button className="mt-6" onClick={onFechar}>Fechar</Button>
   </Dialog>
 }
