@@ -134,7 +134,7 @@ Usos de materiais ficam em `materiais_os`. Cadastro, edição, avanço de status
 
 ## Estoques — `materiais` e `produtos`
 
-**Complemento confirmado por João Franco:** o esquema consolidado inclui `prazo_pagamento`, `meios_pagamento`, `desconto` e `moeda` como text nullable, com CHECK de texto não vazio quando presente. A atualização foi aplicada com os quatro campos, sem preencher dados desconhecidos. São condições comerciais informativas; não criam cálculo financeiro ou tabela de compras. Histórico exibido pela interface usa `movimentacoes_estoque` existente, sem duplicação. Saída total mantém o Material e suas movimentações.
+**Complemento confirmado por João Franco:** o esquema consolidado inclui `prazo_pagamento`, `meios_pagamento`, `desconto` e `moeda` como text nullable, com CHECK de texto não vazio quando presente. A atualização foi aplicada com os quatro campos, sem preencher dados desconhecidos. São condições comerciais informativas; compras de estoque geram lançamentos financeiros de saída e atualizam o custo atual pelo método médio ponderado. Histórico exibido pela interface usa `movimentacoes_estoque` existente, sem duplicação. Saída total mantém o Material e suas movimentações.
 
 **15/10/2026 — Compras e importação aplicadas:** `produtos.quantidade_minima numeric` nullable para preservar cadastros anteriores; novos cadastros exigem mínimo inteiro não negativo. `compras_estoque` guarda fornecedor e instante; `itens_compra_estoque` guarda Produto/Material, quantidade e preço unitário. `movimentacoes_estoque.item_compra_id` liga cada linha da compra à sua entrada. Chaves, trigger e restrições garantem que a origem corresponda ao item, quantidade inteira para Produto, entrada como movimento de compra e apenas uma origem por movimento. O esquema consolidado preserva o histórico.
 
@@ -219,7 +219,7 @@ O Guia §5.10 sugere cadastros auxiliares, mas ainda não resolve seu formato. A
 | Categorias auxiliares de outros módulos | Catálogo de categorias de Produtos e Materiais foi implementado em `categorias_estoque`; demais catálogos previstos em Configuração continuam pendentes (PD-N03). |
 | Dados da empresa e parâmetros financeiros | Previstos em §5.10, mas sem campos ou regras suficientes. Representação pendente; não criar tabela genérica de configurações nem fixar alíquota (PD-N03/PD-N06). |
 
-Login, Perfil e Dashboard não são novas entidades só por serem telas. Faturamento, lucro, imposto e gastos são indicadores previstos (§5.11); propõe-se obtê-los dos registros operacionais quando fórmulas e datas forem aprovadas, sem tabelas espelhando cada indicador. Histórico de custos/recebimentos poderá exigir dados adicionais conforme PD-N05/PD-N06; os campos atuais não garantem cálculo financeiro correto.
+Login, Perfil e Dashboard não são novas entidades só por serem telas. A integração financeira implementada em 20/10/2026 usa `lancamentos_financeiros` (origem, categoria, tipo, valor e estorno), `parcelas_financeiras` (vencimento e divisão do lançamento) e `pagamentos_financeiros` (valor, forma e data efetiva). `movimentacoes_estoque` mantém `custo_unitario` e `custo_total` para apuração pelo custo médio ponderado. As tabelas são criadas pela migração `backend/src/database/financeiro.sql`; a migração também converte registros operacionais legados sem duplicá-los. Impostos, notas fiscais e lucro líquido continuam fora do modelo até decisão da equipe.
 
 ## Sequência sugerida de implementação
 

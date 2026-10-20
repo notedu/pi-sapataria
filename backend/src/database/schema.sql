@@ -463,3 +463,68 @@ CREATE INDEX IF NOT EXISTS notificacoes_destinatario_idx ON sapataria.notificaco
 CREATE INDEX IF NOT EXISTS notificacoes_nao_lidas_idx ON sapataria.notificacoes (destinatario_id, criada_em DESC) WHERE lida_em IS NULL;
 REVOKE ALL ON TABLE sapataria.atividades, sapataria.notificacoes FROM PUBLIC;
 COMMIT;
+
+-- Integração financeira: lançamentos, parcelas, pagamentos e custos históricos.
+BEGIN;
+CREATE TABLE IF NOT EXISTS sapataria.lancamentos_financeiros (
+  id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  tipo text NOT NULL CHECK (tipo IN ('entrada', 'saida')),
+  categoria text NOT NULL CHECK (length(trim(categoria)) > 0 AND length(categoria) <= 80),
+  descricao text NOT NULL CHECK (length(trim(descricao)) > 0 AND length(descricao) <= 500),
+  valor_total numeric NOT NULL CHECK (valor_total >= 0 AND valor_total < 'Infinity'::numeric AND valor_total = round(valor_total, 2)),
+  origem_tipo text,
+  origem_id integer,
+  estorno_de_id integer REFERENCES sapataria.lancamentos_financeiros(id),
+  motivo_estorno text,
+  criado_por integer REFERENCES sapataria.funcionarios(id) ON DELETE SET NULL,
+  criado_em timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT lancamento_origem_valida CHECK ((origem_tipo IS NULL AND origem_id IS NULL) OR (origem_tipo IS NOT NULL AND origem_id IS NOT NULL)),
+  CONSTRAINT lancamento_estorno_valido CHECK ((estorno_de_id IS NULL AND motivo_estorno IS NULL) OR (estorno_de_id IS NOT NULL AND length(trim(motivo_estorno)) > 0))
+);
+CREATE INDEX IF NOT EXISTS lancamentos_financeiros_criado_em_idx ON sapataria.lancamentos_financeiros (criado_em DESC, id DESC);
+CREATE INDEX IF NOT EXISTS lancamentos_financeiros_origem_idx ON sapataria.lancamentos_financeiros (origem_tipo, origem_id);
+
+CREATE TABLE IF NOT EXISTS sapataria.parcelas_financeiras (
+  id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  lancamento_id integer NOT NULL REFERENCES sapataria.lancamentos_financeiros(id) ON DELETE CASCADE,
+  numero integer NOT NULL CHECK (numero > 0),
+  total_parcelas integer NOT NULL CHECK (total_parcelas > 0),
+  valor numeric NOT NULL CHECK (valor > 0 AND valor < 'Infinity'::numeric AND valor = round(valor, 2)),
+  vencimento date NOT NULL,
+  UNIQUE (lancamento_id, numero),
+  CONSTRAINT parcela_numero_valido CHECK (numero <= total_parcelas)
+);
+CREATE INDEX IF NOT EXISTS parcelas_financeiras_vencimento_idx ON sapataria.parcelas_financeiras (vencimento, id);
+
+CREATE TABLE IF NOT EXISTS sapataria.pagamentos_financeiros (
+  id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  parcela_id integer NOT NULL REFERENCES sapataria.parcelas_financeiras(id) ON DELETE CASCADE,
+  valor numeric NOT NULL CHECK (valor > 0 AND valor < 'Infinity'::numeric AND valor = round(valor, 2)),
+  forma_pagamento text NOT NULL CHECK (forma_pagamento IN ('pix', 'credito', 'debito', 'dinheiro')),
+  pago_em timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  criado_por integer REFERENCES sapataria.funcionarios(id) ON DELETE SET NULL
+);
+CREATE INDEX IF NOT EXISTS pagamentos_financeiros_pago_em_idx ON sapataria.pagamentos_financeiros (pago_em DESC, id DESC);
+CREATE INDEX IF NOT EXISTS pagamentos_financeiros_parcela_idx ON sapataria.pagamentos_financeiros (parcela_id);
+
+ALTER TABLE sapataria.movimentacoes_estoque ADD COLUMN IF NOT EXISTS custo_unitario numeric, ADD COLUMN IF NOT EXISTS custo_total numeric;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'movimentos_custo_valido' AND conrelid = 'sapataria.movimentacoes_estoque'::regclass) THEN
+    ALTER TABLE sapataria.movimentacoes_estoque ADD CONSTRAINT movimentos_custo_valido CHECK (
+      (custo_unitario IS NULL OR (custo_unitario >= 0 AND custo_unitario < 'Infinity'::numeric AND custo_unitario = round(custo_unitario, 2))) AND
+      (custo_total IS NULL OR (custo_total >= 0 AND custo_total < 'Infinity'::numeric AND custo_total = round(custo_total, 2)))
+    );
+  END IF;
+END $$;
+REVOKE ALL ON TABLE sapataria.lancamentos_financeiros, sapataria.parcelas_financeiras, sapataria.pagamentos_financeiros FROM PUBLIC;
+DO $$
+DECLARE papel text;
+BEGIN
+  FOREACH papel IN ARRAY ARRAY['anon', 'authenticated'] LOOP
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = papel) THEN
+      EXECUTE format('REVOKE ALL ON TABLE sapataria.lancamentos_financeiros, sapataria.parcelas_financeiras, sapataria.pagamentos_financeiros FROM %I', papel);
+    END IF;
+  END LOOP;
+END $$;
+COMMIT;

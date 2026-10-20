@@ -2,6 +2,7 @@ import { pool } from '../config/db';
 import { emTransacao } from '../config/transacao';
 import { ErroHttp } from '../utils/validacao';
 import { movimentar } from './estoqueModel';
+import * as financeiroModel from './financeiroModel';
 
 export type ItemCompra = { material_id: number | null; produto_id: number | null; quantidade: string; preco_unitario: string };
 
@@ -21,7 +22,7 @@ export async function listar() {
   return (await pool.query(`${consulta} GROUP BY c.id, f.nome ORDER BY c.registrada_em DESC, c.id DESC`)).rows;
 }
 
-export async function criar(fornecedorId: number, itens: ItemCompra[]) {
+export async function criar(fornecedorId: number, itens: ItemCompra[], criadoPor?: number) {
   return emTransacao(async conexao => {
     const fornecedor = await conexao.query('SELECT id FROM sapataria.fornecedores WHERE id=$1 FOR KEY SHARE', [fornecedorId]);
     if (!fornecedor.rowCount) throw new ErroHttp(400, 'FORNECEDOR_INVALIDO', 'Selecione um fornecedor cadastrado.');
@@ -39,9 +40,12 @@ export async function criar(fornecedorId: number, itens: ItemCompra[]) {
       );
       await movimentar(conexao, {
         tipo: 'entrada', material_id: item.material_id, produto_id: item.produto_id,
-        quantidade: item.quantidade, motivo: `Compra #${compraId}`, item_compra_id: salvo.rows[0].id,
+        quantidade: item.quantidade, motivo: `Compra #${compraId}`, item_compra_id: salvo.rows[0].id, custo_unitario: item.preco_unitario,
       });
     }
+    const total = await conexao.query<{ total: string }>('SELECT COALESCE(SUM(quantidade * preco_unitario),0)::text AS total FROM sapataria.itens_compra_estoque WHERE compra_id=$1', [compraId]);
+    const categorias = new Set(itens.map(item => item.material_id !== null ? 'compra_materiais' : 'compra_produtos'));
+    await financeiroModel.criarCompra(conexao, compraId, total.rows[0]!.total, categorias.size === 1 ? [...categorias][0]! : 'compra_estoque', criadoPor);
     const registro = await conexao.query(`${consulta} WHERE c.id=$1 GROUP BY c.id, f.nome`, [compraId]);
     return registro.rows[0];
   });

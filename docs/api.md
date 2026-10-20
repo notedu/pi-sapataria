@@ -68,8 +68,8 @@ O contrato combina como front-end e back-end trocam pedidos e respostas. **Clien
 | A28 | Configurações da loja | `PUT /configuracoes/loja` | Alterar o endereço comercial | Administrador, com CSRF — RN-003 | Implementado |
 | A29 | Configurações | `POST /configuracoes/{cadastro}` | Cadastrar item auxiliar | Pendente — RN-003 | Proposto |
 | A26 | Dashboard | `GET /dashboard` | Consultar resumo operacional | Pendente; acesso amplo é sugestão | Proposto |
-| A30 | Financeiro | `GET /financeiro` | Consultar painel financeiro | Administrador — RN-003 | Proposto; não implementado |
-| A31 | Financeiro | `GET /financeiro/{indicador}` | Consultar indicador detalhado | Administrador — RN-003 | Proposto; não implementado |
+| A30 | Financeiro | `GET /financeiro` | Consultar painel financeiro | Administrador — RN-003 | Implementado |
+| A31 | Financeiro | `GET /financeiro/{indicador}` | Consultar indicador detalhado | Administrador — RN-003 | Implementado |
 
 ## Consultas adicionais implementadas
 
@@ -382,16 +382,26 @@ Exemplo de sequência no Insomnia: login → cadastrar produto → registrar ent
 <a id="a30"></a>
 ### A30 — GET /financeiro
 
-- **Entrada:** Período opcional inicio/fim; datas de reconhecimento, limites e período padrão pendentes. Sem corpo.
-- **Sucesso:** 200; totais e evolução dos indicadores aprovados; chaves e fórmulas pendentes.
-- **Erros, efeitos e origem:** E + N. Somente consulta é sugestão RN-007. Guia §5.11; RF-025; PD-N05/PD-N06. Não retorna zero como substituto de regra ausente.
+- **Entrada:** `inicio` e `fim` opcionais em `YYYY-MM-DD`; o período considera a data efetiva do pagamento e o padrão é o período completo quando omitido. Sem corpo.
+- **Sucesso:** `200`, com `periodo`, `resumo`, `movimentacoes` pagas e `contas`/parcelas. O resumo informa faturamento bruto, saídas, compras, estornos, custo de produtos/materiais usados, despesas, lucro bruto e lucro operacional. Impostos e lucro líquido retornam `null` até definição.
+- **Erros, efeitos e origem:** `400` para datas inválidas ou invertidas, `401` sem sessão e `403` para Funcionário. Consulta não altera dados; exige Administrador conforme RN-003.
 
 <a id="a31"></a>
 ### A31 — GET /financeiro/{indicador}
 
-- **Entrada:** indicador: faturamento, lucro, imposto ou materiais (nomes propostos); período como A30; P apenas se houver lista aprovada.
-- **Sucesso:** 200; detalhamento do indicador aprovado, estrutura pendente.
-- **Erros, efeitos e origem:** E + R + N. Mesmo significado do painel; não inventa fórmula, percentual ou base de custos. Guia §5.11; RN-014 a RN-017; PD-N06.
+- **Entrada:** indicador `faturamento`, `lucro`, `impostos` ou `materiais`; período como A30.
+- **Sucesso:** `200`, com o valor do resumo correspondente e as movimentações do período. Impostos retornam `null` enquanto a regra não for definida.
+- **Erros, efeitos e origem:** `400` para período inválido, `401` sem sessão, `403` para Funcionário e `404` para indicador desconhecido.
+
+### Operações financeiras administrativas
+
+Implementadas sob `/api/v1/financeiro`, sempre com sessão de Administrador e CSRF nas gravações:
+
+- `POST /despesas`: registra aluguel, energia, água ou funcionários, com valor, vencimento e quantidade opcional de parcelas.
+- `POST /pagamentos`: registra pagamento parcial ou total de uma parcela, com forma `pix`, `credito`, `debito` ou `dinheiro` e data efetiva opcional.
+- `POST /lancamentos/{id}/estorno`: cria lançamento inverso uma única vez, exige motivo e mantém a origem.
+
+Vendas, ordens de serviço, compras de estoque e custos de movimentação são registrados automaticamente nas transações dos respectivos módulos. A migração `backend/src/database/financeiro.sql` é aditiva e possui compatibilidade para registros anteriores.
 
 ## Atividades e notificações implementadas em 15/10/2026
 

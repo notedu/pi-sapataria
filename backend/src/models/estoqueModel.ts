@@ -12,6 +12,7 @@ export interface Movimento {
   material_os_id?: number;
   reversao_de_id?: number;
   item_compra_id?: number;
+  custo_unitario?: string;
 }
 
 // Único caminho usado por entradas, vendas, consumo e devoluções para alterar saldos.
@@ -19,21 +20,34 @@ export async function movimentar(conexao: PoolClient, dados: Movimento) {
   const tabela = dados.material_id !== null ? 'materiais' : 'produtos';
   const id = dados.material_id ?? dados.produto_id;
   decimal(dados.quantidade, 'quantidade', { positivo: true, inteiro: tabela === 'produtos' });
-  const item = await conexao.query(`SELECT id FROM sapataria.${tabela} WHERE id = $1 FOR UPDATE`, [id]);
+  const colunaCusto = tabela === 'materiais' ? 'custo' : 'preco_custo';
+  const item = await conexao.query(`SELECT id, quantidade, ${colunaCusto} AS custo_atual FROM sapataria.${tabela} WHERE id = $1 FOR UPDATE`, [id]);
   if (!item.rowCount) throw new ErroHttp(404, 'ITEM_NAO_ENCONTRADO', 'Material ou produto não encontrado.');
+  const custoUnitario = dados.tipo === 'saida' ? String(item.rows[0].custo_atual) : dados.custo_unitario ?? null;
+  const quantidadeDelta = dados.tipo === 'saida' ? `-${dados.quantidade}` : dados.quantidade;
+  if (dados.tipo === 'entrada' && dados.custo_unitario !== undefined) {
+    await conexao.query(
+      `UPDATE sapataria.${tabela}
+          SET quantidade = quantidade + $2::numeric,
+              ${colunaCusto} = CASE WHEN quantidade + $2::numeric = 0 THEN ${colunaCusto}
+                ELSE round(((quantidade * ${colunaCusto}) + ($2::numeric * $3::numeric)) / (quantidade + $2::numeric), 2) END
+        WHERE id = $1`, [id, quantidadeDelta, dados.custo_unitario],
+    );
+  } else {
   // UPDATE condicional + bloqueio impedem duas requisições de gastar o mesmo saldo.
   const saldo = await conexao.query(
     `UPDATE sapataria.${tabela} SET quantidade = quantidade + $2::numeric
      WHERE id = $1 AND quantidade + $2::numeric >= 0 RETURNING quantidade`,
-    [id, dados.tipo === 'saida' ? `-${dados.quantidade}` : dados.quantidade],
+    [id, quantidadeDelta],
   );
   if (!saldo.rowCount) throw new ErroHttp(409, 'ESTOQUE_INSUFICIENTE', 'Saldo insuficiente para concluir a operação.');
+  }
   const movimento = await conexao.query(
     `INSERT INTO sapataria.movimentacoes_estoque
-     (tipo, material_id, produto_id, quantidade, motivo, item_venda_id, material_os_id, reversao_de_id, item_compra_id)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+     (tipo, material_id, produto_id, quantidade, motivo, item_venda_id, material_os_id, reversao_de_id, item_compra_id, custo_unitario, custo_total)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$10::numeric*$4::numeric) RETURNING *`,
     [dados.tipo, dados.material_id, dados.produto_id, dados.quantidade, dados.motivo,
-      dados.item_venda_id ?? null, dados.material_os_id ?? null, dados.reversao_de_id ?? null, dados.item_compra_id ?? null],
+      dados.item_venda_id ?? null, dados.material_os_id ?? null, dados.reversao_de_id ?? null, dados.item_compra_id ?? null, custoUnitario],
   );
   return movimento.rows[0];
 }
@@ -53,6 +67,6 @@ export async function reverter(conexao: PoolClient, origemId: number, quantidade
   if (!limite.permitido) throw new ErroHttp(409, 'DEVOLUCAO_EXCEDIDA', 'Quantidade excede o saldo ainda disponível para reversão.');
   return movimentar(conexao, {
     tipo: origem.tipo === 'entrada' ? 'saida' : 'entrada', material_id: origem.material_id,
-    produto_id: origem.produto_id, quantidade, motivo, reversao_de_id: origemId,
+    produto_id: origem.produto_id, quantidade, motivo, reversao_de_id: origemId, custo_unitario: origem.custo_unitario ?? undefined,
   });
 }

@@ -183,12 +183,12 @@ Todas as sequências abaixo são **propostas**, salvo objetivos e restrições e
 
 ### Controle financeiro
 
-**Tela habilitada em 01/10/2026, autorizada por João Franco:** `/financeiro` integra a navegação em desenvolvimento e produção, exclusiva do Administrador; menu e acesso direto protegidos por AppLayout. Botão Voltar retorna ao Dashboard. Dados fictícios temporários autorizados e identificados, referência 30/09/2026. Atalhos usam dia/semana/mês de referência; período personalizado aceita até 366 dias. Filtros de tipo e origem atualizam cartões, gráfico, lista e detalhes por categoria junto com o período. Recebimentos, Pagamentos e Resultado de caixa mostram exemplos do recorte em Dialog; Faturamento, Materiais, Lucro e Impostos explicam a apuração indisponível, sem valores inventados. Tema e componentes existentes reutilizados. A30/A31 e integração financeira com banco não foram implementadas. RF-011/RF-025 avançam na apresentação; RN-014 a RN-017 continuam pendentes.
+**Tela integrada em 20/10/2026, autorizada por João Franco:** `/financeiro` integra a navegação, é exclusiva do Administrador e consulta a API financeira protegida. Botão Voltar retorna ao Dashboard. O período usa hoje, semana, mês ou intervalo personalizado; filtros de tipo e origem atualizam os cartões, a lista de pagamentos e as contas/parcelas. Os detalhes mostram categoria, origem, forma, data, valor e motivo de estorno. Faturamento, saídas, custo, lucro bruto e lucro operacional usam dados reais no regime de caixa. Impostos, lucro líquido e emissão de nota fiscal permanecem indisponíveis até suas regras; o botão de nota fiscal fica desabilitado. Tema e componentes existentes são reutilizados. A30/A31 e a integração com vendas, OS, compras e estoque estão implementadas; RN-016 continua pendente.
 
 - **Objetivo/origem:** acompanhar indicadores; Guia §5.11, RF-011/RF-025; acesso em RN-003.
-- **Informações:** totais/evolução por período e subtelas Faturamento, Lucro, Imposto e Materiais; fórmulas e dados retornados permanecem pendentes (RN-014 a RN-017).
-- **Fluxo/API:** selecionar período → painel com [A30](api.md#a30) → abrir indicador com [A31](api.md#a31) → voltar ao painel. Consulta apenas é sugestão RN-007; não se criam lançamentos ou edição financeira por inferência.
-- **Pendências:** integração financeira, datas de reconhecimento, custos históricos e fórmulas (PD-N05/PD-N06). Não exibir estimativa fictícia como resultado real, nem transformar regra ausente em valor zero.
+- **Informações:** totais por período, pagamentos realizados, contas por parcela e detalhes por categoria; fórmulas de faturamento, custo e lucros seguem RN-014, RN-015 e RN-017.
+- **Fluxo/API:** selecionar período → painel com [A30](api.md#a30) → filtrar ou abrir detalhe → voltar ao Dashboard. Despesas, pagamentos e estornos usam as operações administrativas documentadas em [api.md](api.md#operacoes-financeiras-administrativas). Não exibir estimativa fictícia como resultado real.
+- **Pendências:** definição de impostos, emissão/armazenamento de notas fiscais e lucro líquido. Esses campos continuam indisponíveis, sem substituir ausência de regra por zero.
 
 <a id="etapas"></a>
 ## Implementação por funcionalidade — sequência sugerida
