@@ -35,7 +35,7 @@ export default function Dashboard() {
   return <div className="mx-auto max-w-container-max space-y-8">
     <header className="flex flex-wrap items-center justify-between gap-5">
       <div><h1 className="text-headline-lg-mobile md:text-headline-lg">Olá, {usuario.nome.split(' ')[0]}!</h1><p className="mt-1 text-on-surface-variant">Acompanhe as ordens de serviço da sapataria.</p></div>
-      <Link to="/ordens-servico/nova" className="inline-flex min-h-11 items-center gap-2 rounded-default bg-primary px-5 py-3 text-label-md text-on-primary hover:bg-primary-container"><span aria-hidden="true">＋</span>Nova OS</Link>
+      <Link to="/ordens-servico/nova" className="mobile-action inline-flex min-h-11 items-center gap-2 rounded-default bg-primary px-5 py-3 text-label-md text-on-primary hover:bg-primary-container"><span aria-hidden="true">＋</span>Nova OS</Link>
     </header>
     {erro ? <div className="space-y-4 rounded-lg border border-outline-variant bg-surface-container-lowest p-6"><p role="alert">{erro}</p><Button onClick={() => { setErro(''); setTentativa(v => v + 1) }}>Tentar novamente</Button></div> : <>
       <section aria-label="Resumo de ordens" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{indicadores.map(([titulo, numero]) => <div key={titulo} className="rounded-xl border border-primary/20 bg-surface-container-lowest p-5"><p className="text-label-md text-on-surface-variant">{titulo}</p><p className="mt-3 text-headline-lg text-primary">{ordens ? numero : '…'}</p></div>)}</section>

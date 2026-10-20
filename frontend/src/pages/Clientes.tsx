@@ -30,7 +30,7 @@ export default function Clientes() {
     <div className="mx-auto max-w-container-max">
       <header className="mb-8 flex flex-wrap items-center justify-between gap-6">
         <div><h1 className="text-headline-lg">Clientes</h1><p className="mt-2 text-on-surface-variant">Cadastre os clientes que serão vinculados às ordens de serviço.</p></div>
-        <Link to="/clientes/novo" className="rounded-default bg-primary px-6 py-4 text-label-md text-on-primary hover:bg-primary-container focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">Novo cliente</Link>
+        <Link to="/clientes/novo" className="mobile-action inline-flex min-h-11 items-center justify-center rounded-default bg-primary px-6 py-4 text-label-md text-on-primary hover:bg-primary-container focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">Novo cliente</Link>
       </header>
       {state?.clienteExcluido && <Alerta className="mb-6" mensagem="Cliente excluído com sucesso." onFechar={() => navigate('/clientes', { replace: true, state: { ...state, clienteExcluido: undefined } })} />}
       {state?.clienteAusente && <Alerta className="mb-6" mensagem="Este cliente não está mais cadastrado. A lista foi atualizada." onFechar={() => navigate('/clientes', { replace: true, state: { ...state, clienteAusente: undefined } })} />}

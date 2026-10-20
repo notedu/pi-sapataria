@@ -66,7 +66,7 @@ export default function Financeiro() {
     <div className="mx-auto max-w-container-max space-y-8">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div><p className="mb-2 text-label-md text-primary">SEDA E COURO · GESTÃO INTERNA</p><h1 className="text-headline-lg-mobile md:text-headline-lg">Financeiro</h1><p className="mt-2 text-body-md text-on-surface-variant">Uma visão clara das entradas e saídas da sapataria.</p></div>
-        <Button variant="secondary" size="compact" onClick={() => navigate('/dashboard')}>Voltar</Button>
+        <Button variant="secondary" size="compact" className="mobile-action" onClick={() => navigate('/dashboard')}>Voltar</Button>
       </header>
 
       <aside aria-label="Sobre a demonstração" className="rounded-default border border-outline-variant bg-secondary-container p-4 text-body-md">

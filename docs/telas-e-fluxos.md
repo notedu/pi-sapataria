@@ -34,7 +34,7 @@ A rota `/login` oferece usuário/senha, layout responsivo conforme a referência
 
 **Padrão visual e movimento — melhoria de 18/10/2026:** telas internas usam a escala comum de título de página e o tema/tokens de `index.css`; botões compartilhados têm altura mínima de 44 px. Links e controles recebem foco visível e transições curtas. A troca entre rotas internas usa uma entrada discreta por opacidade, desativada quando o navegador informa preferência por movimento reduzido. A referência de cores e tipografia continua sendo `design/seda_e_couro_system/DESIGN.md`.
 
-**Ajustes responsivos — 18/10/2026:** tabelas extensas preservam suas colunas e oferecem rolagem horizontal por toque ou teclado. Diálogos respeitam a área visível e as margens seguras do dispositivo; menu móvel tem altura limitada com rolagem, e agrupamentos de ações quebram linha quando necessário. Esses ajustes melhoram a adaptação da interface e não certificam compatibilidade com todo aparelho ou navegador.
+**Ajustes responsivos — 20/10/2026:** tabelas extensas preservam suas colunas e oferecem rolagem horizontal por toque ou teclado. Diálogos respeitam a área visível e as margens seguras do dispositivo. Em telas menores, a Sidebar abre como drawer sobre o conteúdo, com camada de fundo, fechamento por botão, navegação, tecla Esc e foco inativo enquanto está fechada; em telas médias e grandes, permanece fixa à esquerda como no desktop. Ações principais se empilham para manter áreas de toque amplas. Esses ajustes melhoram a adaptação da interface e não certificam compatibilidade com todo aparelho ou navegador.
 
 ### Página pública da loja
 
