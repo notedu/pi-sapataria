@@ -5,6 +5,7 @@ import { dadosOs } from '../utils/operacoes';
 import { movimentar, reverter } from './estoqueModel';
 import { pool } from '../config/db';
 import { registrarNaConexao, type NovaAtividade } from './atividadeModel';
+import * as financeiroModel from './financeiroModel';
 
 // O pg retorna numeric como texto para preservar a precisão dos valores.
 export interface OrdemServico {
@@ -125,6 +126,7 @@ export async function criar(dados: DadosOs, ator?: { id: number; nome: string })
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING ${colunas}`, valores(dados),
     );
     const ordem = resultado.rows[0]!;
+    await financeiroModel.criarOrdemServico(conexao, ordem.id, ordem.valor, ator?.id ?? null);
     if (ator) await registrarNaConexao(conexao, {
       atorId: ator.id, atorNome: ator.nome, acao: 'ordem_servico.criada', entidadeTipo: 'ordem_servico', entidadeId: ordem.id,
       detalhes: { status: ordem.status, responsavelId: ordem.responsavel_id }, notificarFuncionarios: [ordem.responsavel_id],
@@ -145,6 +147,7 @@ export async function atualizar(id: number, dados: DadosOs, ator?: { id: number;
        WHERE id=$9 RETURNING ${colunas}`, [...valores(dados), id],
     );
     const ordem = resultado.rows[0]!;
+    await financeiroModel.atualizarValorOrigem(conexao, 'ordem_servico', ordem.id, ordem.valor);
     if (ator) await registrarNaConexao(conexao, {
       atorId: ator.id, atorNome: ator.nome, acao: 'ordem_servico.atualizada', entidadeTipo: 'ordem_servico', entidadeId: ordem.id,
       detalhes: {
@@ -166,6 +169,14 @@ export async function mudarStatus(id: number, status: string, ator?: { id: numbe
     const cancelamento = status === 'Cancelada' && ['Aberta', 'Em andamento', 'Pronta'].includes(os.status);
     if (!cancelamento && proximo[os.status] !== status) {
       throw new ErroHttp(409, 'TRANSICAO_INVALIDA', 'Avance para o próximo estado; Entregue e Cancelada são estados finais.');
+    }
+    if (cancelamento) {
+      const pago = await conexao.query<{ total: string }>(
+        `SELECT COALESCE(SUM(p.valor),0)::text AS total FROM sapataria.pagamentos_financeiros p
+          JOIN sapataria.parcelas_financeiras pa ON pa.id=p.parcela_id
+          JOIN sapataria.lancamentos_financeiros l ON l.id=pa.lancamento_id
+         WHERE l.origem_tipo='ordem_servico' AND l.origem_id=$1`, [id]);
+      if (Number(pago.rows[0]?.total ?? 0) > 0) throw new ErroHttp(409, 'OS_PAGA_NAO_CANCELAVEL', 'Não é possível cancelar uma OS que já possui pagamento.');
     }
     // Cancelar a OS não devolve materiais já consumidos.
     const resultado = await conexao.query<OrdemServico>(`UPDATE sapataria.ordens_servico SET status=$2 WHERE id=$1 RETURNING ${colunas}`, [id, status]);

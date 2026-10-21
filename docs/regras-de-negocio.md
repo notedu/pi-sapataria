@@ -8,7 +8,7 @@ Este documento registra permissões, condições e relações entre os módulos 
 
 Cada RN informa origem, classificação, situação da definição e limite do critério de aceitação. “Guia §…” remete à seção do Guia do Projeto. **Sugestão significa proposta não aprovada**, inclusive quando a fonte usa verbos afirmativos. As marcações dos §§3, 5, 6, 9.3 e 10 também abrangem tabelas e listas internas, conforme a [legenda documental](README.md#como-interpretar-as-classificacoes).
 
-**Situação atual:** autenticação e operações descritas nas decisões abaixo estão implementadas. Regras financeiras e alertas de prazo continuam pendentes; alertas de estoque por mínimo cadastrado estão implementados.
+**Situação atual:** autenticação, operações de estoque e a integração financeira descrita nas decisões abaixo estão implementadas. Impostos, emissão fiscal e alertas de prazo continuam pendentes; alertas de estoque por mínimo cadastrado estão implementados.
 
 Critérios de sugestões são propostos e condicionados à aprovação. Quando falta decisão, o texto registra **Pendente de definição**. A autorização de criação destes documentos não altera a classificação original.
 
@@ -86,7 +86,7 @@ Estas confirmações substituem as pendências correspondentes das sugestões or
 
 **Acesso a Configuração e Controle financeiro.**
 
-**Decisão de João Franco em 01/10/2026:** Financeiro exclusivo do Administrador. Interface implementada em `/financeiro`, com menu e acesso direto protegidos pelo perfil atual consultado na sessão. Dados fictícios temporários autorizados e identificados; nenhuma API financeira ou mudança de banco nesta etapa. A futura API financeira também deverá exigir Administrador.
+**Decisão de João Franco em 01/10/2026, atualizada em 20/10/2026:** Financeiro exclusivo do Administrador. A interface `/financeiro` e a API protegida consultam lançamentos, parcelas e pagamentos reais do banco. A tela usa regime de caixa, mostra faturamento recebido, saídas, custos, despesas e lucros bruto/operacional. Impostos, emissão/armazenamento de notas fiscais e lucro líquido aguardam definição específica; a emissão fiscal permanece desabilitada na interface.
 
 **Decisão do Integrante 1 em 15/10/2026 — Configurações:** ambos os perfis acessam `/configuracoes` para consultar os próprios dados de acesso, trocar a própria senha, manter preferências pessoais de notificações e tema e consultar o endereço comercial da loja. Essas preferências ficam salvas no navegador por usuário; notificações não geram alertas nesta etapa. Somente Administrador pode alterar o endereço; a API exige autenticação para consulta e verifica perfil administrativo na gravação. Esta decisão cobre somente as opções implementadas; catálogos e parâmetros financeiros sugeridos continuam pendentes.
 
@@ -208,18 +208,18 @@ Cadastro/edição de item aceita fornecedores opcionais na mesma transação. Ca
 
 **Decisão de João Franco em 02/10/2026 — implementada:** a tela principal de Estoque permite aos dois perfis autenticados operar Produtos para venda e Materiais, respeitando RN-018/RN-019/RN-020. Fornecedores têm cadastro pelo nome e associação opcional de vários fornecedores por item. Fornecedor associado não pode ser excluído; editar o nome não altera saldos ou preços. O lucro exibido por Produto é a diferença unitária venda − compra, e o percentual é calculado sobre o custo; custo zero não permite percentual. Esta informação prevista por produto não define lucro realizado, impostos ou indicadores financeiros de RN-014 a RN-017. A tela compara Materiais com seu mínimo cadastrado; Produtos não possuem mínimo, e não recebem limite inventado nem alerta automático.
 
-**Decisão de João Franco em 15/10/2026 — implementada:** Produtos têm quantidade mínima inteira configurável por item; registros anteriores sem mínimo permanecem sem valor até serem editados, sem atribuição de limites presumidos. A tela destaca Materiais ou Produtos cujo saldo atual está abaixo do respectivo mínimo cadastrado. A compra exige um fornecedor e ao menos um item com quantidade e preço unitário; gera registros de compra, itens e entradas vinculadas na mesma transação. O preço da compra fica preservado no histórico e não altera automaticamente o custo/preço atual do cadastro. A importação CSV valida os dados, rejeita duplicados e grava o lote integralmente ou não grava nada; quantidade inicial positiva cria movimento de entrada identificado como saldo inicial importado.
+**Decisão de João Franco em 15/10/2026 — implementada:** Produtos têm quantidade mínima inteira configurável por item; registros anteriores sem mínimo permanecem sem valor até serem editados, sem atribuição de limites presumidos. A tela destaca Materiais ou Produtos cujo saldo atual está abaixo do respectivo mínimo cadastrado. A compra exige um fornecedor e ao menos um item com quantidade e preço unitário; gera registros de compra, itens e entradas vinculadas na mesma transação. O preço da compra fica preservado no histórico e atualiza o custo atual pelo método de custo médio ponderado. A importação CSV valida os dados, rejeita duplicados e grava o lote integralmente ou não grava nada; quantidade inicial positiva cria movimento de entrada identificado como saldo inicial importado.
 
 ### RN-012
 
-**Atualização aprovada:** Consumo efetivo, baixa e devolução confirmados e implementados. Cálculo financeiro de materiais continua pendente.
+**Atualização aprovada em 20/10/2026:** Consumo efetivo, baixa, devolução e custo histórico por movimentação confirmados e implementados. O custo usado no financeiro é calculado pelo método de custo médio ponderado.
 
 **Uso de materiais em OS.**
 
 - **Origem:** Guia §§5.7 e 6.3.
 - **Classificação:** Sugestão. **Situação da definição:** proposta não aprovada.
 - **Regra e critério propostos:** materiais usados em uma OS saem do estoque de materiais e entram no custo de Materiais do financeiro.
-- **Pendente de definição:** momento em que o uso é registrado, gatilho da baixa, apuração do custo e tratamento de correções/cancelamentos; [PD-N06](#pd-n06) e [PD-N07](#pd-n07).
+- **Implementado:** cada uso efetivo registra uma saída com custo unitário vigente; devoluções preservam a origem e o custo da movimentação revertida. [PD-N07](#pd-n07) continua tratando apenas de decisões futuras não relacionadas a este fluxo.
 - **Requisitos relacionados:** [RF-018](requisitos.md#rf-018) e [RF-021](requisitos.md#rf-021).
 
 ### RN-013
@@ -237,9 +237,9 @@ Cadastro/edição de item aceita fornecedores opcionais na mesma transação. Ca
 **Faturamento.**
 
 - **Origem:** Guia §§5.11, 6.1 e 6.3.
-- **Classificação:** Sugestão. **Situação da definição:** proposta não aprovada.
-- **Regra e critério propostos:** total recebido com OS entregues e vendas independentes no período; OS entregue e venda independente geram faturamento.
-- **Pendente de definição:** aprovar a definição, a data que determina o período e o reconhecimento quando retirada e pagamento não coincidirem. O estado sugerido Entregue reúne ambos os eventos; não resolve esses casos. Ver [PD-N06](#pd-n06).
+- **Classificação:** Definição da equipe. **Situação da definição:** definida e implementada em 20/10/2026.
+- **Regra:** faturamento é o total bruto efetivamente recebido no período, em regime de caixa. O cancelamento de venda gera estorno na data do cancelamento; OS cancelada sem pagamento não gera recebimento.
+- **Implementado:** pagamentos são filtrados pela data de pagamento, e o painel exige perfil Administrador.
 - **Requisito relacionado:** [RF-025](requisitos.md#rf-025).
 
 ### RN-015
@@ -247,9 +247,8 @@ Cadastro/edição de item aceita fornecedores opcionais na mesma transação. Ca
 **Indicador de materiais.**
 
 - **Origem:** Guia §§5.7, 5.11 e 6.3.
-- **Classificação:** Sugestão. **Situação da definição:** proposta não aprovada.
-- **Regra e critério propostos:** representar gastos com materiais usados nos serviços; a ligação com o estoque está em RN-012.
-- **Pendente de definição:** método de apuração dos custos e período de reconhecimento; [PD-N06](#pd-n06). Não há método de custeio definido.
+- **Classificação:** Definição da equipe. **Situação da definição:** definida e implementada em 20/10/2026.
+- **Regra:** compras são saídas de caixa/estoque; o custo entra no resultado quando o material é usado ou o produto é vendido. O método de custo é médio ponderado, preservando custo unitário e total nas movimentações.
 - **Requisito relacionado:** [RF-025](requisitos.md#rf-025).
 
 ### RN-016
@@ -257,7 +256,7 @@ Cadastro/edição de item aceita fornecedores opcionais na mesma transação. Ca
 **Imposto e configuração financeira.**
 
 - **Origem:** Guia §§5.10, 5.11 e 6.3; pendência explícita no §17.
-- **Classificação:** Sugestão para a regra; Pendência para sua definição final. **Situação da definição:** proposta não aprovada, Pendente de definição.
+- **Classificação:** Pendência. **Situação da definição:** imposto permanece aguardando definição da equipe.
 - **Regra e critério propostos:** calcular imposto sobre o faturamento conforme parâmetro de Configuração, exemplificado como alíquota.
 - **Pendente de definição:** regra efetiva de cálculo e parâmetro aplicável; [PD-N06](#pd-n06). Não se fixa percentual, fórmula completa, arredondamento ou obrigação fiscal.
 - **Requisitos relacionados:** [RF-024](requisitos.md#rf-024) e [RF-025](requisitos.md#rf-025).
@@ -267,9 +266,8 @@ Cadastro/edição de item aceita fornecedores opcionais na mesma transação. Ca
 **Lucro.**
 
 - **Origem:** Guia §5.11; pendência explícita no §17.
-- **Classificação:** Sugestão para a regra; Pendência para sua definição final. **Situação da definição:** proposta não aprovada, Pendente de definição.
-- **Regra e critério propostos:** faturamento menos materiais, imposto e demais custos que a equipe definir.
-- **Pendente de definição:** fórmula final e custos incluídos; [PD-N06](#pd-n06). A sugestão não resolve tratamento do custo dos produtos vendidos nem autoriza omiti-lo ou incluí-lo por conta própria.
+- **Classificação:** Definição da equipe. **Situação da definição:** definida e implementada em 20/10/2026.
+- **Regra:** lucro bruto = faturamento recebido menos custo de produtos vendidos e materiais usados; lucro operacional = lucro bruto menos despesas operacionais pagas. Lucro líquido permanece indisponível enquanto impostos não forem definidos.
 - **Requisito relacionado:** [RF-025](requisitos.md#rf-025).
 
 ## Consistência e operações sobre registros

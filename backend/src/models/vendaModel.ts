@@ -2,6 +2,7 @@ import { emTransacao } from '../config/transacao';
 import { ErroHttp } from '../utils/validacao';
 import { movimentar, reverter } from './estoqueModel';
 import { pool } from '../config/db';
+import * as financeiroModel from './financeiroModel';
 
 // O pg retorna numeric como texto para preservar a precisão dos valores.
 export interface Venda {
@@ -59,11 +60,12 @@ export async function criar(vendedorId: number, formaPagamento: string, itens: I
       `UPDATE sapataria.vendas SET total = (SELECT sum(quantidade * preco_unitario) FROM sapataria.itens_venda WHERE venda_id=$1)
        WHERE id=$1 RETURNING ${colunas}`, [id],
     );
+    await financeiroModel.criarVenda(conexao, id, resultado.rows[0]!.total, formaPagamento as 'pix' | 'credito' | 'debito' | 'dinheiro', vendedorId);
     return resultado.rows[0]!;
   });
 }
 
-export async function cancelar(id: number, devolvidos: ItemDevolvido[]) {
+export async function cancelar(id: number, devolvidos: ItemDevolvido[], atorId?: number) {
   return emTransacao(async (conexao) => {
     const venda = await conexao.query<Venda>(`SELECT ${colunas} FROM sapataria.vendas WHERE id=$1 FOR UPDATE`, [id]);
     if (!venda.rows[0]) throw new ErroHttp(404, 'VENDA_NAO_ENCONTRADA', 'Venda não encontrada.');
@@ -84,6 +86,7 @@ export async function cancelar(id: number, devolvidos: ItemDevolvido[]) {
     const resultado = await conexao.query<Venda>(
       `UPDATE sapataria.vendas SET cancelada_em=CURRENT_TIMESTAMP WHERE id=$1 RETURNING ${colunas}`, [id],
     );
+    await financeiroModel.estornarOrigem(conexao, 'venda', id, atorId ?? null, `Cancelamento da venda ${id}`);
     return resultado.rows[0]!;
   });
 }

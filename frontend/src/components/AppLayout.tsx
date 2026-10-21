@@ -61,6 +61,18 @@ function LayoutComSessao({ caminho }: { caminho: string }) {
     return () => { ativo = false; window.clearInterval(intervalo); window.removeEventListener('notificacoes-atualizadas', atualizar) }
   }, [caminho])
 
+  useEffect(() => {
+    if (!menuAberto) return
+    const overflowAnterior = document.body.style.overflow
+    const fecharComEsc = (event: KeyboardEvent) => { if (event.key === 'Escape') setMenuAberto(false) }
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', fecharComEsc)
+    return () => {
+      document.body.style.overflow = overflowAnterior
+      document.removeEventListener('keydown', fecharComEsc)
+    }
+  }, [menuAberto])
+
   async function encerrarSessao() {
     if (envioEmCurso.current) return
     envioEmCurso.current = true
@@ -82,21 +94,36 @@ function LayoutComSessao({ caminho }: { caminho: string }) {
   if (!usuario) return <main className="flex min-h-dvh flex-col items-center justify-center gap-6 p-6"><p role="alert">{erroSessao?.chave === chaveVerificacao ? erroSessao.mensagem : 'Sessão indisponível.'}</p><Button onClick={() => setTentativa(valor => valor + 1)}>Tentar novamente</Button></main>
 
   const area = areas.find(item => item.caminho && (item.caminho === caminho || caminho.startsWith(`${item.caminho}/`)))
+  const tituloArea = area?.titulo ?? 'Sistema'
   if (area?.administrador && usuario.perfil !== 'administrador') return <Navigate to="/dashboard" replace />
 
   return (
     <div className="min-h-dvh bg-surface">
       <a href="#conteudo" className="sr-only z-50 rounded-default bg-primary p-3 text-on-primary focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Pular para o conteúdo</a>
-      <header className="flex items-center justify-between bg-secondary-container p-4 md:ml-64 md:justify-end md:bg-surface md:px-8 md:py-3 lg:px-12">
-        <span className="text-headline-md text-primary md:hidden">Seda e Couro</span>
-        <div className="flex items-center gap-2">
+      <header className="app-header sticky top-0 z-30 flex min-h-16 items-center justify-between border-b border-outline-variant/50 bg-surface/95 px-4 py-3 backdrop-blur md:ml-64 md:justify-between md:px-8 lg:px-12">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="truncate text-label-md font-bold text-primary md:hidden">Seda e Couro</span>
+          <span className="hidden truncate text-body-lg font-semibold text-on-surface md:block">{tituloArea}</span>
+        </div>
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <BotaoNotificacoes naoLidas={notificacoesNaoLidas} />
-          <button type="button" aria-expanded={menuAberto} aria-controls="menu-sistema" aria-label={menuAberto ? 'Fechar menu' : 'Abrir menu'} onClick={() => setMenuAberto(valor => !valor)} className="rounded-default p-3 text-primary focus-visible:outline-2 md:hidden"><Icon name={menuAberto ? 'fechar' : 'menu'} /></button>
+          <button type="button" aria-expanded={menuAberto} aria-controls="menu-sistema" aria-label={menuAberto ? 'Fechar menu' : 'Abrir menu'} onClick={() => setMenuAberto(valor => !valor)} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-default text-primary hover:bg-primary/5 focus-visible:outline-2 md:hidden"><Icon name={menuAberto ? 'fechar' : 'menu'} /></button>
         </div>
       </header>
-      <div id="menu-sistema" className={`${menuAberto ? 'block' : 'hidden'} max-h-[calc(100dvh-4.5rem)] overflow-y-auto md:fixed md:inset-y-0 md:block md:max-h-none md:w-64 md:overflow-y-auto`}>
-        <Sidebar usuario={usuario} onSair={encerrarSessao} saindo={saindo} />
+      <div className="md:hidden">
+        {menuAberto && <button type="button" aria-label="Fechar menu" onClick={() => setMenuAberto(false)} className="fixed inset-0 z-40 cursor-default bg-black/40 backdrop-blur-[2px]" />}
+        <aside id="menu-sistema" aria-label="Menu do sistema" aria-hidden={!menuAberto} inert={!menuAberto || undefined} className={`app-drawer fixed inset-y-0 left-0 z-50 h-dvh w-[min(88vw,22rem)] transform bg-secondary-container shadow-2xl transition-transform duration-200 ease-out ${menuAberto ? 'pointer-events-auto translate-x-0' : 'pointer-events-none -translate-x-full'}`}>
+          <div className="relative h-full">
+            <button type="button" aria-label="Fechar menu" onClick={() => setMenuAberto(false)} className="absolute right-3 top-3 z-10 inline-flex min-h-11 min-w-11 items-center justify-center rounded-default text-primary hover:bg-primary/5 focus-visible:outline-2">
+              <Icon name="fechar" />
+            </button>
+            <Sidebar usuario={usuario} onSair={encerrarSessao} saindo={saindo} onNavigate={() => setMenuAberto(false)} />
+          </div>
+        </aside>
       </div>
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 md:block">
+        <Sidebar usuario={usuario} onSair={encerrarSessao} saindo={saindo} />
+      </aside>
       <main id="conteudo" tabIndex={-1} className="min-w-0 px-margin-mobile py-8 outline-none md:ml-64 md:p-8 lg:p-12">
         {erro && <p role="alert" className="mb-6 rounded-default bg-error-container p-4 text-on-error-container">{erro}</p>}
         <div className="page-transition">

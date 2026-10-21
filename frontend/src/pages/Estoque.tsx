@@ -108,7 +108,7 @@ export default function Estoque() {
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div><h1 className="text-headline-lg-mobile text-primary md:text-headline-lg">Controle de Estoque</h1>
         <p className="mt-2 text-body-md text-on-surface-variant">Produtos para venda e materiais utilizados nos serviços.</p></div>
-      <div className="flex flex-wrap gap-2">
+      <div className="mobile-action-group">
         <Button variant="secondary" disabled={bloqueado} onClick={() => { setGerenciar(true); setErroModal(''); setFornecedorEditado(null); setFornecedorDetalhes(null) }}>Fornecedores</Button>
         <Button variant="secondary" disabled={bloqueado} onClick={() => setCategoriasAbertas(true)}>Categorias</Button>
         <Button variant="secondary" disabled={bloqueado} onClick={() => setHistoricoGeralAberto(true)}>Histórico geral</Button>
@@ -134,7 +134,7 @@ export default function Estoque() {
       <div className="mb-6 flex flex-wrap items-end gap-4">
         <div className="min-w-48 flex-1"><InputField id="busca-estoque" label="Buscar item" placeholder="Nome ou categoria" value={busca} onChange={e => setBusca(e.target.value)} /></div>
         <div><label htmlFor="categoria-estoque" className="mb-2 block text-label-md">Categoria</label><select id="categoria-estoque" value={categoria} onChange={e => setCategoria(e.target.value)} className="min-h-12 rounded-default border border-outline-variant bg-surface-container-low px-4"><option value="">Todas</option>{[...new Set(itens.map(i => i.categoria))].sort().map(c => <option key={c}>{c}</option>)}</select></div>
-        <Button disabled={bloqueado} onClick={() => abrir('cadastro')}>Adicionar {tipo === 'produtos' ? 'produto' : 'material'}</Button>
+        <Button className="mobile-action" disabled={bloqueado} onClick={() => abrir('cadastro')}>Adicionar {tipo === 'produtos' ? 'produto' : 'material'}</Button>
       </div>
       <div className="table-scroll" role="region" aria-label="Tabela de estoque; deslize horizontalmente para ver todas as colunas" tabIndex={0}>
         <table className="w-full min-w-[900px] text-body-sm"><caption className="sr-only">Estoque de {tipo === 'produtos' ? 'produtos para venda' : 'materiais'}</caption>

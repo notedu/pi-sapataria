@@ -29,5 +29,5 @@ export async function cadastrar(request: Request, response: Response) {
       preco_unitario: decimal(item.preco_unitario, 'preco_unitario', { dinheiro: true }),
     };
   });
-  response.status(201).json({ dados: await model.criar(fornecedorId, validados) });
+  response.status(201).json({ dados: await model.criar(fornecedorId, validados, request.funcionario!.id) });
 }

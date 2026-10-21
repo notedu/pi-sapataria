@@ -233,6 +233,18 @@ a {
   transition-timing-function: ease-out;
 }
 
+.app-header {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+.app-sidebar {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.app-drawer {
+  padding-top: env(safe-area-inset-top);
+}
+
 .table-scroll {
   max-width: 100%;
   overflow-x: auto;
@@ -252,6 +264,41 @@ a {
   max-height: 90vh;
   max-height: min(90dvh, calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1rem));
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* Em telas estreitas, os controles principais seguem o padrão de ações
+ * empilhadas usado em apps de gestão: área de toque ampla e leitura direta. */
+.mobile-action-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+@media (max-width: 639px) {
+  #conteudo {
+    overflow-x: clip;
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+  }
+
+  .mobile-action-group {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mobile-action {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .mobile-action-group > * {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .dialog-responsive > button {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 @supports (min-height: 100dvh) {

@@ -41,5 +41,5 @@ export async function cancelar(request: Request, response: Response): Promise<vo
   if (new Set(itens.map((item) => item.item_venda_id)).size !== itens.length) {
     throw new ErroHttp(400, 'DADOS_INVALIDOS', 'Informe cada item devolvido uma única vez.');
   }
-  response.json({ dados: await vendaModel.cancelar(idValido(request.params.id), itens) });
+  response.json({ dados: await vendaModel.cancelar(idValido(request.params.id), itens, request.funcionario!.id) });
 }

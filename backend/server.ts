@@ -17,9 +17,10 @@ import compraEstoqueRoutes from './src/routes/compraEstoqueRoutes';
 import importacaoEstoqueRoutes from './src/routes/importacaoEstoqueRoutes';
 import categoriaEstoqueRoutes from './src/routes/categoriaEstoqueRoutes';
 import configuracaoRoutes from './src/routes/configuracaoRoutes';
+import financeiroRoutes from './src/routes/financeiroRoutes';
 import { pool } from './src/config/db';
 import { armazenarSessoes, gerenciarSessao, producao } from './src/config/sessao';
-import { exigirLogin } from './src/middlewares/autenticacao';
+import { exigirAdministrador, exigirLogin } from './src/middlewares/autenticacao';
 import { verificarCsrf } from './src/middlewares/csrf';
 import { auditarRequisicoes } from './src/middlewares/auditoria';
 import { ErroHttp } from './src/utils/validacao';
@@ -70,6 +71,7 @@ app.use('/api/v1/movimentacoes-estoque', exigirLogin, verificarCsrf, movimentaca
 app.use('/api/v1', exigirLogin, verificarCsrf, atividadeRoutes);
 app.use('/api/v1/compras-estoque', exigirLogin, verificarCsrf, compraEstoqueRoutes);
 app.use('/api/v1/estoque/importacoes', exigirLogin, verificarCsrf, importacaoEstoqueRoutes);
+app.use('/api/v1/financeiro', exigirLogin, exigirAdministrador, verificarCsrf, financeiroRoutes);
 
 // O Express 5 encaminha falhas dos controllers assíncronos para este tratamento.
 const tratarErro: ErrorRequestHandler = (error, _request, response, _next) => {

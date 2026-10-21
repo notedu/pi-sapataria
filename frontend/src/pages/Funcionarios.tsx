@@ -30,7 +30,7 @@ export default function Funcionarios() {
     <div className="mx-auto max-w-container-max">
       <header className="mb-8 flex flex-wrap items-center justify-between gap-6">
         <div><h1 className="text-headline-lg">Funcionários</h1><p className="mt-2 text-on-surface-variant">Gerencie as contas de acesso da equipe.</p></div>
-        <Link to="/funcionarios/novo" className="rounded-default bg-primary px-6 py-4 text-label-md text-on-primary hover:bg-primary-container focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">Novo funcionário</Link>
+        <Link to="/funcionarios/novo" className="mobile-action inline-flex min-h-11 items-center justify-center rounded-default bg-primary px-6 py-4 text-label-md text-on-primary hover:bg-primary-container focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">Novo funcionário</Link>
       </header>
       {state?.cadastroConcluido && <Alerta className="mb-6" mensagem="Funcionário cadastrado com sucesso. A conta já pode acessar o sistema." onFechar={() => navigate('/funcionarios', { replace: true, state: { ...state, cadastroConcluido: undefined } })} />}
       {carregando ? <p role="status">Carregando funcionários…</p> : erro ? (
