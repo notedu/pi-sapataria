@@ -2,7 +2,7 @@ import type { PoolClient } from 'pg';
 import { pool } from '../config/db';
 import { emTransacao } from '../config/transacao';
 import { ErroHttp } from '../utils/validacao';
-import { protegerSenha, verificarSenha } from '../utils/senha';
+import { protegerSenha, validarSenhaAlteracao, verificarSenha } from '../utils/senha';
 
 export type Perfil = 'administrador' | 'funcionario';
 export interface Funcionario {
@@ -112,7 +112,7 @@ export async function trocarSenha(
     if (!await verificarSenha(senhaAtual, funcionario.senha_protegida)) {
       throw new ErroHttp(403, 'SENHA_ATUAL_INVALIDA', 'A senha atual está incorreta.');
     }
-    const senhaProtegida = await protegerSenha(senhaNova);
+    const senhaProtegida = await protegerSenha(senhaNova, validarSenhaAlteracao);
     // A versão invalida todas as sessões existentes, inclusive a sessão atual.
     await client.query(
       'UPDATE sapataria.funcionarios SET senha_protegida = $1, versao_acesso = versao_acesso + 1 WHERE id = $2',

@@ -36,7 +36,7 @@ export default function FormularioCliente({ inicial, onSalvar, destino, aoSalvar
     const nome = texto('nome'), numero = texto('numero')
     const email = texto('email'), observacoes = texto('observacoes')
     if (!nome || !numero) { setErro('Preencha nome e número do endereço.'); return }
-    if (!cpfValido(cpf)) { setErro('Informe um CPF válido.'); return }
+    if (cpf && !cpfValido(cpf)) { setErro('Informe um CPF válido ou deixe o campo vazio.'); return }
     if (telefone.length !== 11) { setErro('Informe um telefone com 11 números.'); return }
     if (cep.length !== 8) { setErro('Informe um CEP com 8 números.'); return }
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErro('Informe um e-mail em formato válido ou deixe o campo vazio.'); return }
@@ -46,7 +46,7 @@ export default function FormularioCliente({ inicial, onSalvar, destino, aoSalvar
     setErro('')
     try {
       // Opcionais vazios seguem como null. A API gera o id utilizado pela OS.
-      const clienteSalvo = await onSalvar({ nome, telefone, cpf, cep, numero, email: email || null, observacoes: observacoes || null })
+      const clienteSalvo = await onSalvar({ nome, telefone, cpf: cpf || null, cep, numero, email: email || null, observacoes: observacoes || null })
       aoSalvar(clienteSalvo)
     } catch (error) {
       if (error instanceof ErroApi && error.status === 401) navigate('/login', { replace: true })
@@ -59,12 +59,12 @@ export default function FormularioCliente({ inicial, onSalvar, destino, aoSalvar
 
   return (
       <form onSubmit={salvar} aria-busy={enviando} aria-describedby={erro ? 'erro-cliente' : undefined} className="rounded-lg border border-outline-variant bg-surface-container-lowest p-5 md:p-8">
-        <p className="mb-6 text-label-sm text-on-surface-variant">Nome, CPF, telefone, CEP e número são obrigatórios.</p>
-        {inicial && (!inicial.cpf || !inicial.cep || !inicial.numero) && <p className="mb-6 rounded-default bg-secondary-container p-4">Complete CPF, CEP e número para atualizar este cadastro antigo.{inicial.endereco && <span className="mt-2 block">Endereço anterior: {inicial.endereco}</span>}</p>}
+        <p className="mb-6 text-label-sm text-on-surface-variant">Nome, telefone, CEP e número são obrigatórios. CPF é opcional.</p>
+        {inicial && (!inicial.cep || !inicial.numero) && <p className="mb-6 rounded-default bg-secondary-container p-4">Complete CEP e número para atualizar este cadastro antigo.{inicial.endereco && <span className="mt-2 block">Endereço anterior: {inicial.endereco}</span>}</p>}
         <fieldset disabled={enviando || incerto} className="space-y-6">
           <legend className="sr-only">Dados do cliente</legend>
           <InputField id="nome" name="nome" label="Nome completo" autoComplete="name" defaultValue={inicial?.nome} required />
-          <InputField id="cpf" name="cpf" label="CPF" inputMode="numeric" value={formatarCpf(cpf)} onChange={event => setCpf(digitos(event.target.value, 11))} maxLength={14} required />
+          <InputField id="cpf" name="cpf" label="CPF (opcional)" inputMode="numeric" value={formatarCpf(cpf)} onChange={event => setCpf(digitos(event.target.value, 11))} maxLength={14} />
           <div className="grid gap-6 sm:grid-cols-2">
             <InputField id="telefone" name="telefone" label="Telefone" type="tel" autoComplete="tel" inputMode="numeric" value={formatarTelefone(telefone)} onChange={event => setTelefone(digitos(event.target.value, 11))} maxLength={15} required />
             <InputField id="email" name="email" label="E-mail (opcional)" type="email" autoComplete="email" defaultValue={inicial?.email ?? ''} />

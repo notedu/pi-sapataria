@@ -38,7 +38,7 @@ export async function requisitar(caminho: string, opcoes: RequestInit = {}): Pro
       FUNCIONARIO_NAO_ENCONTRADO: 'Funcionário não encontrado. Atualize a lista.',
       SENHA_ATUAL_INVALIDA: 'A senha atual está incorreta.',
       CONFIRMACAO_SENHA_DIVERGENTE: 'A confirmação precisa ser igual à nova senha.',
-      SENHA_INVALIDA: 'A nova senha deve ter entre 15 e 128 caracteres.',
+      SENHA_INVALIDA: 'A nova senha deve ter pelo menos 8 caracteres, com maiúscula, minúscula e caractere especial.',
     }
     const mensagens: Record<number, string> = {
       400: 'Confira os dados informados.',

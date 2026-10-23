@@ -3,7 +3,7 @@ import { pool } from '../config/db';
 export interface DadosCliente {
   nome: string;
   telefone: string;
-  cpf: string;
+  cpf: string | null;
   cep: string;
   numero: string;
   email: string | null;

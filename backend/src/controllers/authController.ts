@@ -4,7 +4,7 @@ import { encerrarSessao } from '../middlewares/autenticacao';
 import { novoTokenCsrf } from '../middlewares/csrf';
 import { buscarCredencial, dadosPublicos, trocarSenha as salvarNovaSenha } from '../models/funcionarioModel';
 import { limitarTentativas, limitarTrocasSenha, limparTentativasUsuario } from '../models/loginModel';
-import { validarSenha, verificarSenha } from '../utils/senha';
+import { validarSenhaAlteracao, verificarSenha } from '../utils/senha';
 import { ErroHttp, objeto, texto } from '../utils/validacao';
 
 export async function login(request: Request, response: Response): Promise<void> {
@@ -47,7 +47,7 @@ export async function alterarSenha(request: Request, response: Response): Promis
   if (typeof dados.senha_atual !== 'string' || !dados.senha_atual || [...dados.senha_atual].length > 128) {
     throw new ErroHttp(400, 'DADOS_INVALIDOS', 'Informe sua senha atual.');
   }
-  const senhaNova = validarSenha(dados.senha_nova);
+  const senhaNova = validarSenhaAlteracao(dados.senha_nova);
   if (dados.confirmar_senha_nova !== senhaNova) {
     throw new ErroHttp(400, 'CONFIRMACAO_SENHA_DIVERGENTE', 'A confirmação deve ser igual à nova senha.');
   }

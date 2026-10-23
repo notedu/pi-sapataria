@@ -5,6 +5,7 @@ import Alerta from '../components/Alerta'
 import Button from '../components/Button'
 import Icon from '../components/Icon'
 import InputField from '../components/InputField'
+import PasswordField from '../components/PasswordField'
 import { ErroApi, ResultadoIncerto } from '../services/api'
 import type { Usuario } from '../services/auth'
 import { atualizarEnderecoLoja, atualizarSenha, consultarDadosLoja } from '../services/configuracoes'
@@ -57,6 +58,7 @@ export default function Configuracoes() {
   const [carregandoEndereco, setCarregandoEndereco] = useState(true)
   const [editarEndereco, setEditarEndereco] = useState(false)
   const [mostrarSenha, setMostrarSenha] = useState(false)
+  const [senhaNova, setSenhaNova] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
@@ -163,10 +165,18 @@ export default function Configuracoes() {
               {mostrarSenha ? 'Fechar alteração de senha' : 'Alterar senha'}
             </Button>
             {mostrarSenha && <form id="formulario-senha" onSubmit={submeterSenha} className="mt-5 grid gap-4" aria-busy={enviando}>
-              <InputField id="senha_atual" name="senha_atual" label="Senha atual" type="password" autoComplete="current-password" required disabled={enviando} />
-              <InputField id="senha_nova" name="senha_nova" label="Nova senha" type="password" autoComplete="new-password" minLength={15} maxLength={128} required disabled={enviando} />
-              <InputField id="confirmar_senha_nova" name="confirmar_senha_nova" label="Confirmar nova senha" type="password" autoComplete="new-password" minLength={15} maxLength={128} required disabled={enviando} />
-              <p className="text-label-sm text-on-surface-variant">A senha precisa ter entre 15 e 128 caracteres. Após salvar, será necessário entrar novamente.</p>
+              <PasswordField id="senha_atual" name="senha_atual" label="Senha atual" autoComplete="current-password" required disabled={enviando} />
+              <PasswordField id="senha_nova" name="senha_nova" label="Nova senha" autoComplete="new-password" minLength={8} value={senhaNova} onChange={event => setSenhaNova(event.target.value)} required disabled={enviando} aria-describedby="regras-senha" />
+              <ul id="regras-senha" className="grid gap-1 text-label-sm text-on-surface-variant" aria-live="polite">
+                {[
+                  { texto: 'Pelo menos 8 caracteres', ok: [...senhaNova].length >= 8 },
+                  { texto: 'Pelo menos uma letra maiúscula', ok: /[A-Z]/.test(senhaNova) },
+                  { texto: 'Pelo menos uma letra minúscula', ok: /[a-z]/.test(senhaNova) },
+                  { texto: 'Pelo menos um caractere especial', ok: /[^\p{L}\p{N}]/u.test(senhaNova) },
+                ].map(regra => <li key={regra.texto} className={regra.ok ? 'text-success' : ''}>{regra.ok ? '✓' : '○'} {regra.texto}</li>)}
+              </ul>
+              <PasswordField id="confirmar_senha_nova" name="confirmar_senha_nova" label="Confirmar nova senha" autoComplete="new-password" minLength={8} required disabled={enviando} />
+              <p className="text-label-sm text-on-surface-variant">Após salvar, será necessário entrar novamente.</p>
               <div><Button type="submit" disabled={enviando}>{enviando ? 'Atualizando…' : 'Atualizar senha'}</Button></div>
             </form>}
           </div>

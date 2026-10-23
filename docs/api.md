@@ -153,7 +153,7 @@ Retorna `200`, `{"dados": funcionario}` sem senha/hash/versão técnica. Sem ses
 <a id="a04"></a>
 ### A04 — POST /clientes
 
-- **Entrada:** `nome`, `telefone`, `cpf`, `cep` e `numero` obrigatórios; `email` e `observacoes` opcionais. Não aceita `id`, `criado_em`, `endereco` ou campos desconhecidos.
+- **Entrada:** `nome`, `telefone`, `cep` e `numero` obrigatórios; `cpf`, `email` e `observacoes` opcionais. CPF, se informado, deve ser válido; campo ausente, null ou vazio é salvo como null. Não aceita `id`, `criado_em`, `endereco` ou campos desconhecidos.
 - **Validação:** textos não vazios; telefone e CPF com 11 dígitos, CEP com 8, sem pontuação. CPF exige dígitos verificadores válidos e rejeita sequência repetida. Número é texto (ex.: `123A`, `S/N`). E-mail exige formato básico. Sem unicidade nova.
 - **Sucesso:** `201`, `{"dados": cliente}` com data e id gerados pelo banco. Campos retornados: id, nome, telefone, cpf, cep, numero, endereco legado, email, observacoes e criado_em. CPF/CEP/número/data podem ser nulos em registros anteriores à migração.
 - **Dependência:** `schema.sql` contém essa estrutura para banco novo. A evolução ainda não foi aplicada ao banco existente; não execute o esquema completo nesse banco. RF-003/RF-017.
@@ -344,7 +344,7 @@ Exemplo de sequência no Insomnia: login → cadastrar produto → registrar ent
 ### A25 — PUT /auth/senha
 
 - **Caminho implementado:** `PUT /api/v1/auth/senha`; exige sessão autenticada e token CSRF.
-- **Entrada:** `{ "senha_atual": "...", "senha_nova": "...", "confirmar_senha_nova": "..." }`. A nova senha deve ter 15–128 caracteres e a confirmação deve coincidir. Senhas nunca são devolvidas pela API.
+- **Entrada:** `{ "senha_atual": "...", "senha_nova": "...", "confirmar_senha_nova": "..." }`. A nova senha deve ter pelo menos 8 caracteres, sem limite máximo, com pelo menos uma letra maiúscula, uma minúscula e um caractere especial; a confirmação deve coincidir. Senhas nunca são devolvidas pela API.
 - **Sucesso:** `204`, sem corpo. Incrementa `versao_acesso`, encerra a sessão atual e invalida todas as demais; é necessário entrar novamente.
 - **Erros e efeitos:** `400` para campos inválidos, senha fora da política ou confirmação divergente; `401` para sessão inválida; `403 SENHA_ATUAL_INVALIDA` para senha atual incorreta; `429` após 10 tentativas por funcionário ou 50 por IP em 15 minutos. Contadores próprios não alteram os limites de login. Guia §5.9; RF-023; RN-004.
 

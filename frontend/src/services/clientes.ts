@@ -5,7 +5,7 @@ import { ErroApi, enviarComCsrf, objeto, requisitar, ResultadoIncerto } from './
 export type DadosCliente = {
   nome: string
   telefone: string
-  cpf: string
+  cpf: string | null
   cep: string
   numero: string
   email: string | null

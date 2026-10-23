@@ -27,8 +27,19 @@ export function validarSenha(valor: unknown): string {
   return valor; // Não remove espaços nem modifica a senha escolhida.
 }
 
-export async function protegerSenha(senha: string): Promise<string> {
-  validarSenha(senha);
+// Política aplicada somente à troca da própria senha em Configurações.
+export function validarSenhaAlteracao(valor: unknown): string {
+  const senha = typeof valor === 'string' ? valor : '';
+  const tamanho = [...senha].length;
+  if (typeof valor !== 'string' || tamanho < 8
+    || !/[A-Z]/.test(senha) || !/[a-z]/.test(senha) || !/[^\p{L}\p{N}]/u.test(senha)) {
+    throw new ErroHttp(400, 'SENHA_INVALIDA', 'A nova senha deve ter pelo menos 8 caracteres, com maiúscula, minúscula e caractere especial.');
+  }
+  return senha;
+}
+
+export async function protegerSenha(senha: string, validar: (valor: unknown) => string = validarSenha): Promise<string> {
+  validar(senha);
   const salt = randomBytes(16).toString('hex');
   const hash = await derivar(senha, salt);
   return `scrypt$32768$8$3$${salt}$${hash.toString('hex')}`;

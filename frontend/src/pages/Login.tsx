@@ -4,6 +4,7 @@ import type { SubmitEvent } from 'react'
 import logo from '../assets/logo-sapataria.png'
 import Button from '../components/Button'
 import InputField from '../components/InputField'
+import PasswordField from '../components/PasswordField'
 import { autenticar, consultarUsuario, ErroApi } from '../services/auth'
 import { aplicarTemaEscuro } from '../services/preferencias'
 
@@ -96,7 +97,7 @@ export default function Login() {
 
           <form onSubmit={entrar} className="flex flex-col gap-6" aria-busy={enviando || verificandoSessao} aria-describedby={erro ? 'erro-login' : undefined}>
             <InputField id="usuario" name="usuario" label="Usuário" placeholder="Seu nome de usuário" autoComplete="username" autoCapitalize="none" spellCheck={false} required disabled={enviando || verificandoSessao} icon={<LoginIcon tipo="usuario" />} />
-            <InputField id="senha" name="senha" label="Senha" type="password" placeholder="Sua senha" autoComplete="current-password" required disabled={enviando || verificandoSessao} icon={<LoginIcon tipo="senha" />} />
+            <PasswordField id="senha" name="senha" label="Senha" placeholder="Sua senha" autoComplete="current-password" required disabled={enviando || verificandoSessao} icon={<LoginIcon tipo="senha" />} />
             {erro && <p id="erro-login" role="alert" className="rounded-default bg-error-container p-4 text-body-md text-on-error-container">{erro}</p>}
             <Button type="submit" disabled={enviando || verificandoSessao} className="mt-4 w-full">{verificandoSessao ? 'Verificando sessão…' : enviando ? 'Acessando…' : 'Acessar'}</Button>
           </form>

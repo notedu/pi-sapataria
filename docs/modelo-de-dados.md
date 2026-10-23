@@ -68,7 +68,7 @@ Cada movimentação aponta **para um Material ou um Produto, nunca ambos**, conf
 | `ativo` | `boolean` | Obrigatório no banco; padrão true |
 | `versao_acesso` | `integer` | Técnico; padrão 1; incrementa ao mudar perfil/ativo ou trocar senha; invalida sessões anteriores |
 
-A API recebe `senha` (15–128 caracteres), não `senha_protegida`. A senha não é normalizada. Nenhum cadastro público: o primeiro administrador é criado pelo comando local `npm run criar:admin`, que recusa execução quando já existem funcionários. Só administradores autenticados gerenciam as demais contas. A troca da própria senha está implementada em rota autenticada; recuperação continua pendente.
+A API recebe `senha` (15–128 caracteres no cadastro de contas), não `senha_protegida`. A senha não é normalizada. Nenhum cadastro público: o primeiro administrador é criado pelo comando local `npm run criar:admin`, que recusa execução quando já existem funcionários. Só administradores autenticados gerenciam as demais contas. A troca da própria senha está implementada em rota autenticada com política própria de no mínimo 8 caracteres, sem limite máximo, incluindo maiúscula, minúscula e caractere especial; recuperação continua pendente.
 
 **Tabelas técnicas:** `sessoes` (`sid`, `sess`, `expire`) armazena identificadores e estado de sessão conforme connect-pg-simple; `tentativas_login` (`chave`, `tentativas`, `expira_em`) controla tentativas por usuário/IP com chaves derivadas por HMAC, sem senha. Sessões contêm ID do funcionário, versão de acesso, expiração e token CSRF, não dados da credencial. Limite absoluto de 8h; mudança de acesso exige novo login. Essas tabelas não representam novas entidades de negócio.
 
@@ -88,23 +88,23 @@ Decisão do Integrante 1 em 15/10/2026: manter o endereço da loja para consulta
 
 ## Cliente
 
-**Tabela:** `sapataria.clientes`. Evolução aprovada pelo Integrante 1 em 29/09/2026: CPF obrigatório, telefone de 11 dígitos, CEP e número no lugar do endereço livre, data de cadastro e perfil com OS. Código implementado; estrutura incluída em `schema.sql` para banco novo, **não aplicada ao banco existente**.
+**Tabela:** `sapataria.clientes`. Evolução aprovada pelo Integrante 1 em 29/09/2026: CPF, telefone de 11 dígitos, CEP e número no lugar do endereço livre, data de cadastro e perfil com OS. Em 23/10/2026, a equipe definiu CPF opcional; quando informado, segue validado. Código atualizado; migração incremental preparada em `clientes-cpf-opcional.sql`, **ainda não aplicada ao banco existente**.
 
 | Campo | Tipo PostgreSQL / JSON | Obrigatoriedade |
 |---|---|---|
 | `id` | `integer` / número | Gerado pelo banco |
 | `nome` | `text` / string | Obrigatório |
 | `telefone` | `text` / string | Obrigatório, 11 dígitos |
-| `cpf` | `text` / string | Obrigatório, 11 dígitos e verificação dos dígitos na API |
+| `cpf` | `text` / string ou null | Opcional; se informado, 11 dígitos e verificação dos dígitos na API |
 | `cep` | `text` / string | Obrigatório, 8 dígitos |
 | `numero` | `text` / string | Obrigatório; aceita identificação como `123A` ou `S/N` |
 | `criado_em` | `timestamptz` / string ISO | Automático para novos registros; somente leitura |
 | `endereco` | `text` / string ou null | Preservado apenas como dado legado |
 | `email`, `observacoes` | `text` / string ou null | Opcionais |
 
-CPF, telefone e CEP são persistidos sem pontuação. A interface aplica máscaras. Não foi acrescentada unicidade de CPF ou contatos. A validação de CPF verifica o cálculo, sem consultar sua situação cadastral. E-mail mantém validação básica; opcionais vazios viram `NULL`.
+CPF, telefone e CEP são persistidos sem pontuação. A interface aplica máscaras. Não foi acrescentada unicidade de CPF ou contatos. A validação de CPF verifica o cálculo, sem consultar sua situação cadastral. CPF ausente ou vazio vira `NULL`; e-mail e observações opcionais vazios também viram `NULL`.
 
-A migração preserva CPF/CEP/número/data ausentes dos registros antigos, sem inventar valores nem converter endereço livre automaticamente. Restrições `CHECK ... NOT VALID` não revalidam linhas antigas, mas exigem os campos nas novas inserções e atualizações. A API também exige todos os campos obrigatórios no PUT. A data antiga permanece desconhecida, mesmo após edição. O script não remove o endereço legado nem altera vínculos de OS.
+A migração preserva CPF/CEP/número/data ausentes dos registros antigos, sem inventar valores nem converter endereço livre automaticamente. Restrições `CHECK ... NOT VALID` não revalidam linhas antigas; as de telefone, CEP e número exigem campos válidos nas novas inserções e atualizações. CPF pode ser nulo, mas deve ter 11 dígitos quando informado. A API também exige os demais campos obrigatórios no PUT. A data antiga permanece desconhecida, mesmo após edição. O script não remove o endereço legado nem altera vínculos de OS.
 
 Somente CEP e número são gravados como novo endereço. Rua, bairro, cidade e UF são consultados no ViaCEP pela interface; campos ausentes na resposta são apresentados como não informados. Falha da consulta não impede salvar os dados informados e não equivale a validação da existência do CEP pela API. RF-003/RF-017/RF-026.
 

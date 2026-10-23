@@ -28,14 +28,14 @@ export function validarDados(corpo: unknown): DadosCliente {
   const cliente: DadosCliente = {
     nome: texto('nome', true)!,
     telefone: texto('telefone', true)!,
-    cpf: texto('cpf', true)!,
+    cpf: texto('cpf', false),
     cep: texto('cep', true)!,
     numero: texto('numero', true)!,
     email: texto('email', false),
     observacoes: texto('observacoes', false),
   };
   if (!/^\d{11}$/.test(cliente.telefone)) throw new Error('Informe um telefone com 11 dígitos.');
-  if (!cpfValido(cliente.cpf)) throw new Error('Informe um CPF válido.');
+  if (cliente.cpf && !cpfValido(cliente.cpf)) throw new Error('Informe um CPF válido.');
   if (!/^\d{8}$/.test(cliente.cep)) throw new Error('Informe um CEP com 8 dígitos.');
   if (cliente.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cliente.email)) {
     throw new Error('Informe um e-mail em formato válido.');
