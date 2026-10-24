@@ -2,9 +2,8 @@ import { Link } from 'react-router-dom'
 import Icon from './Icon'
 
 export default function BotaoNotificacoes({ naoLidas }: { naoLidas: number }) {
-  const rotulo = naoLidas > 0
-    ? `Notificações, ${naoLidas} não lidas`
-    : 'Notificações'
+  const rotulo =
+    naoLidas > 0 ? `Notificações, ${naoLidas} não lidas` : 'Notificações'
 
   return (
     <Link
@@ -15,7 +14,10 @@ export default function BotaoNotificacoes({ naoLidas }: { naoLidas: number }) {
     >
       <Icon name="notificacoes" />
       {naoLidas > 0 && (
-        <span aria-hidden="true" className="absolute right-0 top-0 min-w-5 rounded-full bg-error-container px-1 text-center text-label-sm leading-5 text-on-error-container">
+        <span
+          aria-hidden="true"
+          className="absolute right-0 top-0 min-w-5 rounded-full bg-error-container px-1 text-center text-label-sm leading-5 text-on-error-container"
+        >
           {naoLidas > 99 ? '99+' : naoLidas}
         </span>
       )}

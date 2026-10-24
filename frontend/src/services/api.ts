@@ -1,5 +1,7 @@
 // VITE_* é público: este endereço nunca deve conter segredos.
-const apiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3333/api/v1').replace(/\/$/, '')
+const apiUrl = (
+  import.meta.env.VITE_API_URL || 'http://localhost:3333/api/v1'
+).replace(/\/$/, '')
 
 export class ErroApi extends Error {
   status: number
@@ -13,7 +15,10 @@ export class ErroApi extends Error {
 
 export class ResultadoIncerto extends Error {}
 
-export async function requisitar(caminho: string, opcoes: RequestInit = {}): Promise<unknown> {
+export async function requisitar(
+  caminho: string,
+  opcoes: RequestInit = {},
+): Promise<unknown> {
   const alteraDados = opcoes.method && opcoes.method !== 'GET'
   let resposta: Response
   try {
@@ -23,8 +28,13 @@ export async function requisitar(caminho: string, opcoes: RequestInit = {}): Pro
       signal: AbortSignal.timeout(15000),
     })
   } catch {
-    if (alteraDados) throw new ResultadoIncerto('Não foi possível confirmar o resultado da operação. Confira os dados antes de tentar novamente.')
-    throw new Error('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.')
+    if (alteraDados)
+      throw new ResultadoIncerto(
+        'Não foi possível confirmar o resultado da operação. Confira os dados antes de tentar novamente.',
+      )
+    throw new Error(
+      'Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.',
+    )
   }
 
   if (!resposta.ok) {
@@ -33,28 +43,47 @@ export async function requisitar(caminho: string, opcoes: RequestInit = {}): Pro
     const codigo = typeof erro?.codigo === 'string' ? erro.codigo : undefined
     const mensagensPorCodigo: Record<string, string> = {
       AUTODESATIVACAO_PROIBIDA: 'Você não pode desativar sua própria conta.',
-      SENHA_CONFIRMACAO_INVALIDA: 'Sua senha está incorreta. A operação não foi realizada.',
+      SENHA_CONFIRMACAO_INVALIDA:
+        'Sua senha está incorreta. A operação não foi realizada.',
       CONFIRMACAO_OBRIGATORIA: 'Informe sua senha para confirmar a operação.',
-      FUNCIONARIO_NAO_ENCONTRADO: 'Funcionário não encontrado. Atualize a lista.',
+      FUNCIONARIO_NAO_ENCONTRADO:
+        'Funcionário não encontrado. Atualize a lista.',
       SENHA_ATUAL_INVALIDA: 'A senha atual está incorreta.',
-      CONFIRMACAO_SENHA_DIVERGENTE: 'A confirmação precisa ser igual à nova senha.',
-      SENHA_INVALIDA: 'A nova senha deve ter pelo menos 8 caracteres, com maiúscula, minúscula e caractere especial.',
+      CONFIRMACAO_SENHA_DIVERGENTE:
+        'A confirmação precisa ser igual à nova senha.',
+      SENHA_INVALIDA:
+        'A nova senha deve ter pelo menos 8 caracteres, com maiúscula, minúscula e caractere especial.',
     }
     const mensagens: Record<number, string> = {
       400: 'Confira os dados informados.',
-      401: caminho === '/auth/login' ? 'Usuário ou senha inválidos.' : 'Sua sessão expirou. Entre novamente.',
-      403: codigo === 'ACESSO_NEGADO' ? 'Este recurso é exclusivo do Administrador.' : 'Não foi possível validar a sessão. Tente novamente.',
+      401:
+        caminho === '/auth/login'
+          ? 'Usuário ou senha inválidos.'
+          : 'Sua sessão expirou. Entre novamente.',
+      403:
+        codigo === 'ACESSO_NEGADO'
+          ? 'Este recurso é exclusivo do Administrador.'
+          : 'Não foi possível validar a sessão. Tente novamente.',
       409: 'Este usuário já está cadastrado. Escolha outro nome de usuário.',
       429: 'Muitas tentativas. Aguarde antes de tentar novamente.',
       503: 'O serviço está ocupado. Tente novamente em instantes.',
     }
-    throw new ErroApi(resposta.status, (codigo && mensagensPorCodigo[codigo]) || mensagens[resposta.status] || 'O servidor não conseguiu concluir a operação. Tente novamente mais tarde.', codigo)
+    throw new ErroApi(
+      resposta.status,
+      (codigo && mensagensPorCodigo[codigo]) ||
+        mensagens[resposta.status] ||
+        'O servidor não conseguiu concluir a operação. Tente novamente mais tarde.',
+      codigo,
+    )
   }
   if (resposta.status === 204) return null
   try {
     return await resposta.json()
   } catch {
-    if (alteraDados) throw new ResultadoIncerto('O servidor retornou uma resposta inesperada. Confira os dados antes de repetir a operação.')
+    if (alteraDados)
+      throw new ResultadoIncerto(
+        'O servidor retornou uma resposta inesperada. Confira os dados antes de repetir a operação.',
+      )
     throw new Error('O servidor retornou uma resposta inesperada.')
   }
 }
@@ -64,16 +93,30 @@ export function objeto(valor: unknown): valor is Record<string, unknown> {
 }
 
 export function possuiToken(dados: unknown): dados is { csrfToken: string } {
-  return objeto(dados) && typeof dados.csrfToken === 'string' && /^[a-f0-9]{64}$/.test(dados.csrfToken)
+  return (
+    objeto(dados) &&
+    typeof dados.csrfToken === 'string' &&
+    /^[a-f0-9]{64}$/.test(dados.csrfToken)
+  )
 }
 
-export async function enviarComCsrf(caminho: string, dados?: unknown, metodo: 'POST' | 'DELETE' | 'PUT' = 'POST'): Promise<unknown> {
+export async function enviarComCsrf(
+  caminho: string,
+  dados?: unknown,
+  metodo: 'POST' | 'DELETE' | 'PUT' = 'POST',
+): Promise<unknown> {
   const sessao = await requisitar('/auth/csrf')
-  if (!possuiToken(sessao)) throw new Error('Não foi possível preparar uma sessão segura. Tente novamente.')
+  if (!possuiToken(sessao))
+    throw new Error(
+      'Não foi possível preparar uma sessão segura. Tente novamente.',
+    )
   // Token e cookie pertencem à mesma sessão. Nunca repete a alteração automaticamente.
   return requisitar(caminho, {
     method: metodo,
-    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': sessao.csrfToken },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': sessao.csrfToken,
+    },
     ...(dados === undefined ? {} : { body: JSON.stringify(dados) }),
   })
 }

@@ -152,7 +152,7 @@ Todos os registros abaixo têm classificação **Pendência** e situação **Pen
 
 ### Evolução de Clientes — 29/09/2026
 
-Aprovado pelo Integrante 1 em 29/09/2026: CPF com validação, telefone de 11 dígitos, endereço por CEP/número, consulta ViaCEP e perfil com data e OS. Em 23/10/2026, a equipe definiu CPF opcional no cadastro/edição, validado somente quando informado. Formulário e API atualizados; migração incremental preparada em `backend/src/database/clientes-cpf-opcional.sql`, ainda não aplicada ao banco existente. Edição visual implementada em `/clientes/:id/editar`, com formulário compartilhado e A06. Busca e histórico de compras de RF-017 continuam fora desta entrega.
+Aprovado pelo Integrante 1 em 29/09/2026: CPF com validação, telefone de 11 dígitos, endereço por CEP/número, consulta ViaCEP e perfil com data e OS. Em 23/10/2026, a equipe definiu CPF opcional no cadastro/edição, validado somente quando informado. Formulário e API atualizados; a estrutura para bancos novos está em `backend/src/database/schema.sql`. A atualização ainda não foi aplicada ao banco existente; o script incremental preparado foi removido na consolidação e precisará ser recriado para essa atualização. Edição visual implementada em `/clientes/:id/editar`, com formulário compartilhado e A06. Busca e histórico de compras de RF-017 continuam fora desta entrega.
 
 ### Evolução de Funcionários — 30/09/2026
 

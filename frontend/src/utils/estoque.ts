@@ -6,6 +6,11 @@ export function lucroProduto(custo: string, venda: string) {
   }
   const compra = centavos(custo)
   const lucro = centavos(venda) - compra
-  const percentual = compra === 0n ? null : Number((lucro * 10000n + (lucro < 0n ? -compra / 2n : compra / 2n)) / compra) / 100
+  const percentual =
+    compra === 0n
+      ? null
+      : Number(
+          (lucro * 10000n + (lucro < 0n ? -compra / 2n : compra / 2n)) / compra,
+        ) / 100
   return { valor: Number(lucro) / 100, percentual }
 }

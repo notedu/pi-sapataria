@@ -401,7 +401,7 @@ Implementadas sob `/api/v1/financeiro`, sempre com sessão de Administrador e CS
 - `POST /pagamentos`: registra pagamento parcial ou total de uma parcela, com forma `pix`, `credito`, `debito` ou `dinheiro` e data efetiva opcional.
 - `POST /lancamentos/{id}/estorno`: cria lançamento inverso uma única vez, exige motivo e mantém a origem.
 
-Vendas, ordens de serviço, compras de estoque e custos de movimentação são registrados automaticamente nas transações dos respectivos módulos. A migração `backend/src/database/financeiro.sql` é aditiva e possui compatibilidade para registros anteriores.
+Vendas, ordens de serviço, compras de estoque e custos de movimentação são registrados automaticamente nas transações dos respectivos módulos. A estrutura financeira e a conversão de registros anteriores estão no `backend/src/database/schema.sql`, destinado a instalações novas. O script incremental que atualizava bancos existentes foi removido na consolidação; uma atualização futura desses bancos exigirá recriar um script incremental próprio.
 
 ## Atividades e notificações implementadas em 15/10/2026
 

@@ -13,7 +13,9 @@ if (!databaseUrl || !certificado) {
 
 // Esses parâmetros substituiriam a configuração SSL abaixo no driver pg.
 if (/[?&](sslmode|sslrootcert|sslcert|sslkey)=/i.test(databaseUrl)) {
-  throw new Error('Remova sslmode, sslrootcert, sslcert e sslkey da DATABASE_URL; o SSL é configurado no db.ts.');
+  throw new Error(
+    'Remova sslmode, sslrootcert, sslcert e sslkey da DATABASE_URL; o SSL é configurado no db.ts.',
+  );
 }
 
 // Compartilha as conexões entre as consultas da API.

@@ -1,5 +1,11 @@
 import { Router } from 'express';
-import { buscarPorId, listar, listarGeral, cadastrar, estornar } from '../controllers/movimentacaoEstoqueController';
+import {
+  buscarPorId,
+  listar,
+  listarGeral,
+  cadastrar,
+  estornar,
+} from '../controllers/movimentacaoEstoqueController';
 
 const router = Router();
 router.get('/', listar);

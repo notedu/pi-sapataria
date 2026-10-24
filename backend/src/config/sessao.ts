@@ -14,7 +14,9 @@ export const nomeCookie = 'sapataria.sid';
 export const producao = process.env.NODE_ENV === 'production';
 export const segredoSessao = process.env.SESSION_SECRET ?? '';
 if (Buffer.byteLength(segredoSessao) < 32) {
-  throw new Error('Configure SESSION_SECRET com pelo menos 32 bytes aleatórios.');
+  throw new Error(
+    'Configure SESSION_SECRET com pelo menos 32 bytes aleatórios.',
+  );
 }
 
 const PgStore = connectPgSimple(session);
@@ -24,10 +26,16 @@ export const armazenarSessoes = new PgStore({
   tableName: 'sessoes',
   createTableIfMissing: false,
   disableTouch: true,
-  errorLog: () => console.error('Não foi possível acessar o armazenamento de sessões.'),
+  errorLog: () =>
+    console.error('Não foi possível acessar o armazenamento de sessões.'),
 });
 
-export const opcoesCookie = { httpOnly: true, secure: producao, sameSite: 'lax' as const, path: '/' };
+export const opcoesCookie = {
+  httpOnly: true,
+  secure: producao,
+  sameSite: 'lax' as const,
+  path: '/',
+};
 
 export const gerenciarSessao = session({
   name: nomeCookie,

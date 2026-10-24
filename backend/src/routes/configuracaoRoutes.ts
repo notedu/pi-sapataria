@@ -1,5 +1,8 @@
 import { Router } from 'express';
-import { atualizar, consultar } from '../controllers/configuracaoLojaController';
+import {
+  atualizar,
+  consultar,
+} from '../controllers/configuracaoLojaController';
 import { exigirAdministrador } from '../middlewares/autenticacao';
 
 const router = Router();

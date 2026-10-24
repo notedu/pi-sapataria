@@ -6,5 +6,7 @@ export const categoriasSugeridas: Record<TipoEstoque, string[]> = {
   materiais: ['Cola'],
 }
 export function unidadesDaCategoria(categoria: string): string[] {
-  return ['cola', 'colas'].includes(categoria.trim().toLocaleLowerCase('pt-BR')) ? ['kg', 'g'] : []
+  return ['cola', 'colas'].includes(categoria.trim().toLocaleLowerCase('pt-BR'))
+    ? ['kg', 'g']
+    : []
 }

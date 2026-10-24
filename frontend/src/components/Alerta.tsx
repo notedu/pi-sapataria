@@ -24,10 +24,16 @@ function AlertaTemporario({ mensagem, onFechar, className = '' }: AlertaProps) {
   }, [])
 
   if (!visivel) return null
-  return <div role="status" aria-atomic="true" className={`overflow-hidden rounded-default border border-success/25 bg-success-container text-on-success-container ${className}`}>
-    <p className="px-4 py-4">{mensagem}</p>
-    <div aria-hidden="true" className="h-1 bg-success/15">
-      <div className="alerta-progresso h-full bg-success" />
+  return (
+    <div
+      role="status"
+      aria-atomic="true"
+      className={`overflow-hidden rounded-default border border-success/25 bg-success-container text-on-success-container ${className}`}
+    >
+      <p className="px-4 py-4">{mensagem}</p>
+      <div aria-hidden="true" className="h-1 bg-success/15">
+        <div className="alerta-progresso h-full bg-success" />
+      </div>
     </div>
-  </div>
+  )
 }

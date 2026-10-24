@@ -4,7 +4,9 @@ import { segredoSessao } from '../config/sessao';
 import { ErroHttp } from '../utils/validacao';
 
 function chave(tipo: string, valor: string): string {
-  return createHmac('sha256', segredoSessao).update(`${tipo}:${valor}`).digest('hex');
+  return createHmac('sha256', segredoSessao)
+    .update(`${tipo}:${valor}`)
+    .digest('hex');
 }
 
 async function consumir(chave: string, limite: number): Promise<void> {
@@ -14,34 +16,55 @@ async function consumir(chave: string, limite: number): Promise<void> {
      ON CONFLICT (chave) DO UPDATE SET
        tentativas = CASE WHEN tentativas_login.expira_em <= now() THEN 1 ELSE tentativas_login.tentativas + 1 END,
        expira_em = CASE WHEN tentativas_login.expira_em <= now() THEN now() + interval '15 minutes' ELSE tentativas_login.expira_em END
-     RETURNING tentativas`, [chave],
+     RETURNING tentativas`,
+    [chave],
   );
   if (resultado.rows[0]!.tentativas > limite) {
-    throw new ErroHttp(429, 'MUITAS_TENTATIVAS', 'Muitas tentativas. Aguarde até 15 minutos e tente novamente.');
+    throw new ErroHttp(
+      429,
+      'MUITAS_TENTATIVAS',
+      'Muitas tentativas. Aguarde até 15 minutos e tente novamente.',
+    );
   }
 }
 
-export async function limitarTentativas(usuario: string, ip: string): Promise<void> {
-  await pool.query('DELETE FROM sapataria.tentativas_login WHERE expira_em <= now()');
+export async function limitarTentativas(
+  usuario: string,
+  ip: string,
+): Promise<void> {
+  await pool.query(
+    'DELETE FROM sapataria.tentativas_login WHERE expira_em <= now()',
+  );
   await consumir(chave('ip', ip), 50);
   await consumir(chave('usuario', usuario), 10);
 }
 
 export async function limparTentativasUsuario(usuario: string): Promise<void> {
-  await pool.query('DELETE FROM sapataria.tentativas_login WHERE chave = $1', [chave('usuario', usuario)]);
+  await pool.query('DELETE FROM sapataria.tentativas_login WHERE chave = $1', [
+    chave('usuario', usuario),
+  ]);
 }
 
-
 // Contadores separados do login: entrar novamente não libera novas confirmações.
-export async function limitarConfirmacoes(funcionarioId: number, ip: string): Promise<void> {
-  await pool.query('DELETE FROM sapataria.tentativas_login WHERE expira_em <= now()');
+export async function limitarConfirmacoes(
+  funcionarioId: number,
+  ip: string,
+): Promise<void> {
+  await pool.query(
+    'DELETE FROM sapataria.tentativas_login WHERE expira_em <= now()',
+  );
   await consumir(chave('confirmacao-ip', ip), 50);
   await consumir(chave('confirmacao-administrador', String(funcionarioId)), 10);
 }
 
 // Trocas de senha têm contadores próprios e não alteram os limites do login.
-export async function limitarTrocasSenha(funcionarioId: number, ip: string): Promise<void> {
-  await pool.query('DELETE FROM sapataria.tentativas_login WHERE expira_em <= now()');
+export async function limitarTrocasSenha(
+  funcionarioId: number,
+  ip: string,
+): Promise<void> {
+  await pool.query(
+    'DELETE FROM sapataria.tentativas_login WHERE expira_em <= now()',
+  );
   await consumir(chave('troca-senha-ip', ip), 50);
   await consumir(chave('troca-senha-funcionario', String(funcionarioId)), 10);
 }

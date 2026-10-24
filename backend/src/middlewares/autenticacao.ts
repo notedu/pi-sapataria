@@ -6,29 +6,48 @@ import { ErroHttp } from '../utils/validacao';
 
 declare global {
   namespace Express {
-    interface Request { funcionario?: Funcionario }
+    interface Request {
+      funcionario?: Funcionario;
+    }
   }
 }
 
 export function encerrarSessao(request: Request): Promise<void> {
-  return new Promise((resolve, reject) => request.session.destroy((error) => error ? reject(error) : resolve()));
+  return new Promise((resolve, reject) =>
+    request.session.destroy((error) => (error ? reject(error) : resolve())),
+  );
 }
 
 export const exigirLogin: RequestHandler = async (request, response, next) => {
   const acesso = request.session.autenticacao;
-  const funcionario = acesso && acesso.expiraEm > Date.now() ? await buscarAcesso(acesso.funcionarioId) : undefined;
+  const funcionario =
+    acesso && acesso.expiraEm > Date.now()
+      ? await buscarAcesso(acesso.funcionarioId)
+      : undefined;
   if (!funcionario?.ativo || funcionario.versao_acesso !== acesso?.versao) {
     await encerrarSessao(request);
     response.clearCookie(nomeCookie, opcoesCookie);
-    throw new ErroHttp(401, 'NAO_AUTENTICADO', 'Faça login para acessar este recurso.');
+    throw new ErroHttp(
+      401,
+      'NAO_AUTENTICADO',
+      'Faça login para acessar este recurso.',
+    );
   }
   request.funcionario = dadosPublicos(funcionario);
   next();
 };
 
-export const exigirAdministrador: RequestHandler = (request, _response, next) => {
+export const exigirAdministrador: RequestHandler = (
+  request,
+  _response,
+  next,
+) => {
   if (request.funcionario?.perfil !== 'administrador') {
-    throw new ErroHttp(403, 'ACESSO_NEGADO', 'Este recurso é exclusivo do administrador.');
+    throw new ErroHttp(
+      403,
+      'ACESSO_NEGADO',
+      'Este recurso é exclusivo do administrador.',
+    );
   }
   next();
 };

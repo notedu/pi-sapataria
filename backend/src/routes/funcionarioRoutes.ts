@@ -1,5 +1,13 @@
 import { Router } from 'express';
-import { alterarAcesso, buscarPorId, cadastrar, desativar, listar, editar, ordens } from '../controllers/funcionarioController';
+import {
+  alterarAcesso,
+  buscarPorId,
+  cadastrar,
+  desativar,
+  listar,
+  editar,
+  ordens,
+} from '../controllers/funcionarioController';
 
 import { exigirAdministrador } from '../middlewares/autenticacao';
 

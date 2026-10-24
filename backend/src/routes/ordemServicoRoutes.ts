@@ -1,5 +1,14 @@
 import { Router } from 'express';
-import { buscarPorId, listar, listarMateriais, cadastrar, atualizar, mudarStatus, consumir, devolverMaterial } from '../controllers/ordemServicoController';
+import {
+  buscarPorId,
+  listar,
+  listarMateriais,
+  cadastrar,
+  atualizar,
+  mudarStatus,
+  consumir,
+  devolverMaterial,
+} from '../controllers/ordemServicoController';
 
 const router = Router();
 router.get('/', listar);

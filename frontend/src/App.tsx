@@ -26,14 +26,32 @@ const Notificacoes = lazy(() => import('./pages/Notificacoes'))
 const Configuracoes = lazy(() => import('./pages/Configuracoes'))
 
 function CarregandoPagina() {
-  return <main className="flex min-h-dvh items-center justify-center p-6"><p role="status">Carregando página…</p></main>
+  return (
+    <main className="flex min-h-dvh items-center justify-center p-6">
+      <p role="status">Carregando página…</p>
+    </main>
+  )
 }
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Suspense fallback={<CarregandoPagina />}><LandingPage /></Suspense>} />
-      <Route path="/login" element={<Suspense fallback={<CarregandoPagina />}><Login /></Suspense>} />
+      <Route
+        path="/"
+        element={
+          <Suspense fallback={<CarregandoPagina />}>
+            <LandingPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/login"
+        element={
+          <Suspense fallback={<CarregandoPagina />}>
+            <Login />
+          </Suspense>
+        }
+      />
       <Route element={<AppLayout />}>
         <Route path="/financeiro" element={<Financeiro />} />
         <Route path="/configuracoes" element={<Configuracoes />} />
@@ -44,7 +62,10 @@ export default function App() {
         <Route path="/busca" element={<Busca />} />
         <Route path="/ordens-servico" element={<OrdensServico />} />
         <Route path="/ordens-servico/nova" element={<NovaOrdemServico />} />
-        <Route path="/ordens-servico/:id/editar" element={<EditarOrdemServico />} />
+        <Route
+          path="/ordens-servico/:id/editar"
+          element={<EditarOrdemServico />}
+        />
         <Route path="/ordens-servico/:id" element={<DetalhesOrdemServico />} />
         <Route path="/clientes" element={<Clientes />} />
         <Route path="/clientes/:id/editar" element={<EditarCliente />} />
@@ -52,7 +73,10 @@ export default function App() {
         <Route path="/clientes/novo" element={<NovoCliente />} />
         <Route path="/meu-perfil" element={<PerfilFuncionario proprio />} />
         <Route path="/funcionarios/:id" element={<PerfilFuncionario />} />
-        <Route path="/funcionarios/:id/editar" element={<EditarFuncionario />} />
+        <Route
+          path="/funcionarios/:id/editar"
+          element={<EditarFuncionario />}
+        />
         <Route path="/funcionarios" element={<Funcionarios />} />
         <Route path="/funcionarios/novo" element={<NovoFuncionario />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

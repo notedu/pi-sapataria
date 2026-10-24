@@ -1,13 +1,27 @@
 import { jsPDF } from 'jspdf'
 import type { Cliente } from '../services/clientes'
-import type { MaterialDisponivel, OrdemDetalhada, UsoMaterial } from '../services/ordensServico'
+import type {
+  MaterialDisponivel,
+  OrdemDetalhada,
+  UsoMaterial,
+} from '../services/ordensServico'
 import { formatarTelefone } from './clientes'
 import { data, dinheiro } from './ordensServico'
 
-const pagamento: Record<string, string> = { pix: 'PIX', credito: 'Crédito', debito: 'Débito', dinheiro: 'Dinheiro' }
+const pagamento: Record<string, string> = {
+  pix: 'PIX',
+  credito: 'Crédito',
+  debito: 'Débito',
+  dinheiro: 'Dinheiro',
+}
 
 // O PDF usa somente os dados já consultados para a OS; gerar o arquivo não altera registros.
-export function gerarPdfOrdemServico(ordem: OrdemDetalhada, cliente: Cliente, usos: UsoMaterial[], materiais: MaterialDisponivel[]) {
+export function gerarPdfOrdemServico(
+  ordem: OrdemDetalhada,
+  cliente: Cliente,
+  usos: UsoMaterial[],
+  materiais: MaterialDisponivel[],
+) {
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   const largura = pdf.internal.pageSize.getWidth()
   const altura = pdf.internal.pageSize.getHeight()
@@ -34,7 +48,10 @@ export function gerarPdfOrdemServico(ordem: OrdemDetalhada, cliente: Cliente, us
 
   function campo(rotulo: string, valor: string) {
     pdf.setFontSize(10)
-    const linhas = pdf.splitTextToSize(valor || 'Não informado', direita - esquerda - 54) as string[]
+    const linhas = pdf.splitTextToSize(
+      valor || 'Não informado',
+      direita - esquerda - 54,
+    ) as string[]
     novaPaginaSeNecessario(Math.max(8, linhas.length * 5.5))
     pdf.setFont('helvetica', 'bold')
     pdf.setTextColor(43, 49, 60)
@@ -48,7 +65,10 @@ export function gerarPdfOrdemServico(ordem: OrdemDetalhada, cliente: Cliente, us
     pdf.setFont('helvetica', 'normal')
     pdf.setFontSize(10)
     pdf.setTextColor(43, 49, 60)
-    const linhas = pdf.splitTextToSize(texto, direita - esquerda - 4) as string[]
+    const linhas = pdf.splitTextToSize(
+      texto,
+      direita - esquerda - 4,
+    ) as string[]
     for (const linha of linhas) {
       novaPaginaSeNecessario(7)
       pdf.text(linha, esquerda + 2, y)
@@ -72,16 +92,27 @@ export function gerarPdfOrdemServico(ordem: OrdemDetalhada, cliente: Cliente, us
 
   titulo('CLIENTE E ATENDIMENTO')
   campo('Cliente', cliente.nome)
-  campo('Telefone', /^\d{11}$/.test(cliente.telefone) ? formatarTelefone(cliente.telefone) : cliente.telefone)
+  campo(
+    'Telefone',
+    /^\d{11}$/.test(cliente.telefone)
+      ? formatarTelefone(cliente.telefone)
+      : cliente.telefone,
+  )
   campo('Responsável', ordem.responsavel_nome)
 
   titulo('SERVIÇO')
   campo('Item', ordem.descricao_calcado)
   campo('Serviço solicitado', ordem.servico)
   campo('Entrada', data(ordem.data_entrada))
-  campo('Previsão de entrega', ordem.prazo_entrega ? data(ordem.prazo_entrega) : 'Não informada')
+  campo(
+    'Previsão de entrega',
+    ordem.prazo_entrega ? data(ordem.prazo_entrega) : 'Não informada',
+  )
   campo('Valor', dinheiro(ordem.valor))
-  campo('Forma de pagamento', pagamento[ordem.forma_pagamento ?? ''] ?? 'Não informada')
+  campo(
+    'Forma de pagamento',
+    pagamento[ordem.forma_pagamento ?? ''] ?? 'Não informada',
+  )
 
   titulo('OBSERVAÇÕES')
   paragrafo(ordem.observacoes || 'Nenhuma observação registrada.')
@@ -89,10 +120,12 @@ export function gerarPdfOrdemServico(ordem: OrdemDetalhada, cliente: Cliente, us
   titulo('MATERIAIS REGISTRADOS')
   if (usos.length === 0) paragrafo('Nenhum material registrado nesta ordem.')
   else {
-    const nomes = new Map(materiais.map(material => [material.id, material]))
+    const nomes = new Map(materiais.map((material) => [material.id, material]))
     for (const uso of usos) {
       const material = nomes.get(uso.material_id)
-      paragrafo(`${material?.nome ?? `Material #${uso.material_id}`} — ${uso.quantidade_usada} ${material?.unidade ?? ''}`.trim())
+      paragrafo(
+        `${material?.nome ?? `Material #${uso.material_id}`} — ${uso.quantidade_usada} ${material?.unidade ?? ''}`.trim(),
+      )
     }
   }
 
@@ -104,7 +137,9 @@ export function gerarPdfOrdemServico(ordem: OrdemDetalhada, cliente: Cliente, us
   pdf.setFontSize(9)
   pdf.setTextColor(80, 85, 96)
   pdf.text('Assinatura do cliente', esquerda + 39, y + 6, { align: 'center' })
-  pdf.text('Responsável pelo atendimento', direita - 39, y + 6, { align: 'center' })
+  pdf.text('Responsável pelo atendimento', direita - 39, y + 6, {
+    align: 'center',
+  })
 
   const totalPaginas = pdf.getNumberOfPages()
   for (let pagina = 1; pagina <= totalPaginas; pagina++) {
@@ -114,7 +149,9 @@ export function gerarPdfOrdemServico(ordem: OrdemDetalhada, cliente: Cliente, us
     pdf.setFontSize(8)
     pdf.setTextColor(100, 105, 115)
     pdf.text('Documento da ordem de serviço', esquerda, altura - 12)
-    pdf.text(`Página ${pagina} de ${totalPaginas}`, direita, altura - 12, { align: 'right' })
+    pdf.text(`Página ${pagina} de ${totalPaginas}`, direita, altura - 12, {
+      align: 'right',
+    })
   }
   pdf.save(`ordem-servico-${ordem.id}.pdf`)
 }

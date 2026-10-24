@@ -1,10 +1,22 @@
 import { useEffect, useId, useRef } from 'react'
 import type { ReactNode } from 'react'
 
-type DialogProps = { titulo: string; children: ReactNode; onCancelar: () => void; ocupado?: boolean; largura?: 'normal' | 'ampla' }
+type DialogProps = {
+  titulo: string
+  children: ReactNode
+  onCancelar: () => void
+  ocupado?: boolean
+  largura?: 'normal' | 'ampla'
+}
 
 // O dialog nativo mantém o foco no modal e torna o restante da página inativo.
-export default function Dialog({ titulo, children, onCancelar, ocupado = false, largura = 'normal' }: DialogProps) {
+export default function Dialog({
+  titulo,
+  children,
+  onCancelar,
+  ocupado = false,
+  largura = 'normal',
+}: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null)
   const tituloId = useId()
   useEffect(() => {
@@ -13,15 +25,25 @@ export default function Dialog({ titulo, children, onCancelar, ocupado = false, 
     dialog?.showModal()
     return () => {
       dialog?.close()
-      if (focoAnterior instanceof HTMLElement && focoAnterior.isConnected) focoAnterior.focus()
+      if (focoAnterior instanceof HTMLElement && focoAnterior.isConnected)
+        focoAnterior.focus()
     }
   }, [])
 
   return (
-    <dialog ref={ref} aria-labelledby={tituloId} aria-busy={ocupado}
-      onCancel={event => { event.preventDefault(); if (!ocupado) onCancelar() }}
-      className={`dialog-responsive m-auto ${largura === 'ampla' ? 'max-w-4xl' : 'max-w-lg'} overflow-y-auto rounded-lg border border-outline-variant bg-surface p-4 text-on-surface shadow-xl backdrop:bg-black/40 sm:p-6 md:p-8`}>
-      <h2 id={tituloId} className="mb-4 text-headline-md">{titulo}</h2>
+    <dialog
+      ref={ref}
+      aria-labelledby={tituloId}
+      aria-busy={ocupado}
+      onCancel={(event) => {
+        event.preventDefault()
+        if (!ocupado) onCancelar()
+      }}
+      className={`dialog-responsive m-auto ${largura === 'ampla' ? 'max-w-4xl' : 'max-w-lg'} overflow-y-auto rounded-lg border border-outline-variant bg-surface p-4 text-on-surface shadow-xl backdrop:bg-black/40 sm:p-6 md:p-8`}
+    >
+      <h2 id={tituloId} className="mb-4 text-headline-md">
+        {titulo}
+      </h2>
       {children}
     </dialog>
   )
