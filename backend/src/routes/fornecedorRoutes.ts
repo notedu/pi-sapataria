@@ -1,5 +1,12 @@
 import { Router } from 'express';
-import { listar, cadastrar, atualizar, excluir, listarVinculos, associar } from '../controllers/fornecedorController';
+import {
+  listar,
+  cadastrar,
+  atualizar,
+  excluir,
+  listarVinculos,
+  associar,
+} from '../controllers/fornecedorController';
 
 const router = Router();
 router.get('/', listar);

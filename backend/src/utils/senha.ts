@@ -8,7 +8,11 @@ let operacoesAtivas = 0;
 function derivar(senha: string, salt: string): Promise<Buffer> {
   // Limita memória usada simultaneamente por requisições de autenticação.
   if (operacoesAtivas >= 4) {
-    throw new ErroHttp(503, 'AUTENTICACAO_OCUPADA', 'Tente novamente em alguns instantes.');
+    throw new ErroHttp(
+      503,
+      'AUTENTICACAO_OCUPADA',
+      'Tente novamente em alguns instantes.',
+    );
   }
   operacoesAtivas++;
   return new Promise((resolve, reject) => {
@@ -21,8 +25,16 @@ function derivar(senha: string, salt: string): Promise<Buffer> {
 }
 
 export function validarSenha(valor: unknown): string {
-  if (typeof valor !== 'string' || [...valor].length < 15 || [...valor].length > 128) {
-    throw new ErroHttp(400, 'SENHA_INVALIDA', 'A senha deve conter entre 15 e 128 caracteres.');
+  if (
+    typeof valor !== 'string' ||
+    [...valor].length < 15 ||
+    [...valor].length > 128
+  ) {
+    throw new ErroHttp(
+      400,
+      'SENHA_INVALIDA',
+      'A senha deve conter entre 15 e 128 caracteres.',
+    );
   }
   return valor; // Não remove espaços nem modifica a senha escolhida.
 }
@@ -31,14 +43,26 @@ export function validarSenha(valor: unknown): string {
 export function validarSenhaAlteracao(valor: unknown): string {
   const senha = typeof valor === 'string' ? valor : '';
   const tamanho = [...senha].length;
-  if (typeof valor !== 'string' || tamanho < 8
-    || !/[A-Z]/.test(senha) || !/[a-z]/.test(senha) || !/[^\p{L}\p{N}]/u.test(senha)) {
-    throw new ErroHttp(400, 'SENHA_INVALIDA', 'A nova senha deve ter pelo menos 8 caracteres, com maiúscula, minúscula e caractere especial.');
+  if (
+    typeof valor !== 'string' ||
+    tamanho < 8 ||
+    !/[A-Z]/.test(senha) ||
+    !/[a-z]/.test(senha) ||
+    !/[^\p{L}\p{N}]/u.test(senha)
+  ) {
+    throw new ErroHttp(
+      400,
+      'SENHA_INVALIDA',
+      'A nova senha deve ter pelo menos 8 caracteres, com maiúscula, minúscula e caractere especial.',
+    );
   }
   return senha;
 }
 
-export async function protegerSenha(senha: string, validar: (valor: unknown) => string = validarSenha): Promise<string> {
+export async function protegerSenha(
+  senha: string,
+  validar: (valor: unknown) => string = validarSenha,
+): Promise<string> {
   validar(senha);
   const salt = randomBytes(16).toString('hex');
   const hash = await derivar(senha, salt);
@@ -48,7 +72,10 @@ export async function protegerSenha(senha: string, validar: (valor: unknown) => 
 // Mesmo trabalho criptográfico quando o usuário não existe, sem revelar cadastro.
 const hashAusente = `scrypt$32768$8$3$${'0'.repeat(32)}$${'0'.repeat(128)}`;
 
-export async function verificarSenha(senha: string, protegida?: string): Promise<boolean> {
+export async function verificarSenha(
+  senha: string,
+  protegida?: string,
+): Promise<boolean> {
   const formato = /^scrypt\$32768\$8\$3\$([a-f0-9]{32})\$([a-f0-9]{128})$/;
   const partes = formato.exec(protegida ?? '') ?? formato.exec(hashAusente)!;
   const calculado = await derivar(senha, partes[1]!);

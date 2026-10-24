@@ -517,6 +517,84 @@ BEGIN
     );
   END IF;
 END $$;
+
+-- Compatibilidade: transforma registros existentes em lançamentos sem duplicar
+-- dados. Vendas existentes são consideradas pagas porque a API anterior exigia
+-- forma de pagamento; OS e compras permanecem pendentes até um pagamento real.
+DO $$
+DECLARE registro RECORD; lancamento_id integer; parcela_id integer; categoria text; total numeric;
+BEGIN
+  FOR registro IN SELECT v.* FROM sapataria.vendas v LOOP
+    IF NOT EXISTS (SELECT 1 FROM sapataria.lancamentos_financeiros WHERE origem_tipo='venda' AND origem_id=registro.id AND estorno_de_id IS NULL) THEN
+      INSERT INTO sapataria.lancamentos_financeiros (tipo,categoria,descricao,valor_total,origem_tipo,origem_id,criado_por,criado_em)
+      VALUES ('entrada','venda',format('Venda #%s', registro.id),registro.total,'venda',registro.id,registro.vendedor_id,registro.data)
+      RETURNING id INTO lancamento_id;
+      IF registro.total > 0 THEN
+        INSERT INTO sapataria.parcelas_financeiras (lancamento_id,numero,total_parcelas,valor,vencimento)
+        VALUES (lancamento_id,1,1,registro.total,(registro.data AT TIME ZONE 'America/Sao_Paulo')::date) RETURNING id INTO parcela_id;
+        INSERT INTO sapataria.pagamentos_financeiros (parcela_id,valor,forma_pagamento,pago_em,criado_por)
+        VALUES (parcela_id,registro.total,registro.forma_pagamento,registro.data,registro.vendedor_id);
+      END IF;
+    END IF;
+    IF registro.cancelada_em IS NOT NULL AND NOT EXISTS (
+      SELECT 1 FROM sapataria.lancamentos_financeiros l
+       WHERE l.origem_tipo='venda' AND l.origem_id=registro.id AND l.estorno_de_id IS NOT NULL
+    ) THEN
+      SELECT id INTO lancamento_id FROM sapataria.lancamentos_financeiros
+       WHERE origem_tipo='venda' AND origem_id=registro.id AND estorno_de_id IS NULL ORDER BY id DESC LIMIT 1;
+      INSERT INTO sapataria.lancamentos_financeiros (tipo,categoria,descricao,valor_total,origem_tipo,origem_id,estorno_de_id,motivo_estorno,criado_por,criado_em)
+      VALUES ('saida','estorno',format('Estorno de Venda #%s', registro.id),registro.total,'venda',registro.id,lancamento_id,'Cancelamento da venda anterior à integração financeira.',registro.vendedor_id,registro.cancelada_em)
+      RETURNING id INTO lancamento_id;
+      IF registro.total > 0 THEN
+        INSERT INTO sapataria.parcelas_financeiras (lancamento_id,numero,total_parcelas,valor,vencimento)
+        VALUES (lancamento_id,1,1,registro.total,(registro.cancelada_em AT TIME ZONE 'America/Sao_Paulo')::date) RETURNING id INTO parcela_id;
+        INSERT INTO sapataria.pagamentos_financeiros (parcela_id,valor,forma_pagamento,pago_em,criado_por)
+        VALUES (parcela_id,registro.total,registro.forma_pagamento,registro.cancelada_em,registro.vendedor_id);
+      END IF;
+    END IF;
+  END LOOP;
+
+  FOR registro IN SELECT os.* FROM sapataria.ordens_servico os WHERE os.status <> 'Cancelada' LOOP
+    IF NOT EXISTS (SELECT 1 FROM sapataria.lancamentos_financeiros WHERE origem_tipo='ordem_servico' AND origem_id=registro.id AND estorno_de_id IS NULL) THEN
+      INSERT INTO sapataria.lancamentos_financeiros (tipo,categoria,descricao,valor_total,origem_tipo,origem_id,criado_por,criado_em)
+      VALUES ('entrada','ordem_servico',format('OS #%s', registro.id),registro.valor,'ordem_servico',registro.id,registro.responsavel_id,(registro.data_entrada::timestamp AT TIME ZONE 'America/Sao_Paulo'));
+    END IF;
+  END LOOP;
+
+  FOR registro IN SELECT c.id,c.fornecedor_id,c.registrada_em,
+                         COALESCE(SUM(ic.quantidade * ic.preco_unitario),0) AS total,
+                         bool_and(ic.material_id IS NOT NULL) AS somente_materiais,
+                         bool_and(ic.produto_id IS NOT NULL) AS somente_produtos
+                    FROM sapataria.compras_estoque c
+                    LEFT JOIN sapataria.itens_compra_estoque ic ON ic.compra_id=c.id
+                   GROUP BY c.id,c.fornecedor_id,c.registrada_em LOOP
+    IF NOT EXISTS (SELECT 1 FROM sapataria.lancamentos_financeiros WHERE origem_tipo='compra_estoque' AND origem_id=registro.id AND estorno_de_id IS NULL) THEN
+      categoria := CASE WHEN registro.somente_materiais THEN 'compra_materiais' WHEN registro.somente_produtos THEN 'compra_produtos' ELSE 'compra_estoque' END;
+      total := registro.total;
+      INSERT INTO sapataria.lancamentos_financeiros (tipo,categoria,descricao,valor_total,origem_tipo,origem_id,criado_em)
+      VALUES ('saida',categoria,format('Compra #%s', registro.id),total,'compra_estoque',registro.id,registro.registrada_em);
+    END IF;
+  END LOOP;
+END $$;
+
+-- Garante uma parcela para lançamentos pendentes legados criados antes da
+-- primeira execução desta migração. A operação é idempotente.
+DO $$
+DECLARE registro RECORD;
+BEGIN
+  FOR registro IN
+    SELECT l.id, l.valor_total, origem_tipo, origem_id
+      FROM sapataria.lancamentos_financeiros l
+     WHERE l.estorno_de_id IS NULL
+       AND l.valor_total > 0
+       AND l.origem_tipo IN ('ordem_servico', 'compra_estoque')
+       AND NOT EXISTS (SELECT 1 FROM sapataria.parcelas_financeiras p WHERE p.lancamento_id=l.id)
+  LOOP
+    INSERT INTO sapataria.parcelas_financeiras (lancamento_id,numero,total_parcelas,valor,vencimento)
+    VALUES (registro.id,1,1,registro.valor_total,CURRENT_DATE);
+  END LOOP;
+END $$;
+
 REVOKE ALL ON TABLE sapataria.lancamentos_financeiros, sapataria.parcelas_financeiras, sapataria.pagamentos_financeiros FROM PUBLIC;
 DO $$
 DECLARE papel text;

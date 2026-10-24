@@ -8,38 +8,558 @@ import InputField from '../components/InputField'
 import SelectField from '../components/SelectField'
 import { ErroApi } from '../services/api'
 import { consultarFinanceiro } from '../services/financeiro'
-import type { ContaFinanceira, DadosFinanceiros, MovimentoFinanceiro } from '../services/financeiro'
+import type {
+  ContaFinanceira,
+  DadosFinanceiros,
+  MovimentoFinanceiro,
+} from '../services/financeiro'
 
-const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
-const dataHoje = () => { const agora = new Date(); const ano = agora.getFullYear(); const mes = String(agora.getMonth() + 1).padStart(2, '0'); const dia = String(agora.getDate()).padStart(2, '0'); return `${ano}-${mes}-${dia}` }
+const moeda = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+})
+const dataHoje = () => {
+  const agora = new Date()
+  const ano = agora.getFullYear()
+  const mes = String(agora.getMonth() + 1).padStart(2, '0')
+  const dia = String(agora.getDate()).padStart(2, '0')
+  return `${ano}-${mes}-${dia}`
+}
 const inicioMes = (data: string) => `${data.slice(0, 7)}-01`
-const inicioSemana = (data: string) => { const dia = new Date(`${data}T00:00:00Z`).getUTCDay(); const deslocamento = (dia + 6) % 7; const inicio = new Date(`${data}T00:00:00Z`); inicio.setUTCDate(inicio.getUTCDate() - deslocamento); return inicio.toISOString().slice(0, 10) }
-const formatarData = (data: string) => data.slice(0, 10).split('-').reverse().join('/')
-const formatarDinheiro = (valor: string | null | undefined) => valor === null || valor === undefined ? 'Não disponível' : moeda.format(Number(valor))
-const nomeCategoria = (categoria: string) => ({ venda: 'Venda', ordem_servico: 'Ordem de serviço', compra_materiais: 'Compra de materiais', compra_produtos: 'Compra de produtos', compra_estoque: 'Compra de estoque', aluguel: 'Aluguel', energia: 'Energia', agua: 'Água', funcionarios: 'Funcionários', estorno: 'Estorno' }[categoria] ?? categoria)
-const origemMovimento = (movimento: MovimentoFinanceiro) => movimento.categoria.startsWith('compra_') ? 'compras' : ['aluguel', 'energia', 'agua', 'funcionarios'].includes(movimento.categoria) ? 'despesas' : movimento.categoria === 'estorno' ? 'estornos' : movimento.categoria === 'ordem_servico' ? 'os' : 'vendas'
-const statusLabel = (status: ContaFinanceira['status']) => ({ pendente: 'Pendente', pago: 'Pago', vencido: 'Vencido', parcial: 'Parcial' }[status])
+const inicioSemana = (data: string) => {
+  const dia = new Date(`${data}T00:00:00Z`).getUTCDay()
+  const deslocamento = (dia + 6) % 7
+  const inicio = new Date(`${data}T00:00:00Z`)
+  inicio.setUTCDate(inicio.getUTCDate() - deslocamento)
+  return inicio.toISOString().slice(0, 10)
+}
+const formatarData = (data: string) =>
+  data.slice(0, 10).split('-').reverse().join('/')
+const formatarDinheiro = (valor: string | null | undefined) =>
+  valor === null || valor === undefined
+    ? 'Não disponível'
+    : moeda.format(Number(valor))
+const nomeCategoria = (categoria: string) =>
+  ({
+    venda: 'Venda',
+    ordem_servico: 'Ordem de serviço',
+    compra_materiais: 'Compra de materiais',
+    compra_produtos: 'Compra de produtos',
+    compra_estoque: 'Compra de estoque',
+    aluguel: 'Aluguel',
+    energia: 'Energia',
+    agua: 'Água',
+    funcionarios: 'Funcionários',
+    estorno: 'Estorno',
+  })[categoria] ?? categoria
+const origemMovimento = (movimento: MovimentoFinanceiro) =>
+  movimento.categoria.startsWith('compra_')
+    ? 'compras'
+    : ['aluguel', 'energia', 'agua', 'funcionarios'].includes(
+          movimento.categoria,
+        )
+      ? 'despesas'
+      : movimento.categoria === 'estorno'
+        ? 'estornos'
+        : movimento.categoria === 'ordem_servico'
+          ? 'os'
+          : 'vendas'
+const statusLabel = (status: ContaFinanceira['status']) =>
+  ({
+    pendente: 'Pendente',
+    pago: 'Pago',
+    vencido: 'Vencido',
+    parcial: 'Parcial',
+  })[status]
 type Periodo = { inicio: string; fim: string }
 
 export default function Financeiro() {
-  const navigate = useNavigate(); const hoje = dataHoje()
-  const [opcao, setOpcao] = useState('mes'); const [periodo, setPeriodo] = useState<Periodo>({ inicio: inicioMes(hoje), fim: hoje }); const [rascunho, setRascunho] = useState(periodo)
-  const [dados, setDados] = useState<DadosFinanceiros | null>(null); const [erro, setErro] = useState(''); const [carregando, setCarregando] = useState(true)
-  const [tipoFiltro, setTipoFiltro] = useState<'todos' | MovimentoFinanceiro['tipo']>('todos'); const [origemFiltro, setOrigemFiltro] = useState<'todas' | 'vendas' | 'os' | 'compras' | 'despesas' | 'estornos'>('todas')
-  const [detalhe, setDetalhe] = useState<MovimentoFinanceiro | ContaFinanceira | null>(null)
+  const navigate = useNavigate()
+  const hoje = dataHoje()
+  const [opcao, setOpcao] = useState('mes')
+  const [periodo, setPeriodo] = useState<Periodo>({
+    inicio: inicioMes(hoje),
+    fim: hoje,
+  })
+  const [rascunho, setRascunho] = useState(periodo)
+  const [dados, setDados] = useState<DadosFinanceiros | null>(null)
+  const [erro, setErro] = useState('')
+  const [carregando, setCarregando] = useState(true)
+  const [tipoFiltro, setTipoFiltro] = useState<
+    'todos' | MovimentoFinanceiro['tipo']
+  >('todos')
+  const [origemFiltro, setOrigemFiltro] = useState<
+    'todas' | 'vendas' | 'os' | 'compras' | 'despesas' | 'estornos'
+  >('todas')
+  const [detalhe, setDetalhe] = useState<
+    MovimentoFinanceiro | ContaFinanceira | null
+  >(null)
 
-  useEffect(() => { let ativo = true; void consultarFinanceiro(periodo.inicio, periodo.fim).then(resultado => { if (!ativo) return; setErro(''); setDados(resultado) }).catch(error => { if (!ativo) return; setErro(error instanceof ErroApi && error.status === 403 ? 'O Financeiro é exclusivo do Administrador.' : error instanceof Error ? error.message : 'Não foi possível consultar o Financeiro.'); setDados(null) }).finally(() => { if (ativo) setCarregando(false) }); return () => { ativo = false } }, [periodo])
-  const movimentos = useMemo(() => (dados?.movimentacoes ?? []).filter(item => (tipoFiltro === 'todos' || item.tipo === tipoFiltro) && (origemFiltro === 'todas' || origemMovimento(item) === origemFiltro)), [dados, tipoFiltro, origemFiltro])
+  useEffect(() => {
+    let ativo = true
+    void consultarFinanceiro(periodo.inicio, periodo.fim)
+      .then((resultado) => {
+        if (!ativo) return
+        setErro('')
+        setDados(resultado)
+      })
+      .catch((error) => {
+        if (!ativo) return
+        setErro(
+          error instanceof ErroApi && error.status === 403
+            ? 'O Financeiro é exclusivo do Administrador.'
+            : error instanceof Error
+              ? error.message
+              : 'Não foi possível consultar o Financeiro.',
+        )
+        setDados(null)
+      })
+      .finally(() => {
+        if (ativo) setCarregando(false)
+      })
+    return () => {
+      ativo = false
+    }
+  }, [periodo])
+  const movimentos = useMemo(
+    () =>
+      (dados?.movimentacoes ?? []).filter(
+        (item) =>
+          (tipoFiltro === 'todos' || item.tipo === tipoFiltro) &&
+          (origemFiltro === 'todas' || origemMovimento(item) === origemFiltro),
+      ),
+    [dados, tipoFiltro, origemFiltro],
+  )
 
-  function selecionarPeriodo(valor: string) { setOpcao(valor); if (valor === 'hoje') { setCarregando(true); setPeriodo({ inicio: hoje, fim: hoje }) } if (valor === 'semana') { setCarregando(true); setPeriodo({ inicio: inicioSemana(hoje), fim: hoje }) } if (valor === 'mes') { setCarregando(true); setPeriodo({ inicio: inicioMes(hoje), fim: hoje }) } if (valor !== 'personalizado') setRascunho(periodo) }
-  function aplicarPeriodo(event: FormEvent<HTMLFormElement>) { event.preventDefault(); if (!rascunho.inicio || !rascunho.fim || rascunho.inicio > rascunho.fim) { setErro('Informe as duas datas, com o início anterior ou igual ao fim.'); return } setErro(''); setCarregando(true); setPeriodo(rascunho) }
+  function selecionarPeriodo(valor: string) {
+    setOpcao(valor)
+    if (valor === 'hoje') {
+      setCarregando(true)
+      setPeriodo({ inicio: hoje, fim: hoje })
+    }
+    if (valor === 'semana') {
+      setCarregando(true)
+      setPeriodo({ inicio: inicioSemana(hoje), fim: hoje })
+    }
+    if (valor === 'mes') {
+      setCarregando(true)
+      setPeriodo({ inicio: inicioMes(hoje), fim: hoje })
+    }
+    if (valor !== 'personalizado') setRascunho(periodo)
+  }
+  function aplicarPeriodo(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!rascunho.inicio || !rascunho.fim || rascunho.inicio > rascunho.fim) {
+      setErro('Informe as duas datas, com o início anterior ou igual ao fim.')
+      return
+    }
+    setErro('')
+    setCarregando(true)
+    setPeriodo(rascunho)
+  }
 
-  return <div className="mx-auto max-w-container-max space-y-8">
-    <header className="flex flex-wrap items-start justify-between gap-4"><div><p className="mb-2 text-label-md text-primary">SEDA E COURO · GESTÃO INTERNA</p><h1 className="text-headline-lg-mobile md:text-headline-lg">Financeiro</h1><p className="mt-2 text-body-md text-on-surface-variant">Receitas, pagamentos, custos e despesas registrados no regime de caixa.</p></div><div className="flex flex-wrap gap-3"><Button variant="secondary" size="compact" disabled title="Emissão fiscal será habilitada após a definição da integração tributária">Emitir nota fiscal (em breve)</Button><Button variant="secondary" size="compact" className="mobile-action" onClick={() => navigate('/dashboard')}>Voltar</Button></div></header>
-    <aside aria-label="Escopo do painel" className="rounded-default border border-outline-variant bg-secondary-container p-4 text-body-md"><strong>Integração financeira em leitura.</strong> Os valores são consultados do banco e representam registros operacionais. Impostos, notas fiscais e lucro líquido aguardam suas regras específicas.</aside>
-    <section aria-label="Filtros financeiros" className="rounded-default border border-outline-variant bg-surface-container-lowest p-5"><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"><SelectField id="periodo-financeiro" label="Período" value={opcao} onChange={event => selecionarPeriodo(event.target.value)}><option value="hoje">Hoje</option><option value="semana">Esta semana</option><option value="mes">Este mês</option><option value="personalizado">Personalizado</option></SelectField><SelectField id="tipo-movimento-financeiro" label="Tipo de movimento" value={tipoFiltro} onChange={event => setTipoFiltro(event.target.value as typeof tipoFiltro)}><option value="todos">Todos</option><option value="entrada">Entradas</option><option value="saida">Saídas</option></SelectField><SelectField id="origem-movimento-financeiro" label="Origem" value={origemFiltro} onChange={event => setOrigemFiltro(event.target.value as typeof origemFiltro)}><option value="todas">Todas</option><option value="vendas">Vendas</option><option value="os">Ordens de serviço</option><option value="compras">Compras</option><option value="despesas">Despesas</option><option value="estornos">Estornos</option></SelectField></div>{opcao === 'personalizado' && <form onSubmit={aplicarPeriodo} className="mt-5 flex flex-wrap items-end gap-4"><InputField id="financeiro-inicio" label="Data inicial" type="date" required value={rascunho.inicio} onChange={event => setRascunho({ ...rascunho, inicio: event.target.value })} /><InputField id="financeiro-fim" label="Data final" type="date" required value={rascunho.fim} onChange={event => setRascunho({ ...rascunho, fim: event.target.value })} /><Button type="submit" size="compact">Aplicar período</Button></form>}<p className="mt-4 text-body-md text-on-surface-variant" aria-live="polite">Exibindo {formatarData(periodo.inicio)} a {formatarData(periodo.fim)}</p>{erro && <p role="alert" className="mt-3 text-error">{erro}</p>}</section>
-    {carregando && <p role="status" className="rounded-default border border-outline-variant bg-surface p-5">Consultando os dados financeiros…</p>}
-    {!carregando && dados && <><section aria-label="Resumo financeiro" className="grid gap-4 lg:grid-cols-3"><CartaoInformacoes titulo="Faturamento bruto recebido" icone="financeiro"><p className="break-words text-headline-lg tabular-nums text-primary">{formatarDinheiro(dados.resumo.faturamento_bruto)}</p><p className="mt-2 text-label-sm text-on-surface-variant">Entradas efetivamente recebidas no regime de caixa.</p></CartaoInformacoes><CartaoInformacoes titulo="Saídas de caixa" icone="observacoes"><p className="break-words text-headline-lg tabular-nums">{formatarDinheiro(dados.resumo.saidas_caixa)}</p><p className="mt-2 text-label-sm text-on-surface-variant">Compras, despesas e estornos pagos no período.</p></CartaoInformacoes><CartaoInformacoes titulo="Lucro bruto" icone="dashboard" destaque><p className="break-words text-headline-lg tabular-nums text-primary">{formatarDinheiro(dados.resumo.lucro_bruto)}</p><p className="mt-2 text-label-sm text-on-surface-variant">Receitas recebidas menos custos de produtos vendidos e materiais usados.</p></CartaoInformacoes></section><section aria-label="Indicadores financeiros" className="grid gap-4 md:grid-cols-3"><CartaoInformacoes titulo="Custo de produtos e materiais" icone="estoque"><p className="text-headline-lg tabular-nums">{formatarDinheiro(dados.resumo.custo_mercadorias_e_materiais)}</p></CartaoInformacoes><CartaoInformacoes titulo="Lucro operacional" icone="dashboard"><p className="text-headline-lg tabular-nums">{formatarDinheiro(dados.resumo.lucro_operacional)}</p><p className="mt-2 text-label-sm text-on-surface-variant">Após despesas operacionais pagas.</p></CartaoInformacoes><CartaoInformacoes titulo="Lucro líquido e impostos" icone="observacoes"><p className="text-headline-lg tabular-nums">Não disponível</p><p className="mt-2 text-label-sm text-on-surface-variant">A regra de impostos ainda será definida.</p></CartaoInformacoes></section><section aria-labelledby="titulo-movimentos" className="overflow-hidden rounded-default border border-outline-variant bg-surface-container-lowest"><div className="p-5 md:p-6"><h2 id="titulo-movimentos" className="text-headline-md">Movimentações financeiras</h2><p className="mt-1 text-label-sm text-on-surface-variant">{movimentos.length} registros pagos no período e nos filtros aplicados.</p></div>{movimentos.length === 0 ? <p className="px-6 pb-6 text-on-surface-variant">Nenhuma movimentação financeira encontrada.</p> : <div className="table-scroll" role="region" aria-label="Movimentações financeiras" tabIndex={0}><table className="w-full min-w-[720px] text-left text-body-md"><caption className="sr-only">Movimentações financeiras pagas</caption><thead className="bg-surface-container-low text-label-md text-on-surface-variant"><tr>{['Data', 'Descrição', 'Categoria', 'Tipo', 'Valor', 'Detalhes'].map(titulo => <th key={titulo} scope="col" className="px-5 py-4">{titulo}</th>)}</tr></thead><tbody>{movimentos.map(item => <tr key={item.id} className="border-t border-outline-variant/40"><td className="whitespace-nowrap px-5 py-4">{formatarData(item.pago_em)}</td><td className="px-5 py-4 font-medium">{item.descricao}</td><td className="px-5 py-4">{nomeCategoria(item.categoria)}</td><td className="px-5 py-4">{item.tipo === 'entrada' ? 'Entrada' : 'Saída'}</td><td className="whitespace-nowrap px-5 py-4 text-right tabular-nums">{formatarDinheiro(item.valor)}</td><td className="px-5 py-4"><Button variant="secondary" size="compact" onClick={() => setDetalhe(item)}>Ver detalhes</Button></td></tr>)}</tbody></table></div>}</section><section aria-labelledby="titulo-contas" className="overflow-hidden rounded-default border border-outline-variant bg-surface-container-lowest"><div className="p-5 md:p-6"><h2 id="titulo-contas" className="text-headline-md">Contas e parcelas</h2><p className="mt-1 text-label-sm text-on-surface-variant">Acompanhamento de valores pendentes, pagos, vencidos e parciais.</p></div>{dados.contas.length === 0 ? <p className="px-6 pb-6 text-on-surface-variant">Nenhuma conta financeira encontrada no período.</p> : <div className="table-scroll" role="region" aria-label="Contas financeiras" tabIndex={0}><table className="w-full min-w-[680px] text-left text-body-md"><thead className="bg-surface-container-low text-label-md text-on-surface-variant"><tr>{['Descrição', 'Vencimento', 'Parcela', 'Valor', 'Pago', 'Situação'].map(titulo => <th key={titulo} scope="col" className="px-5 py-4">{titulo}</th>)}</tr></thead><tbody>{dados.contas.map(item => <tr key={item.parcela_id} className="border-t border-outline-variant/40"><td className="px-5 py-4 font-medium">{item.descricao}</td><td className="px-5 py-4">{formatarData(item.vencimento)}</td><td className="px-5 py-4">{item.numero}/{item.total_parcelas}</td><td className="px-5 py-4 tabular-nums">{formatarDinheiro(item.valor)}</td><td className="px-5 py-4 tabular-nums">{formatarDinheiro(item.valor_pago)}</td><td className="px-5 py-4"><Button variant="secondary" size="compact" onClick={() => setDetalhe(item)}>{item.parcelado ? 'Parcelado · ' : ''}{statusLabel(item.status)}</Button></td></tr>)}</tbody></table></div>}</section></>}
-    {detalhe && <Dialog titulo="Detalhes financeiros" onCancelar={() => setDetalhe(null)}><dl className="space-y-4">{('forma_pagamento' in detalhe ? [['Descrição', detalhe.descricao], ['Categoria', nomeCategoria(detalhe.categoria)], ['Data do pagamento', formatarData(detalhe.pago_em)], ['Forma de pagamento', detalhe.forma_pagamento], ['Valor', formatarDinheiro(detalhe.valor)], ['Motivo do estorno', detalhe.motivo_estorno ?? 'Não informado']] : [['Descrição', detalhe.descricao], ['Categoria', nomeCategoria(detalhe.categoria)], ['Vencimento', formatarData(detalhe.vencimento)], ['Situação', statusLabel(detalhe.status)], ['Valor previsto', formatarDinheiro(detalhe.valor)], ['Valor pago', formatarDinheiro(detalhe.valor_pago)]]).map(([titulo, valor]) => <div key={titulo}><dt className="text-label-sm text-on-surface-variant">{titulo}</dt><dd className="mt-1 font-medium">{valor}</dd></div>)}</dl><Button className="mt-6" onClick={() => setDetalhe(null)}>Fechar</Button></Dialog>}
-  </div>
+  return (
+    <div className="mx-auto max-w-container-max space-y-8">
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="mb-2 text-label-md text-primary">
+            SEDA E COURO · GESTÃO INTERNA
+          </p>
+          <h1 className="text-headline-lg-mobile md:text-headline-lg">
+            Financeiro
+          </h1>
+          <p className="mt-2 text-body-md text-on-surface-variant">
+            Receitas, pagamentos, custos e despesas registrados no regime de
+            caixa.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Button
+            variant="secondary"
+            size="compact"
+            disabled
+            title="Emissão fiscal será habilitada após a definição da integração tributária"
+          >
+            Emitir nota fiscal (em breve)
+          </Button>
+          <Button
+            variant="secondary"
+            size="compact"
+            className="mobile-action"
+            onClick={() => navigate('/dashboard')}
+          >
+            Voltar
+          </Button>
+        </div>
+      </header>
+      <aside
+        aria-label="Escopo do painel"
+        className="rounded-default border border-outline-variant bg-secondary-container p-4 text-body-md"
+      >
+        <strong>Integração financeira em leitura.</strong> Os valores são
+        consultados do banco e representam registros operacionais. Impostos,
+        notas fiscais e lucro líquido aguardam suas regras específicas.
+      </aside>
+      <section
+        aria-label="Filtros financeiros"
+        className="rounded-default border border-outline-variant bg-surface-container-lowest p-5"
+      >
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <SelectField
+            id="periodo-financeiro"
+            label="Período"
+            value={opcao}
+            onChange={(event) => selecionarPeriodo(event.target.value)}
+          >
+            <option value="hoje">Hoje</option>
+            <option value="semana">Esta semana</option>
+            <option value="mes">Este mês</option>
+            <option value="personalizado">Personalizado</option>
+          </SelectField>
+          <SelectField
+            id="tipo-movimento-financeiro"
+            label="Tipo de movimento"
+            value={tipoFiltro}
+            onChange={(event) =>
+              setTipoFiltro(event.target.value as typeof tipoFiltro)
+            }
+          >
+            <option value="todos">Todos</option>
+            <option value="entrada">Entradas</option>
+            <option value="saida">Saídas</option>
+          </SelectField>
+          <SelectField
+            id="origem-movimento-financeiro"
+            label="Origem"
+            value={origemFiltro}
+            onChange={(event) =>
+              setOrigemFiltro(event.target.value as typeof origemFiltro)
+            }
+          >
+            <option value="todas">Todas</option>
+            <option value="vendas">Vendas</option>
+            <option value="os">Ordens de serviço</option>
+            <option value="compras">Compras</option>
+            <option value="despesas">Despesas</option>
+            <option value="estornos">Estornos</option>
+          </SelectField>
+        </div>
+        {opcao === 'personalizado' && (
+          <form
+            onSubmit={aplicarPeriodo}
+            className="mt-5 flex flex-wrap items-end gap-4"
+          >
+            <InputField
+              id="financeiro-inicio"
+              label="Data inicial"
+              type="date"
+              required
+              value={rascunho.inicio}
+              onChange={(event) =>
+                setRascunho({ ...rascunho, inicio: event.target.value })
+              }
+            />
+            <InputField
+              id="financeiro-fim"
+              label="Data final"
+              type="date"
+              required
+              value={rascunho.fim}
+              onChange={(event) =>
+                setRascunho({ ...rascunho, fim: event.target.value })
+              }
+            />
+            <Button type="submit" size="compact">
+              Aplicar período
+            </Button>
+          </form>
+        )}
+        <p
+          className="mt-4 text-body-md text-on-surface-variant"
+          aria-live="polite"
+        >
+          Exibindo {formatarData(periodo.inicio)} a {formatarData(periodo.fim)}
+        </p>
+        {erro && (
+          <p role="alert" className="mt-3 text-error">
+            {erro}
+          </p>
+        )}
+      </section>
+      {carregando && (
+        <p
+          role="status"
+          className="rounded-default border border-outline-variant bg-surface p-5"
+        >
+          Consultando os dados financeiros…
+        </p>
+      )}
+      {!carregando && dados && (
+        <>
+          <section
+            aria-label="Resumo financeiro"
+            className="grid gap-4 lg:grid-cols-3"
+          >
+            <CartaoInformacoes
+              titulo="Faturamento bruto recebido"
+              icone="financeiro"
+            >
+              <p className="break-words text-headline-lg tabular-nums text-primary">
+                {formatarDinheiro(dados.resumo.faturamento_bruto)}
+              </p>
+              <p className="mt-2 text-label-sm text-on-surface-variant">
+                Entradas efetivamente recebidas no regime de caixa.
+              </p>
+            </CartaoInformacoes>
+            <CartaoInformacoes titulo="Saídas de caixa" icone="observacoes">
+              <p className="break-words text-headline-lg tabular-nums">
+                {formatarDinheiro(dados.resumo.saidas_caixa)}
+              </p>
+              <p className="mt-2 text-label-sm text-on-surface-variant">
+                Compras, despesas e estornos pagos no período.
+              </p>
+            </CartaoInformacoes>
+            <CartaoInformacoes titulo="Lucro bruto" icone="dashboard" destaque>
+              <p className="break-words text-headline-lg tabular-nums text-primary">
+                {formatarDinheiro(dados.resumo.lucro_bruto)}
+              </p>
+              <p className="mt-2 text-label-sm text-on-surface-variant">
+                Receitas recebidas menos custos de produtos vendidos e materiais
+                usados.
+              </p>
+            </CartaoInformacoes>
+          </section>
+          <section
+            aria-label="Indicadores financeiros"
+            className="grid gap-4 md:grid-cols-3"
+          >
+            <CartaoInformacoes
+              titulo="Custo de produtos e materiais"
+              icone="estoque"
+            >
+              <p className="text-headline-lg tabular-nums">
+                {formatarDinheiro(dados.resumo.custo_mercadorias_e_materiais)}
+              </p>
+            </CartaoInformacoes>
+            <CartaoInformacoes titulo="Lucro operacional" icone="dashboard">
+              <p className="text-headline-lg tabular-nums">
+                {formatarDinheiro(dados.resumo.lucro_operacional)}
+              </p>
+              <p className="mt-2 text-label-sm text-on-surface-variant">
+                Após despesas operacionais pagas.
+              </p>
+            </CartaoInformacoes>
+            <CartaoInformacoes
+              titulo="Lucro líquido e impostos"
+              icone="observacoes"
+            >
+              <p className="text-headline-lg tabular-nums">Não disponível</p>
+              <p className="mt-2 text-label-sm text-on-surface-variant">
+                A regra de impostos ainda será definida.
+              </p>
+            </CartaoInformacoes>
+          </section>
+          <section
+            aria-labelledby="titulo-movimentos"
+            className="overflow-hidden rounded-default border border-outline-variant bg-surface-container-lowest"
+          >
+            <div className="p-5 md:p-6">
+              <h2 id="titulo-movimentos" className="text-headline-md">
+                Movimentações financeiras
+              </h2>
+              <p className="mt-1 text-label-sm text-on-surface-variant">
+                {movimentos.length} registros pagos no período e nos filtros
+                aplicados.
+              </p>
+            </div>
+            {movimentos.length === 0 ? (
+              <p className="px-6 pb-6 text-on-surface-variant">
+                Nenhuma movimentação financeira encontrada.
+              </p>
+            ) : (
+              <div
+                className="table-scroll"
+                role="region"
+                aria-label="Movimentações financeiras"
+                tabIndex={0}
+              >
+                <table className="w-full min-w-[720px] text-left text-body-md">
+                  <caption className="sr-only">
+                    Movimentações financeiras pagas
+                  </caption>
+                  <thead className="bg-surface-container-low text-label-md text-on-surface-variant">
+                    <tr>
+                      {[
+                        'Data',
+                        'Descrição',
+                        'Categoria',
+                        'Tipo',
+                        'Valor',
+                        'Detalhes',
+                      ].map((titulo) => (
+                        <th key={titulo} scope="col" className="px-5 py-4">
+                          {titulo}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {movimentos.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="border-t border-outline-variant/40"
+                      >
+                        <td className="whitespace-nowrap px-5 py-4">
+                          {formatarData(item.pago_em)}
+                        </td>
+                        <td className="px-5 py-4 font-medium">
+                          {item.descricao}
+                        </td>
+                        <td className="px-5 py-4">
+                          {nomeCategoria(item.categoria)}
+                        </td>
+                        <td className="px-5 py-4">
+                          {item.tipo === 'entrada' ? 'Entrada' : 'Saída'}
+                        </td>
+                        <td className="whitespace-nowrap px-5 py-4 text-right tabular-nums">
+                          {formatarDinheiro(item.valor)}
+                        </td>
+                        <td className="px-5 py-4">
+                          <Button
+                            variant="secondary"
+                            size="compact"
+                            onClick={() => setDetalhe(item)}
+                          >
+                            Ver detalhes
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+          <section
+            aria-labelledby="titulo-contas"
+            className="overflow-hidden rounded-default border border-outline-variant bg-surface-container-lowest"
+          >
+            <div className="p-5 md:p-6">
+              <h2 id="titulo-contas" className="text-headline-md">
+                Contas e parcelas
+              </h2>
+              <p className="mt-1 text-label-sm text-on-surface-variant">
+                Acompanhamento de valores pendentes, pagos, vencidos e parciais.
+              </p>
+            </div>
+            {dados.contas.length === 0 ? (
+              <p className="px-6 pb-6 text-on-surface-variant">
+                Nenhuma conta financeira encontrada no período.
+              </p>
+            ) : (
+              <div
+                className="table-scroll"
+                role="region"
+                aria-label="Contas financeiras"
+                tabIndex={0}
+              >
+                <table className="w-full min-w-[680px] text-left text-body-md">
+                  <thead className="bg-surface-container-low text-label-md text-on-surface-variant">
+                    <tr>
+                      {[
+                        'Descrição',
+                        'Vencimento',
+                        'Parcela',
+                        'Valor',
+                        'Pago',
+                        'Situação',
+                      ].map((titulo) => (
+                        <th key={titulo} scope="col" className="px-5 py-4">
+                          {titulo}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dados.contas.map((item) => (
+                      <tr
+                        key={item.parcela_id}
+                        className="border-t border-outline-variant/40"
+                      >
+                        <td className="px-5 py-4 font-medium">
+                          {item.descricao}
+                        </td>
+                        <td className="px-5 py-4">
+                          {formatarData(item.vencimento)}
+                        </td>
+                        <td className="px-5 py-4">
+                          {item.numero}/{item.total_parcelas}
+                        </td>
+                        <td className="px-5 py-4 tabular-nums">
+                          {formatarDinheiro(item.valor)}
+                        </td>
+                        <td className="px-5 py-4 tabular-nums">
+                          {formatarDinheiro(item.valor_pago)}
+                        </td>
+                        <td className="px-5 py-4">
+                          <Button
+                            variant="secondary"
+                            size="compact"
+                            onClick={() => setDetalhe(item)}
+                          >
+                            {item.parcelado ? 'Parcelado · ' : ''}
+                            {statusLabel(item.status)}
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </>
+      )}
+      {detalhe && (
+        <Dialog
+          titulo="Detalhes financeiros"
+          onCancelar={() => setDetalhe(null)}
+        >
+          <dl className="space-y-4">
+            {('forma_pagamento' in detalhe
+              ? [
+                  ['Descrição', detalhe.descricao],
+                  ['Categoria', nomeCategoria(detalhe.categoria)],
+                  ['Data do pagamento', formatarData(detalhe.pago_em)],
+                  ['Forma de pagamento', detalhe.forma_pagamento],
+                  ['Valor', formatarDinheiro(detalhe.valor)],
+                  [
+                    'Motivo do estorno',
+                    detalhe.motivo_estorno ?? 'Não informado',
+                  ],
+                ]
+              : [
+                  ['Descrição', detalhe.descricao],
+                  ['Categoria', nomeCategoria(detalhe.categoria)],
+                  ['Vencimento', formatarData(detalhe.vencimento)],
+                  ['Situação', statusLabel(detalhe.status)],
+                  ['Valor previsto', formatarDinheiro(detalhe.valor)],
+                  ['Valor pago', formatarDinheiro(detalhe.valor_pago)],
+                ]
+            ).map(([titulo, valor]) => (
+              <div key={titulo}>
+                <dt className="text-label-sm text-on-surface-variant">
+                  {titulo}
+                </dt>
+                <dd className="mt-1 font-medium">{valor}</dd>
+              </div>
+            ))}
+          </dl>
+          <Button className="mt-6" onClick={() => setDetalhe(null)}>
+            Fechar
+          </Button>
+        </Dialog>
+      )}
+    </div>
+  )
 }

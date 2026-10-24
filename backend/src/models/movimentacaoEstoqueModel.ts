@@ -32,7 +32,10 @@ export type HistoricoGeralEstoque = {
 
 const colunas = `id, tipo, material_id, produto_id, quantidade, data, motivo, item_venda_id, material_os_id, reversao_de_id, item_compra_id`;
 
-export async function listar(filtro?: { campo: 'material_id' | 'produto_id'; id: number }): Promise<MovimentacaoEstoque[]> {
+export async function listar(filtro?: {
+  campo: 'material_id' | 'produto_id';
+  id: number;
+}): Promise<MovimentacaoEstoque[]> {
   const resultado = await pool.query<MovimentacaoEstoque>(
     `SELECT ${colunas} FROM sapataria.movimentacoes_estoque ${filtro ? `WHERE ${filtro.campo} = $1 ORDER BY id DESC` : 'ORDER BY id'}`,
     filtro ? [filtro.id] : [],
@@ -67,9 +70,12 @@ export async function listarGeral(): Promise<HistoricoGeralEstoque[]> {
   return resultado.rows;
 }
 
-export async function buscar(id: number): Promise<MovimentacaoEstoque | undefined> {
+export async function buscar(
+  id: number,
+): Promise<MovimentacaoEstoque | undefined> {
   const resultado = await pool.query<MovimentacaoEstoque>(
-    `SELECT ${colunas} FROM sapataria.movimentacoes_estoque WHERE id = $1`, [id],
+    `SELECT ${colunas} FROM sapataria.movimentacoes_estoque WHERE id = $1`,
+    [id],
   );
   return resultado.rows[0];
 }
@@ -80,11 +86,27 @@ export async function criar(dados: Movimento) {
 
 export async function estornar(id: number, motivo: string) {
   return emTransacao(async (conexao) => {
-    const resultado = await conexao.query<MovimentacaoEstoque>(`SELECT ${colunas} FROM sapataria.movimentacoes_estoque WHERE id=$1 FOR UPDATE`, [id]);
+    const resultado = await conexao.query<MovimentacaoEstoque>(
+      `SELECT ${colunas} FROM sapataria.movimentacoes_estoque WHERE id=$1 FOR UPDATE`,
+      [id],
+    );
     const origem = resultado.rows[0];
-    if (!origem) throw new ErroHttp(404, 'MOVIMENTACAO_NAO_ENCONTRADA', 'Movimentação não encontrada.');
-    if (origem.item_venda_id !== null || origem.material_os_id !== null || origem.reversao_de_id !== null) {
-      throw new ErroHttp(409, 'ORIGEM_VINCULADA', 'Estorne somente movimentos manuais; para vendas e OS, use suas operações de cancelamento/devolução.');
+    if (!origem)
+      throw new ErroHttp(
+        404,
+        'MOVIMENTACAO_NAO_ENCONTRADA',
+        'Movimentação não encontrada.',
+      );
+    if (
+      origem.item_venda_id !== null ||
+      origem.material_os_id !== null ||
+      origem.reversao_de_id !== null
+    ) {
+      throw new ErroHttp(
+        409,
+        'ORIGEM_VINCULADA',
+        'Estorne somente movimentos manuais; para vendas e OS, use suas operações de cancelamento/devolução.',
+      );
     }
     return reverter(conexao, id, origem.quantidade, motivo);
   });

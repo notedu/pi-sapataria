@@ -1,5 +1,12 @@
 import { Router } from 'express';
-import { atualizar, buscarPorId, cadastrar, listar, excluir, ordens } from '../controllers/clienteController';
+import {
+  atualizar,
+  buscarPorId,
+  cadastrar,
+  listar,
+  excluir,
+  ordens,
+} from '../controllers/clienteController';
 
 const router = Router();
 

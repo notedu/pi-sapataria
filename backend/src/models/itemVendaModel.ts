@@ -13,7 +13,8 @@ const colunas = `id, venda_id, produto_id, quantidade, preco_unitario`;
 
 export async function listarPorVenda(id: number): Promise<ItemVenda[]> {
   const resultado = await pool.query<ItemVenda>(
-    `SELECT ${colunas} FROM sapataria.itens_venda WHERE venda_id = $1 ORDER BY id`, [id],
+    `SELECT ${colunas} FROM sapataria.itens_venda WHERE venda_id = $1 ORDER BY id`,
+    [id],
   );
   return resultado.rows;
 }

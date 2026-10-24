@@ -1,5 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap");
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
 
 /* Referência: design/seda_e_couro_system/DESIGN.md.
  * Os valores seguem a tabela do guia. `static` mantém todas as variáveis
@@ -63,7 +63,7 @@
   --color-surface-variant: #dfe2ed;
 
   /* Fonte global; sans-serif é a alternativa caso a fonte externa não carregue. */
-  --font-sans: "Hanken Grotesk", sans-serif;
+  --font-sans: 'Hanken Grotesk', sans-serif;
 
   /* Cada classe text-* aplica tamanho, altura de linha e peso em conjunto.
    * Exemplo responsivo: text-headline-lg-mobile md:text-headline-lg.
@@ -222,13 +222,18 @@
 }
 
 @keyframes entrada-pagina {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 button,
 a {
-  transition-property: color, background-color, border-color, box-shadow, transform;
+  transition-property:
+    color, background-color, border-color, box-shadow, transform;
   transition-duration: 160ms;
   transition-timing-function: ease-out;
 }
@@ -260,9 +265,15 @@ a {
 
 .dialog-responsive {
   width: calc(100% - 2rem);
-  width: min(calc(100% - 2rem), calc(100% - env(safe-area-inset-left) - env(safe-area-inset-right) - 1rem));
+  width: min(
+    calc(100% - 2rem),
+    calc(100% - env(safe-area-inset-left) - env(safe-area-inset-right) - 1rem)
+  );
   max-height: 90vh;
-  max-height: min(90dvh, calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1rem));
+  max-height: min(
+    90dvh,
+    calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1rem)
+  );
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
 
@@ -302,7 +313,9 @@ a {
 }
 
 @supports (min-height: 100dvh) {
-  .landing-root { min-height: 100dvh; }
+  .landing-root {
+    min-height: 100dvh;
+  }
 }
 
 button:not(:disabled):active,
@@ -334,8 +347,12 @@ button {
 }
 
 @keyframes alerta-contagem {
-  from { transform: scaleX(1); }
-  to { transform: scaleX(0); }
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
 }
 
 .alerta-progresso {
@@ -344,11 +361,26 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  .alerta-progresso { animation-timing-function: steps(5, end); }
-  .page-transition { animation: none; }
-  button, a, .interruptor-tema-thumb { transition-duration: 0ms !important; }
-  button:not(:disabled):active, a:active { transform: none; }
+  html {
+    scroll-behavior: auto;
+  }
+  .alerta-progresso {
+    animation-timing-function: steps(5, end);
+  }
+  .page-transition {
+    animation: none;
+  }
+  button,
+  a,
+  .interruptor-tema-thumb {
+    transition-duration: 0ms !important;
+  }
+  button:not(:disabled):active,
+  a:active {
+    transform: none;
+  }
   .theme-transition,
-  .theme-transition * { transition-duration: 0ms !important; }
+  .theme-transition * {
+    transition-duration: 0ms !important;
+  }
 }

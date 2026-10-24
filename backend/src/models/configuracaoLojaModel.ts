@@ -13,7 +13,8 @@ export async function atualizarEndereco(endereco: string): Promise<DadosLoja> {
   const resultado = await pool.query<DadosLoja>(
     `INSERT INTO sapataria.configuracoes_loja (id, endereco) VALUES (1, $1)
      ON CONFLICT (id) DO UPDATE SET endereco = EXCLUDED.endereco
-     RETURNING endereco`, [endereco],
+     RETURNING endereco`,
+    [endereco],
   );
   return resultado.rows[0]!;
 }

@@ -18,7 +18,11 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Adicionado
 
-- Estoque: cadastro opcional de saldo inicial com entrada histórica transacionada, histórico geral colorido para cadastros/entradas/saídas e cadastro de categorias por tipo. Migração `estoque-categorias.sql` aplicada ao banco configurado.
+- `schema.sql` reúne também a conversão idempotente de lançamentos financeiros legados. Os scripts SQL separados foram removidos após a centralização; o arquivo consolidado continua destinado a bancos novos, não a atualizações de bancos existentes.
+
+- Financeiro: demonstração com dados locais substituída por consulta à API, com períodos, filtros, resumos, movimentações e contas/parcelas. Operações financeiras seguem protegidas por perfil e CSRF; impostos, lucro líquido e emissão fiscal permanecem indisponíveis até definição das regras.
+
+- Estoque: cadastro opcional de saldo inicial com entrada histórica transacionada, histórico geral colorido para cadastros/entradas/saídas e cadastro de categorias por tipo. A estrutura foi aplicada ao banco configurado e está consolidada no `schema.sql` para novas instalações.
 
 - Nome do cliente nas ordens de serviço exibidas no perfil do funcionário, incluído pela consulta da API sem alteração no banco.
 - Landing Page pública em `/` para a Seda e Couro, com serviços, carrossel automático de fotos a cada cinco segundos com setas laterais, controle de tema claro/escuro, rolagem suave, endereço, Instagram, telefone/WhatsApp e atalho `/login`. Endereço fornecido estático nesta etapa; sem mudanças na API ou no banco.

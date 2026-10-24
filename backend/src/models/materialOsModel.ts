@@ -12,7 +12,8 @@ const colunas = `id, ordem_servico_id, material_id, quantidade_usada`;
 
 export async function listarPorOrdemServico(id: number): Promise<MaterialOs[]> {
   const resultado = await pool.query<MaterialOs>(
-    `SELECT ${colunas} FROM sapataria.materiais_os WHERE ordem_servico_id = $1 ORDER BY id`, [id],
+    `SELECT ${colunas} FROM sapataria.materiais_os WHERE ordem_servico_id = $1 ORDER BY id`,
+    [id],
   );
   return resultado.rows;
 }

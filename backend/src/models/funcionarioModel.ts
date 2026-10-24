@@ -2,7 +2,11 @@ import type { PoolClient } from 'pg';
 import { pool } from '../config/db';
 import { emTransacao } from '../config/transacao';
 import { ErroHttp } from '../utils/validacao';
-import { protegerSenha, validarSenhaAlteracao, verificarSenha } from '../utils/senha';
+import {
+  protegerSenha,
+  validarSenhaAlteracao,
+  verificarSenha,
+} from '../utils/senha';
 
 export type Perfil = 'administrador' | 'funcionario';
 export interface Funcionario {
@@ -20,42 +24,83 @@ export interface Credencial extends Funcionario {
   versao_acesso: number;
 }
 export interface NovoFuncionario {
-  nome: string; cpf: string; telefone: string; usuario: string; email: string; perfil: Perfil; ativo: boolean; senha_protegida: string;
+  nome: string;
+  cpf: string;
+  telefone: string;
+  usuario: string;
+  email: string;
+  perfil: Perfil;
+  ativo: boolean;
+  senha_protegida: string;
 }
 
 const colunas = 'id, nome, usuario, email, perfil, ativo, cpf, telefone';
 
 export function dadosPublicos(funcionario: Funcionario): Funcionario {
-  const { id, nome, usuario, email, perfil, ativo, cpf, telefone } = funcionario;
+  const { id, nome, usuario, email, perfil, ativo, cpf, telefone } =
+    funcionario;
   return { id, nome, usuario, email, perfil, ativo, cpf, telefone };
 }
 
 export async function listar(): Promise<Funcionario[]> {
-  return (await pool.query<Funcionario>(`SELECT ${colunas} FROM sapataria.funcionarios ORDER BY id`)).rows;
+  return (
+    await pool.query<Funcionario>(
+      `SELECT ${colunas} FROM sapataria.funcionarios ORDER BY id`,
+    )
+  ).rows;
 }
 
 export async function buscar(id: number): Promise<Funcionario | undefined> {
-  return (await pool.query<Funcionario>(`SELECT ${colunas} FROM sapataria.funcionarios WHERE id = $1`, [id])).rows[0];
+  return (
+    await pool.query<Funcionario>(
+      `SELECT ${colunas} FROM sapataria.funcionarios WHERE id = $1`,
+      [id],
+    )
+  ).rows[0];
 }
 
-export async function buscarAcesso(id: number): Promise<(Funcionario & { versao_acesso: number }) | undefined> {
-  return (await pool.query<Funcionario & { versao_acesso: number }>(
-    `SELECT ${colunas}, versao_acesso FROM sapataria.funcionarios WHERE id = $1`, [id],
-  )).rows[0];
+export async function buscarAcesso(
+  id: number,
+): Promise<(Funcionario & { versao_acesso: number }) | undefined> {
+  return (
+    await pool.query<Funcionario & { versao_acesso: number }>(
+      `SELECT ${colunas}, versao_acesso FROM sapataria.funcionarios WHERE id = $1`,
+      [id],
+    )
+  ).rows[0];
 }
 
-export async function buscarCredencial(usuario: string): Promise<Credencial | undefined> {
-  return (await pool.query<Credencial>(
-    `SELECT ${colunas}, senha_protegida, versao_acesso FROM sapataria.funcionarios WHERE lower(usuario) = $1`, [usuario],
-  )).rows[0];
+export async function buscarCredencial(
+  usuario: string,
+): Promise<Credencial | undefined> {
+  return (
+    await pool.query<Credencial>(
+      `SELECT ${colunas}, senha_protegida, versao_acesso FROM sapataria.funcionarios WHERE lower(usuario) = $1`,
+      [usuario],
+    )
+  ).rows[0];
 }
 
-export async function criar(dados: NovoFuncionario, banco: Pick<PoolClient, 'query'> = pool): Promise<Funcionario> {
-  return (await banco.query<Funcionario>(
-    `INSERT INTO sapataria.funcionarios (nome, usuario, email, senha_protegida, perfil, ativo, cpf, telefone)
+export async function criar(
+  dados: NovoFuncionario,
+  banco: Pick<PoolClient, 'query'> = pool,
+): Promise<Funcionario> {
+  return (
+    await banco.query<Funcionario>(
+      `INSERT INTO sapataria.funcionarios (nome, usuario, email, senha_protegida, perfil, ativo, cpf, telefone)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING ${colunas}`,
-    [dados.nome, dados.usuario, dados.email, dados.senha_protegida, dados.perfil, dados.ativo, dados.cpf, dados.telefone],
-  )).rows[0]!;
+      [
+        dados.nome,
+        dados.usuario,
+        dados.email,
+        dados.senha_protegida,
+        dados.perfil,
+        dados.ativo,
+        dados.cpf,
+        dados.telefone,
+      ],
+    )
+  ).rows[0]!;
 }
 
 export interface AutorizacaoAcesso {
@@ -66,53 +111,113 @@ export interface AutorizacaoAcesso {
 }
 
 // Tanto a edição quanto a desativação revalidam o autor sob o mesmo bloqueio.
-async function bloquearPessoas(client: PoolClient, id: number, autorizacao: AutorizacaoAcesso) {
+async function bloquearPessoas(
+  client: PoolClient,
+  id: number,
+  autorizacao: AutorizacaoAcesso,
+) {
   // Ordem comum evita deadlock entre dois administradores. Os bloqueios impedem
   // autorizações obsoletas e preservam a versão usada para invalidar sessões.
-  const pessoas = (await client.query<Credencial>(
-    `SELECT ${colunas}, senha_protegida, versao_acesso FROM sapataria.funcionarios
-     WHERE id = ANY($1::integer[]) ORDER BY id FOR UPDATE`, [[autorizacao.funcionarioId, id]],
-  )).rows;
-  const autor = pessoas.find(pessoa => pessoa.id === autorizacao.funcionarioId);
-  if (!autor?.ativo || autor.versao_acesso !== autorizacao.versao || autorizacao.expiraEm <= Date.now()) {
+  const pessoas = (
+    await client.query<Credencial>(
+      `SELECT ${colunas}, senha_protegida, versao_acesso FROM sapataria.funcionarios
+     WHERE id = ANY($1::integer[]) ORDER BY id FOR UPDATE`,
+      [[autorizacao.funcionarioId, id]],
+    )
+  ).rows;
+  const autor = pessoas.find(
+    (pessoa) => pessoa.id === autorizacao.funcionarioId,
+  );
+  if (
+    !autor?.ativo ||
+    autor.versao_acesso !== autorizacao.versao ||
+    autorizacao.expiraEm <= Date.now()
+  ) {
     throw new ErroHttp(401, 'NAO_AUTENTICADO', 'Faça login novamente.');
   }
   if (autor.perfil !== 'administrador') {
-    throw new ErroHttp(403, 'ACESSO_NEGADO', 'Este recurso é exclusivo do administrador.');
+    throw new ErroHttp(
+      403,
+      'ACESSO_NEGADO',
+      'Este recurso é exclusivo do administrador.',
+    );
   }
-  const alvo = pessoas.find(pessoa => pessoa.id === id);
-  if (!alvo) throw new ErroHttp(404, 'FUNCIONARIO_NAO_ENCONTRADO', 'Funcionário não encontrado.');
+  const alvo = pessoas.find((pessoa) => pessoa.id === id);
+  if (!alvo)
+    throw new ErroHttp(
+      404,
+      'FUNCIONARIO_NAO_ENCONTRADO',
+      'Funcionário não encontrado.',
+    );
   return { alvo, autor };
 }
 
-export type DadosPessoais = { nome: string; email: string; cpf: string; telefone: string };
+export type DadosPessoais = {
+  nome: string;
+  email: string;
+  cpf: string;
+  telefone: string;
+};
 
-export async function editarDados(id: number, dados: DadosPessoais, autorizacao: AutorizacaoAcesso): Promise<Funcionario> {
-  return emTransacao(async client => {
+export async function editarDados(
+  id: number,
+  dados: DadosPessoais,
+  autorizacao: AutorizacaoAcesso,
+): Promise<Funcionario> {
+  return emTransacao(async (client) => {
     const { autor } = await bloquearPessoas(client, id, autorizacao);
-    if (!autorizacao.confirmarSenha) throw new ErroHttp(400, 'CONFIRMACAO_OBRIGATORIA', 'Confirme a operação com sua senha.');
+    if (!autorizacao.confirmarSenha)
+      throw new ErroHttp(
+        400,
+        'CONFIRMACAO_OBRIGATORIA',
+        'Confirme a operação com sua senha.',
+      );
     await autorizacao.confirmarSenha(autor.senha_protegida);
-    return (await client.query<Funcionario>(
-      `UPDATE sapataria.funcionarios SET nome=$1, email=$2, cpf=$3, telefone=$4 WHERE id=$5 RETURNING ${colunas}`,
-      [dados.nome, dados.email, dados.cpf, dados.telefone, id],
-    )).rows[0]!;
+    return (
+      await client.query<Funcionario>(
+        `UPDATE sapataria.funcionarios SET nome=$1, email=$2, cpf=$3, telefone=$4 WHERE id=$5 RETURNING ${colunas}`,
+        [dados.nome, dados.email, dados.cpf, dados.telefone, id],
+      )
+    ).rows[0]!;
   });
 }
 
 export async function trocarSenha(
-  id: number, versao: number, expiraEm: number, senhaAtual: string, senhaNova: string,
+  id: number,
+  versao: number,
+  expiraEm: number,
+  senhaAtual: string,
+  senhaNova: string,
 ): Promise<void> {
-  await emTransacao(async client => {
-    const funcionario = (await client.query<Credencial>(
-      `SELECT ${colunas}, senha_protegida, versao_acesso FROM sapataria.funcionarios WHERE id = $1 FOR UPDATE`, [id],
-    )).rows[0];
-    if (!funcionario?.ativo || funcionario.versao_acesso !== versao || expiraEm <= Date.now()) {
-      throw new ErroHttp(401, 'NAO_AUTENTICADO', 'Faça login novamente para alterar a senha.');
+  await emTransacao(async (client) => {
+    const funcionario = (
+      await client.query<Credencial>(
+        `SELECT ${colunas}, senha_protegida, versao_acesso FROM sapataria.funcionarios WHERE id = $1 FOR UPDATE`,
+        [id],
+      )
+    ).rows[0];
+    if (
+      !funcionario?.ativo ||
+      funcionario.versao_acesso !== versao ||
+      expiraEm <= Date.now()
+    ) {
+      throw new ErroHttp(
+        401,
+        'NAO_AUTENTICADO',
+        'Faça login novamente para alterar a senha.',
+      );
     }
-    if (!await verificarSenha(senhaAtual, funcionario.senha_protegida)) {
-      throw new ErroHttp(403, 'SENHA_ATUAL_INVALIDA', 'A senha atual está incorreta.');
+    if (!(await verificarSenha(senhaAtual, funcionario.senha_protegida))) {
+      throw new ErroHttp(
+        403,
+        'SENHA_ATUAL_INVALIDA',
+        'A senha atual está incorreta.',
+      );
     }
-    const senhaProtegida = await protegerSenha(senhaNova, validarSenhaAlteracao);
+    const senhaProtegida = await protegerSenha(
+      senhaNova,
+      validarSenhaAlteracao,
+    );
     // A versão invalida todas as sessões existentes, inclusive a sessão atual.
     await client.query(
       'UPDATE sapataria.funcionarios SET senha_protegida = $1, versao_acesso = versao_acesso + 1 WHERE id = $2',
@@ -122,37 +227,63 @@ export async function trocarSenha(
 }
 
 export async function alterarAcesso(
-  id: number, perfil: Perfil | undefined, ativo: boolean, autorizacao: AutorizacaoAcesso,
+  id: number,
+  perfil: Perfil | undefined,
+  ativo: boolean,
+  autorizacao: AutorizacaoAcesso,
 ): Promise<Funcionario> {
   if (!ativo && id === autorizacao.funcionarioId) {
-    throw new ErroHttp(403, 'AUTODESATIVACAO_PROIBIDA', 'Você não pode desativar sua própria conta.');
+    throw new ErroHttp(
+      403,
+      'AUTODESATIVACAO_PROIBIDA',
+      'Você não pode desativar sua própria conta.',
+    );
   }
   return emTransacao(async (client) => {
     const { alvo, autor } = await bloquearPessoas(client, id, autorizacao);
     if (!ativo) {
       if (!autorizacao.confirmarSenha) {
-        throw new ErroHttp(400, 'CONFIRMACAO_OBRIGATORIA', 'Confirme a operação com sua senha.');
+        throw new ErroHttp(
+          400,
+          'CONFIRMACAO_OBRIGATORIA',
+          'Confirme a operação com sua senha.',
+        );
       }
       await autorizacao.confirmarSenha(autor.senha_protegida);
     }
-    return (await client.query<Funcionario>(
-      `UPDATE sapataria.funcionarios
+    return (
+      await client.query<Funcionario>(
+        `UPDATE sapataria.funcionarios
        SET versao_acesso = versao_acesso + CASE WHEN perfil <> $2 OR ativo <> $3 THEN 1 ELSE 0 END,
            perfil = $2, ativo = $3
-       WHERE id = $1 RETURNING ${colunas}`, [id, perfil ?? alvo.perfil, ativo],
-    )).rows[0]!;
+       WHERE id = $1 RETURNING ${colunas}`,
+        [id, perfil ?? alvo.perfil, ativo],
+      )
+    ).rows[0]!;
   });
 }
 
-export async function criarPrimeiroAdministrador(dados: NovoFuncionario): Promise<Funcionario> {
+export async function criarPrimeiroAdministrador(
+  dados: NovoFuncionario,
+): Promise<Funcionario> {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
     // Impede duas execuções simultâneas do cadastro inicial.
     await client.query('LOCK TABLE sapataria.funcionarios IN EXCLUSIVE MODE');
-    const existentes = await client.query('SELECT 1 FROM sapataria.funcionarios LIMIT 1');
-    if (existentes.rowCount) throw new ErroHttp(409, 'CADASTRO_INICIAL_CONCLUIDO', 'Já existem funcionários. Use uma conta de administrador.');
-    const funcionario = await criar({ ...dados, perfil: 'administrador', ativo: true }, client);
+    const existentes = await client.query(
+      'SELECT 1 FROM sapataria.funcionarios LIMIT 1',
+    );
+    if (existentes.rowCount)
+      throw new ErroHttp(
+        409,
+        'CADASTRO_INICIAL_CONCLUIDO',
+        'Já existem funcionários. Use uma conta de administrador.',
+      );
+    const funcionario = await criar(
+      { ...dados, perfil: 'administrador', ativo: true },
+      client,
+    );
     await client.query('COMMIT');
     return funcionario;
   } catch (error) {

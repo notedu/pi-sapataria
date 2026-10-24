@@ -2,7 +2,9 @@ import type { PoolClient } from 'pg';
 import { pool } from './db';
 
 // Todas as consultas da operação usam a mesma conexão: ou tudo confirma, ou nada.
-export async function emTransacao<T>(operacao: (conexao: PoolClient) => Promise<T>): Promise<T> {
+export async function emTransacao<T>(
+  operacao: (conexao: PoolClient) => Promise<T>,
+): Promise<T> {
   const conexao = await pool.connect();
   try {
     await conexao.query('BEGIN');

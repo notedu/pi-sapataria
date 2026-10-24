@@ -15,8 +15,18 @@ export const verificarCsrf: RequestHandler = (request, _response, next) => {
   if (['GET', 'HEAD', 'OPTIONS'].includes(request.method)) return next();
   const recebido = request.get('X-CSRF-Token');
   const esperado = request.session.csrfToken;
-  if (!recebido || !esperado || !/^[a-f0-9]{64}$/.test(recebido) || recebido.length !== esperado.length || !timingSafeEqual(Buffer.from(recebido), Buffer.from(esperado))) {
-    throw new ErroHttp(403, 'CSRF_INVALIDO', 'Obtenha um token em GET /api/v1/auth/csrf e envie o cabeçalho X-CSRF-Token.');
+  if (
+    !recebido ||
+    !esperado ||
+    !/^[a-f0-9]{64}$/.test(recebido) ||
+    recebido.length !== esperado.length ||
+    !timingSafeEqual(Buffer.from(recebido), Buffer.from(esperado))
+  ) {
+    throw new ErroHttp(
+      403,
+      'CSRF_INVALIDO',
+      'Obtenha um token em GET /api/v1/auth/csrf e envie o cabeçalho X-CSRF-Token.',
+    );
   }
   next();
 };

@@ -1,5 +1,11 @@
 import { Router } from 'express';
-import { listar, notificacoes, quantidadeNaoLidas, marcarLida, marcarTodasLidas } from '../controllers/atividadeController';
+import {
+  listar,
+  notificacoes,
+  quantidadeNaoLidas,
+  marcarLida,
+  marcarTodasLidas,
+} from '../controllers/atividadeController';
 
 const router = Router();
 router.get('/atividades', listar);

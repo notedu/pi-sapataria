@@ -1,5 +1,11 @@
 import { Router } from 'express';
-import { consultar, despesa, estorno, indicador, pagamentoFinanceiro } from '../controllers/financeiroController';
+import {
+  consultar,
+  despesa,
+  estorno,
+  indicador,
+  pagamentoFinanceiro,
+} from '../controllers/financeiroController';
 
 const router = Router();
 router.get('/', consultar);
