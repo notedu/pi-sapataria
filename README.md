@@ -104,7 +104,7 @@ A lupa na lista abre `/funcionarios/:id`, com identificação, dados pessoais, i
 
 **Desativar funcionário** fica no perfil, com confirmação da senha própria; bloqueia desativar a própria conta e mantém as proteções/históricos existentes. A conta desativada permanece consultável pelo Administrador, mas perde o acesso. Sem reativação na interface.
 
-**Banco:** `backend/src/database/schema.sql` inclui a estrutura de CPF e telefone para instalações novas. Essa parte ainda não foi aplicada ao banco existente; não execute o esquema completo nele. Os registros antigos mantêm CPF/telefone desconhecidos e continuam desativáveis. Edição pessoal exige preencher os campos. O comando `npm run criar:admin` também passou a solicitá-los. Não há upload de foto; o avatar usa iniciais.
+**Banco:** a estrutura de CPF e telefone está aplicada ao banco existente e consta em `backend/src/database/schema.sql` para instalações novas. Registros antigos podem continuar com CPF/telefone não informados; continuam desativáveis, mas a edição pessoal exige preencher esses campos. O comando `npm run criar:admin` também os solicita. Não execute o esquema completo no banco existente. Não há upload de foto; o avatar usa iniciais.
 
 Verificado: lint/build/typecheck; 52 verificações HTTP de perfil/edição, 33 de desativação e 29 de Clientes em PostgreSQL local descartável, incluindo permissões, senha, CSRF, migração/legado, histórico, sessões e concorrência. Navegador com API simulada: cadastro, perfil, edição com senha, cancelamento, resultado incerto, ambos os perfis e responsividade. Esses testes foram executados durante o desenvolvimento; os scripts de `backend/tests` foram posteriormente removidos a pedido da equipe. Nenhuma conta real foi modificada.
 

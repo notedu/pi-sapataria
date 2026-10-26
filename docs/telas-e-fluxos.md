@@ -134,7 +134,7 @@ Todas as sequências abaixo são **propostas**, salvo objetivos e restrições e
 - `/funcionarios/:id/editar` altera nome, e-mail, CPF e telefone. Salvar abre `ConfirmarSenhaDialog`; só grava após confirmar a senha do Administrador conectado. Cancelar preserva o formulário; erro mantém dados e limpa a senha. Resultado incerto bloqueia reenvio e direciona para conferir o perfil.
 - Desativar exige senha própria, bloqueia a própria conta e invalida sessões, preservando histórico. Legados sem CPF/telefone continuam desativáveis; edição pessoal exige completar os campos.
 - Reutilização: Button, Icon, Alerta, InputField, SelectField, CartaoInformacoes, ConfirmarSenhaDialog, layout e serviço HTTP/CSRF. Leitura de OS compartilha validação com Clientes.
-- Verificado: lint/build/typecheck, 52 verificações HTTP de perfil/edição, 33 de desativação e 29 de Clientes em PostgreSQL descartável; navegador com API simulada, dois perfis, edição/cadastro, senha, falhas e layouts desktop/celular. Migração ainda não aplicada ao banco existente.
+- Verificado: lint/build/typecheck, 52 verificações HTTP de perfil/edição, 33 de desativação e 29 de Clientes em PostgreSQL descartável; navegador com API simulada, dois perfis, edição/cadastro, senha, falhas e layouts desktop/celular. O usuário confirmou em 26/10/2026 que a estrutura de CPF/telefone está aplicada ao banco existente; registros legados podem manter esses dados nulos.
 - Pendentes: upload de foto (adiado), busca, reativação e alteração de acesso pela interface.
 
 ### OS — abrir, acompanhar e registrar materiais
