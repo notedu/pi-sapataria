@@ -76,7 +76,7 @@ A API recebe `senha` (15–128 caracteres no cadastro de contas), não `senha_pr
 
 **Evolução aprovada pelo Integrante 1 em 30/09/2026:** CPF e telefone obrigatórios no cadastro e na edição pessoal; sem unicidade nova. A definição consolidada acrescenta colunas nulas aos registros antigos, restrições de formato e gatilho de obrigatoriedade apenas para INSERT/UPDATE dos campos pessoais. Assim, alterar acesso/desativar legados continua possível sem inventar CPF/telefone. Edição de nome, email, cpf e telefone exige senha do Administrador conectado. Funcionário comum pode apenas consultar seu próprio perfil e suas OS. Foto adiada explicitamente.
 
-Essa evolução está incluída em `backend/src/database/schema.sql` para instalações novas. **Ainda não aplicada ao banco existente**; o arquivo completo não é um script de atualização incremental. O bootstrap do primeiro Administrador foi atualizado para solicitar os novos campos.
+Essa evolução está aplicada ao banco existente e incluída em `backend/src/database/schema.sql` para instalações novas. Registros legados podem permanecer com CPF/telefone nulos até edição pessoal; novos cadastros e edições exigem os campos. O arquivo completo não é um script de atualização incremental. O bootstrap do primeiro Administrador solicita os novos campos.
 
 O arquivo consolidado `backend/src/database/schema.sql` reúne a estrutura para instalações novas. Ele não atualiza bancos existentes: alterações nesses bancos exigem scripts incrementais versionados. Os scripts incrementais anteriores foram removidos na consolidação e precisam ser recriados caso alguma atualização ainda pendente seja necessária.
 
@@ -105,6 +105,8 @@ Decisão do Integrante 1 em 15/10/2026: manter o endereço da loja para consulta
 CPF, telefone e CEP são persistidos sem pontuação. A interface aplica máscaras. Não foi acrescentada unicidade de CPF ou contatos. A validação de CPF verifica o cálculo, sem consultar sua situação cadastral. CPF ausente ou vazio vira `NULL`; e-mail e observações opcionais vazios também viram `NULL`.
 
 A migração preserva CPF/CEP/número/data ausentes dos registros antigos, sem inventar valores nem converter endereço livre automaticamente. Restrições `CHECK ... NOT VALID` não revalidam linhas antigas; as de telefone, CEP e número exigem campos válidos nas novas inserções e atualizações. CPF pode ser nulo, mas deve ter 11 dígitos quando informado. A API também exige os demais campos obrigatórios no PUT. A data antiga permanece desconhecida, mesmo após edição. O script não remove o endereço legado nem altera vínculos de OS.
+
+No banco existente, a restrição `clientes_cpf_formato` foi encontrada exigindo CPF não nulo, em conflito com a decisão de 23/10/2026 e com a API. A migração incremental `backend/src/database/migrations/20261026_clientes_cpf_opcional.sql` foi preparada para permitir `NULL` e manter o formato de 11 dígitos quando informado. **Está preparada; sua aplicação ao banco não foi confirmada neste registro.**
 
 Somente CEP e número são gravados como novo endereço. Rua, bairro, cidade e UF são consultados no ViaCEP pela interface; campos ausentes na resposta são apresentados como não informados. Falha da consulta não impede salvar os dados informados e não equivale a validação da existência do CEP pela API. RF-003/RF-017/RF-026.
 

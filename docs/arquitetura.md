@@ -22,7 +22,7 @@ Configuração de produção: HTTPS, APP_ORIGIN exata, NODE_ENV=production, HOST
 
 Clientes agora possui formulário e perfil em React, reutilizando os campos, botões e layout. `EnderecoPorCep` compartilha a consulta pública ViaCEP (somente CEP, sem cookies) entre as duas telas; detalhes do endereço não são persistidos. A API valida os dados independentemente das máscaras e usa o modelo de OS para consultar o histórico por cliente. A estrutura consolidada está em `backend/src/database/schema.sql` para banco novo; ainda não aplicada ao banco existente. Decisão do Integrante 1 em 29/09/2026 substitui a antiga pendência de provedor de CEP nas seções históricas abaixo.
 
-Funcionários: `schema.sql` contém a estrutura de CPF/telefone para banco novo; ainda não aplicada ao banco existente. `funcionarioRoutes` aplica permissão administrativa a cada operação de gestão; consultas individuais conferem Administrador ou próprio id. Edição e desativação compartilham confirmação, limites e bloqueio/revalidação do autor na transação. `FormularioFuncionario` é compartilhado entre cadastro/edição; confirmação usa o diálogo existente. Nenhum serviço de fotos foi adicionado.
+Funcionários: a estrutura de CPF/telefone está aplicada ao banco existente e também consta em `schema.sql` para banco novo; dados legados podem continuar nulos até edição pessoal. `funcionarioRoutes` aplica permissão administrativa a cada operação de gestão; consultas individuais conferem Administrador ou próprio id. Edição e desativação compartilham confirmação, limites e bloqueio/revalidação do autor na transação. `FormularioFuncionario` é compartilhado entre cadastro/edição; confirmação usa o diálogo existente. Nenhum serviço de fotos foi adicionado.
 
 ## 1. Objetivo e situação do documento
 
