@@ -50,10 +50,13 @@ export async function cadastrar(
   response
     .status(201)
     .json({
-      dados: await ordemServicoModel.criar(dadosOs(request.body), {
-        id: request.funcionario!.id,
-        nome: request.funcionario!.nome,
-      }),
+      dados: await ordemServicoModel.criar(
+        dadosOs(request.body, request.funcionario!.id),
+        {
+          id: request.funcionario!.id,
+          nome: request.funcionario!.nome,
+        },
+      ),
     });
 }
 

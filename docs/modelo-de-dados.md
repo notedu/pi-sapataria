@@ -122,7 +122,7 @@ RF-004/RF-018. Todos os campos abaixo são obrigatórios, exceto `prazo_entrega`
 | Campo (além de id) | Tipo / vínculo | Definição |
 |---|---|---|
 | cliente_id | integer → clientes.id | Cliente atendido |
-| responsavel_id | integer → funcionarios.id | Responsável pelo serviço; não define automaticamente autoria |
+| responsavel_id | integer → funcionarios.id | Responsável atual pelo serviço; no cadastro, recebe o funcionário autenticado. A autoria original fica no evento de criação em `atividades`. |
 | descricao_calcado | text | Descrição do calçado |
 | servico | text | Descrição do serviço nesta etapa; não foi criado catálogo auxiliar |
 | valor | numeric | Valor informado, sem cálculo automático |

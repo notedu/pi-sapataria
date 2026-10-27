@@ -68,10 +68,10 @@ export function pagamento(valor: unknown, podeOmitir = false): string | null {
   return valor;
 }
 
-export function dadosOs(corpo: unknown) {
+export function dadosOs(corpo: unknown, responsavelAutenticado?: number) {
   const d = objeto(corpo, [
     'cliente_id',
-    'responsavel_id',
+    ...(responsavelAutenticado === undefined ? ['responsavel_id'] : []),
     'descricao_calcado',
     'servico',
     'valor',
@@ -95,7 +95,7 @@ export function dadosOs(corpo: unknown) {
   }
   return {
     cliente_id: idCorpo(d.cliente_id),
-    responsavel_id: idCorpo(d.responsavel_id),
+    responsavel_id: responsavelAutenticado ?? idCorpo(d.responsavel_id),
     descricao_calcado: texto(d.descricao_calcado, 'descricao_calcado'),
     servico: texto(d.servico, 'servico'),
     valor: decimal(d.valor, 'valor', { dinheiro: true }),
