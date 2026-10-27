@@ -23,6 +23,7 @@ export type OrdemResumo = {
 export type OrdemDetalhada = OrdemResumo & {
   responsavel_nome: string
   responsavel_ativo: boolean
+  criado_por_nome: string | null
 }
 
 export type DadosOrdem = Pick<
@@ -36,6 +37,7 @@ export type DadosOrdem = Pick<
   | 'forma_pagamento'
   | 'observacoes'
 >
+export type DadosNovaOrdem = Omit<DadosOrdem, 'responsavel_id'>
 export type UsoMaterial = {
   id: number
   material_id: number
@@ -73,7 +75,10 @@ export function ordemDetalhada(valor: unknown): valor is OrdemDetalhada {
     typeof (valor as unknown as Record<string, unknown>).responsavel_nome ===
       'string' &&
     typeof (valor as unknown as Record<string, unknown>).responsavel_ativo ===
-      'boolean'
+      'boolean' &&
+    ((valor as unknown as Record<string, unknown>).criado_por_nome === null ||
+      typeof (valor as unknown as Record<string, unknown>).criado_por_nome ===
+        'string')
   )
 }
 
@@ -97,7 +102,9 @@ export async function buscarOrdem(id: string): Promise<OrdemDetalhada> {
   return resposta.dados
 }
 
-export async function cadastrarOrdem(dados: DadosOrdem): Promise<OrdemResumo> {
+export async function cadastrarOrdem(
+  dados: DadosNovaOrdem,
+): Promise<OrdemResumo> {
   const resposta = await enviarComCsrf('/ordens-servico', dados)
   if (!objeto(resposta) || !ordem(resposta.dados))
     throw new ResultadoIncerto(

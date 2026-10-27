@@ -44,6 +44,8 @@ Essas decisões atualizam as pendências correspondentes de RN-001/RN-002/RN-004
 - Notificações: Administradores ativos recebem novas OS e cancelamentos de OS/venda; o Funcionário responsável ativo recebe atribuição de OS e mudanças de status da OS atualmente atribuída. O autor da ação não recebe aviso da própria ação.
 - Alertas automáticos de prazo continuam pendentes conforme RN-013/PD-N08. O alerta de estoque abaixo do mínimo considera Materiais e Produtos com mínimo cadastrado e é atualizado junto aos dados da tela. A lista de atividades é limitada a 250 resultados por consulta e notificações a 100; filtros permitem localizar eventos anteriores.
 
+**Decisão de João Contin em 27/10/2026 — autoria e responsável inicial de OS:** no cadastro, a API define `responsavel_id` a partir do funcionário autenticado e não aceita esse campo enviado pelo cliente. O evento de criação mantém o autor histórico. Edições podem alterar o responsável atual sem trocar o autor registrado; os detalhes exibem ambos. Para OS sem evento de criação, o autor aparece como não registrado.
+
 Estas confirmações substituem as pendências correspondentes das sugestões originais abaixo. Financeiro, alertas automáticos e cadastro auxiliar de configurações continuam fora desta etapa.
 
 ### RN-001

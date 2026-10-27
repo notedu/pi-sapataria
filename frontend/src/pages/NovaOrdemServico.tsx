@@ -33,6 +33,7 @@ export default function NovaOrdemServico({
   const navigate = useNavigate()
   const { state } = useLocation()
   const rascunho = state?.rascunhoOs
+  const editando = Boolean(inicial)
   const servicoInicial =
     inicial?.servico ??
     (typeof rascunho?.servico === 'string' ? rascunho.servico : '')
@@ -85,7 +86,7 @@ export default function NovaOrdemServico({
     Promise.all([
       listarClientes(),
       listarOrdens(),
-      usuario.perfil === 'administrador'
+      editando && usuario.perfil === 'administrador'
         ? listarFuncionarios()
         : Promise.resolve([] as Funcionario[]),
     ])
@@ -135,6 +136,7 @@ export default function NovaOrdemServico({
   }, [
     navigate,
     tentativa,
+    editando,
     usuario.perfil,
     state,
     inicial?.cliente_id,
@@ -146,13 +148,15 @@ export default function NovaOrdemServico({
     if (envioEmCurso.current || incerto) return
     if (
       !clientes?.some((cliente) => cliente.id === Number(clienteId)) ||
-      !responsavelId ||
+      (inicial && !responsavelId) ||
       !item.trim() ||
       !servico.trim() ||
       !valor
     ) {
       setErro(
-        'Selecione cliente e responsável, descreva o item e o serviço e informe o valor da OS.',
+        inicial
+          ? 'Selecione cliente e responsável, descreva o item e o serviço e informe o valor da OS.'
+          : 'Selecione cliente, descreva o item e o serviço e informe o valor da OS.',
       )
       return
     }
@@ -166,7 +170,6 @@ export default function NovaOrdemServico({
     try {
       const dados = {
         cliente_id: Number(clienteId),
-        responsavel_id: Number(responsavelId),
         descricao_calcado: item.trim(),
         servico: servico.trim(),
         valor: valorOsParaApi(valor),
@@ -175,7 +178,10 @@ export default function NovaOrdemServico({
         observacoes: observacoes.trim() || null,
       }
       const ordem = inicial
-        ? await atualizarOrdem(inicial.id, dados)
+        ? await atualizarOrdem(inicial.id, {
+            ...dados,
+            responsavel_id: Number(responsavelId),
+          })
         : await cadastrarOrdem(dados)
       navigate(`/ordens-servico/${ordem.id}`, {
         replace: true,
@@ -286,7 +292,7 @@ export default function NovaOrdemServico({
                 </Link>
               </div>
             )}
-            {usuario.perfil === 'administrador' ? (
+            {inicial && usuario.perfil === 'administrador' ? (
               <div className="mt-5 max-w-md">
                 <SelectField
                   id="responsavel-os"

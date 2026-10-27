@@ -239,12 +239,12 @@ Implementado: `200`, `{"dados": [...]}`, lista de OS ordenada por id, sem filtro
 <a id="a10"></a>
 ### A10 — POST /ordens-servico
 
-Implementado. Corpo: `cliente_id`, `responsavel_id`, `descricao_calcado`, `servico`, `valor`; opcionais `prazo_entrega`, `forma_pagamento`, `observacoes`. Responsável deve estar ativo e cliente deve existir. Status inicial `Aberta` e data de entrada automáticos; enviar esses campos gera `400`. Pagamento: `pix`, `credito`, `debito` ou `dinheiro`; pode ser omitido na OS. Prazo deve ser uma data real YYYY-MM-DD. Retorna `201`, `{"dados": OS}`. O valor é informado, sem fórmula automática e sem baixa ao abrir a OS.
+Implementado. Corpo: `cliente_id`, `descricao_calcado`, `servico`, `valor`; opcionais `prazo_entrega`, `forma_pagamento`, `observacoes`. `responsavel_id` não é aceito no cadastro: a API atribui o funcionário autenticado, que deve estar ativo; cliente deve existir. Status inicial `Aberta` e data de entrada automáticos; enviar esses campos gera `400`. Pagamento: `pix`, `credito`, `debito` ou `dinheiro`; pode ser omitido na OS. Prazo deve ser uma data real YYYY-MM-DD. Retorna `201`, `{"dados": OS}`. O valor é informado, sem fórmula automática e sem baixa ao abrir a OS.
 
 <a id="a11"></a>
 ### A11 — GET /ordens-servico/{id}
 
-Implementado: `200`, `{"dados": OS}` com `responsavel_nome` e `responsavel_ativo` adicionais. ID inválido: `400`; inexistente: `404`. Os materiais são consultados separadamente em `GET /ordens-servico/:id/materiais`; não há campo materiais_utilizados embutido na resposta atual. RF-018.
+Implementado: `200`, `{"dados": OS}` com `responsavel_nome`, `responsavel_ativo` e `criado_por_nome` adicionais. O nome do criador vem do evento de criação no histórico; OS antigas sem esse evento retornam `criado_por_nome: null`. ID inválido: `400`; inexistente: `404`. Os materiais são consultados separadamente em `GET /ordens-servico/:id/materiais`; não há campo materiais_utilizados embutido na resposta atual. RF-018.
 
 <a id="a12"></a>
 ### A12 — PUT /ordens-servico/{id}/status
@@ -306,7 +306,7 @@ Todas as rotas desta seção exigem sessão e CSRF; ambos os perfis podem execut
 | PUT /produtos/:id | Mesmo corpo completo de A17; não altera saldo nem preços de vendas anteriores. `200`, `{"dados": produto}`. |
 | DELETE /materiais/:id | Sem corpo. Saldo zero e sem vínculos; `204`, `404` ou `409`. |
 | DELETE /produtos/:id | Mesma regra de Materiais. |
-| PUT /ordens-servico/:id | Mesmo corpo de A10; apenas Aberta ou Em andamento. `200` ou `409` por estado. |
+| PUT /ordens-servico/:id | Campos de A10 mais `responsavel_id` para edição; apenas Aberta ou Em andamento. `200` ou `409` por estado. |
 | POST /ordens-servico/:id/materiais/:usoId/devolucoes | `{"quantidade":"0.05","motivo":"Sobra não utilizada"}`. Devolve parte não utilizada, até o uso menos devoluções anteriores. Funciona também após encerramento; nunca representa cola já consumida. `201`, `{"dados": movimentacao}`. |
 
 | POST /movimentacoes-estoque/:id/estorno | `{"motivo":"Correção de lançamento"}`. Inverte integralmente um movimento manual uma única vez, sem editar o original. Requer saldo se a reversão gerar saída. `201`, `{"dados": movimentacao}`. |
@@ -460,7 +460,7 @@ Os dados são fictícios. Substitua os IDs por cadastros existentes e use cookie
 **OS — POST /ordens-servico:**
 
 ```json
-{"cliente_id":1,"responsavel_id":1,"descricao_calcado":"Sapato social marrom","servico":"Colagem da sola","valor":"45.00"}
+{"cliente_id":1,"descricao_calcado":"Sapato social marrom","servico":"Colagem da sola","valor":"45.00"}
 ```
 
 **Venda — POST /vendas:**

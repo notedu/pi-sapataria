@@ -226,6 +226,13 @@ function Conteudo({ id }: { id: string }) {
               <p className="mt-2 text-on-surface-variant">
                 Entrada em {data(ordem.data_entrada)}
               </p>
+              <p className="mt-2 text-on-surface-variant">
+                Responsável atual: {ordem.responsavel_nome}
+                {!ordem.responsavel_ativo && ' (inativo)'}
+              </p>
+              <p className="mt-1 text-on-surface-variant">
+                Criada por: {ordem.criado_por_nome ?? 'Não registrado'}
+              </p>
             </div>
             <div className="mobile-action-group">
               <Button

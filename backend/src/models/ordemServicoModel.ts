@@ -65,6 +65,10 @@ export type OrdemClienteComResponsavel = OrdemServico & {
   responsavel_ativo: boolean;
 };
 
+export type OrdemDetalhada = OrdemClienteComResponsavel & {
+  criado_por_nome: string | null;
+};
+
 // O perfil do cliente recebe apenas a identificação necessária para o histórico de OS.
 export async function listarPorClienteComResponsavel(
   clienteId: number,
@@ -93,15 +97,25 @@ export async function buscar(id: number): Promise<OrdemServico | undefined> {
 
 export async function buscarComResponsavel(
   id: number,
-): Promise<OrdemClienteComResponsavel | undefined> {
-  const resultado = await pool.query<OrdemClienteComResponsavel>(
+): Promise<OrdemDetalhada | undefined> {
+  const resultado = await pool.query<OrdemDetalhada>(
     `SELECT os.id, os.cliente_id, os.responsavel_id, os.descricao_calcado, os.servico,
             os.valor, to_char(os.data_entrada, 'YYYY-MM-DD') AS data_entrada,
             to_char(os.prazo_entrega, 'YYYY-MM-DD') AS prazo_entrega,
             os.status, os.forma_pagamento, os.observacoes,
-            f.nome AS responsavel_nome, f.ativo AS responsavel_ativo
+            f.nome AS responsavel_nome, f.ativo AS responsavel_ativo,
+            criacao.ator_nome AS criado_por_nome
        FROM sapataria.ordens_servico AS os
        JOIN sapataria.funcionarios AS f ON f.id = os.responsavel_id
+       LEFT JOIN LATERAL (
+         SELECT a.ator_nome
+           FROM sapataria.atividades AS a
+          WHERE a.entidade_tipo = 'ordem_servico'
+            AND a.entidade_id = os.id
+            AND a.acao = 'ordem_servico.criada'
+          ORDER BY a.id
+          LIMIT 1
+       ) AS criacao ON true
       WHERE os.id = $1`,
     [id],
   );
@@ -175,7 +189,7 @@ function valores(d: DadosOs) {
 
 export async function criar(
   dados: DadosOs,
-  ator?: { id: number; nome: string },
+  ator: { id: number; nome: string },
 ) {
   return emTransacao(async (conexao) => {
     await validarReferencias(conexao, dados);
@@ -190,20 +204,19 @@ export async function criar(
       conexao,
       ordem.id,
       ordem.valor,
-      ator?.id ?? null,
+      ator.id,
     );
-    if (ator)
-      await registrarNaConexao(conexao, {
-        atorId: ator.id,
-        atorNome: ator.nome,
-        acao: 'ordem_servico.criada',
-        entidadeTipo: 'ordem_servico',
-        entidadeId: ordem.id,
-        detalhes: { status: ordem.status, responsavelId: ordem.responsavel_id },
-        notificarFuncionarios: [ordem.responsavel_id],
-        notificarAdministradores: true,
-        mensagem: `Nova OS #${ordem.id} criada.`,
-      });
+    await registrarNaConexao(conexao, {
+      atorId: ator.id,
+      atorNome: ator.nome,
+      acao: 'ordem_servico.criada',
+      entidadeTipo: 'ordem_servico',
+      entidadeId: ordem.id,
+      detalhes: { status: ordem.status, responsavelId: ordem.responsavel_id },
+      notificarFuncionarios: [ordem.responsavel_id],
+      notificarAdministradores: true,
+      mensagem: `Nova OS #${ordem.id} criada.`,
+    });
     return ordem;
   });
 }
