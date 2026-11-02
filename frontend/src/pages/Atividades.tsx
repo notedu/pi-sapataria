@@ -15,6 +15,8 @@ const nomes: Record<string, string> = {
   'ordem_servico.cancelada': 'cancelou a ordem de serviço',
   'ordem_servico.material_utilizado': 'registrou material utilizado na OS',
   'ordem_servico.material_devolvido': 'registrou devolução de material da OS',
+  'ordem_servico.material_planejado_removido':
+    'removeu material planejado da OS',
   'cliente.criado': 'cadastrou um cliente',
   'cliente.atualizado': 'editou um cliente',
   'cliente.excluido': 'excluiu um cliente',

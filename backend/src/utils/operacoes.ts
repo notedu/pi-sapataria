@@ -74,6 +74,8 @@ export function dadosOs(corpo: unknown, responsavelAutenticado?: number) {
     ...(responsavelAutenticado === undefined ? ['responsavel_id'] : []),
     'descricao_calcado',
     'servico',
+    'itens',
+    'materiais_planejados',
     'valor',
     'prazo_entrega',
     'forma_pagamento',
@@ -93,11 +95,47 @@ export function dadosOs(corpo: unknown, responsavelAutenticado?: number) {
       'Informe prazo_entrega como uma data válida YYYY-MM-DD.',
     );
   }
+  const itens =
+    d.itens === undefined
+      ? [
+          {
+            descricao_item: texto(d.descricao_calcado, 'descricao_calcado'),
+            servico: texto(d.servico, 'servico'),
+          },
+        ]
+      : lista(d.itens, 'itens').map((entrada, indice) => {
+          const item = objeto(entrada, ['descricao_item', 'servico']);
+          return {
+            descricao_item: texto(
+              item.descricao_item,
+              `itens[${indice}].descricao_item`,
+            ),
+            servico: texto(item.servico, `itens[${indice}].servico`),
+          };
+        });
+  const materiais_planejados =
+    d.materiais_planejados === undefined
+      ? []
+      : lista(d.materiais_planejados, 'materiais_planejados', true).map(
+          (entrada, indice) => {
+            const material = objeto(entrada, ['material_id', 'quantidade']);
+            return {
+              material_id: idCorpo(material.material_id),
+              quantidade: decimal(
+                material.quantidade,
+                `materiais_planejados[${indice}].quantidade`,
+                { positivo: true },
+              ),
+            };
+          },
+        );
   return {
     cliente_id: idCorpo(d.cliente_id),
     responsavel_id: responsavelAutenticado ?? idCorpo(d.responsavel_id),
-    descricao_calcado: texto(d.descricao_calcado, 'descricao_calcado'),
-    servico: texto(d.servico, 'servico'),
+    descricao_calcado: itens.map((item) => item.descricao_item).join(' · '),
+    servico: itens.map((item) => item.servico).join(' · '),
+    itens,
+    materiais_planejados,
     valor: decimal(d.valor, 'valor', { dinheiro: true }),
     prazo_entrega: prazo,
     forma_pagamento: pagamento(d.forma_pagamento, true),

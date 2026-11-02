@@ -18,6 +18,8 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Adicionado
 
+- Ordens de serviço: várias linhas de item/serviço, materiais previstos sem baixa, retorno de status, motivo obrigatório no cancelamento e devolução do saldo não utilizado sem apagar histórico. Migração incremental preparada em `backend/src/database/migrations/20261028_ordens_servico_operacional.sql`; não aplicada ao banco configurado.
+
 - `schema.sql` reúne também a conversão idempotente de lançamentos financeiros legados. Os scripts SQL separados foram removidos após a centralização; o arquivo consolidado continua destinado a bancos novos, não a atualizações de bancos existentes.
 
 - Financeiro: demonstração com dados locais substituída por consulta à API, com períodos, filtros, resumos, movimentações e contas/parcelas. Operações financeiras seguem protegidas por perfil e CSRF; impostos, lucro líquido e emissão fiscal permanecem indisponíveis até definição das regras.

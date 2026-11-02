@@ -101,8 +101,10 @@ export function gerarPdfOrdemServico(
   campo('Responsável', ordem.responsavel_nome)
 
   titulo('SERVIÇO')
-  campo('Item', ordem.descricao_calcado)
-  campo('Serviço solicitado', ordem.servico)
+  ordem.itens.forEach((item, indice) => {
+    campo(`Item ${indice + 1}`, item.descricao_item)
+    campo('Serviço solicitado', item.servico)
+  })
   campo('Entrada', data(ordem.data_entrada))
   campo(
     'Previsão de entrega',
@@ -117,6 +119,24 @@ export function gerarPdfOrdemServico(
   titulo('OBSERVAÇÕES')
   paragrafo(ordem.observacoes || 'Nenhuma observação registrada.')
 
+  if (ordem.motivo_cancelamento) {
+    titulo('MOTIVO DO CANCELAMENTO')
+    paragrafo(ordem.motivo_cancelamento)
+  }
+
+  titulo('MATERIAIS PREVISTOS')
+  if (ordem.materiais_planejados.length === 0)
+    paragrafo('Nenhum material previsto nesta ordem.')
+  else {
+    const nomes = new Map(materiais.map((material) => [material.id, material]))
+    for (const planejado of ordem.materiais_planejados) {
+      const material = nomes.get(planejado.material_id)
+      paragrafo(
+        `${material?.nome ?? `Material #${planejado.material_id}`} — ${planejado.quantidade} ${material?.unidade ?? ''}`.trim(),
+      )
+    }
+  }
+
   titulo('MATERIAIS REGISTRADOS')
   if (usos.length === 0) paragrafo('Nenhum material registrado nesta ordem.')
   else {
@@ -124,7 +144,7 @@ export function gerarPdfOrdemServico(
     for (const uso of usos) {
       const material = nomes.get(uso.material_id)
       paragrafo(
-        `${material?.nome ?? `Material #${uso.material_id}`} — ${uso.quantidade_usada} ${material?.unidade ?? ''}`.trim(),
+        `${material?.nome ?? `Material #${uso.material_id}`} — usado ${uso.quantidade_usada} ${material?.unidade ?? ''}; devolvido ${uso.quantidade_devolvida}`.trim(),
       )
     }
   }

@@ -117,8 +117,13 @@ export default function Busca() {
           .includes(consulta),
       ) ?? [])
     : []
+  const idsClientesEncontrados = new Set(pessoas.map((cliente) => cliente.id))
+  const nomesClientes = new Map(
+    (clientes ?? []).map((cliente) => [cliente.id, cliente.nome]),
+  )
   const servicos = consulta
     ? (ordens?.filter((os) =>
+        idsClientesEncontrados.has(os.cliente_id) ||
         `os ${os.id} ${os.descricao_calcado} ${os.servico}`
           .toLocaleLowerCase('pt-BR')
           .includes(consulta),
@@ -131,6 +136,21 @@ export default function Busca() {
     ...paginasExtras,
   ].filter(
     (pagina) => !pagina.administrador || usuario.perfil === 'administrador',
+  )
+  const rotasComAcessoNaBarra = new Set([
+    '/dashboard',
+    '/atividades',
+    '/busca',
+    '/clientes',
+    '/ordens-servico',
+    '/financeiro',
+    '/funcionarios',
+    '/estoque',
+    '/configuracoes',
+    '/meu-perfil',
+  ])
+  const paginasAcessoRapido = paginasDisponiveis.filter(
+    (pagina) => !rotasComAcessoNaBarra.has(pagina.caminho),
   )
   const paginas = consulta
     ? paginasDisponiveis.filter((pagina) =>
@@ -216,9 +236,9 @@ export default function Busca() {
                     >
                       OS #{os.id} · {os.servico}
                     </Link>
-                    <span className="ml-2 text-label-sm text-on-surface-variant">
-                      {os.status}
-                    </span>
+                    <p className="mt-1 text-label-sm text-on-surface-variant">
+                      Cliente: {nomesClientes.get(os.cliente_id) ?? `#${os.cliente_id}`} · {os.status}
+                    </p>
                     {['Aberta', 'Em andamento'].includes(os.status) && (
                       <Link
                         to={`/ordens-servico/${os.id}/editar`}
@@ -341,7 +361,7 @@ export default function Busca() {
               Páginas disponíveis
             </h2>
             <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {paginasDisponiveis.map((pagina) => (
+              {paginasAcessoRapido.map((pagina) => (
                 <li key={`${pagina.caminho}-${pagina.titulo}`}>
                   <Link
                     to={pagina.caminho}

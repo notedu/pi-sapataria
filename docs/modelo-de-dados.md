@@ -117,22 +117,25 @@ Somente CEP e número são gravados como novo endereço. Rua, bairro, cidade e U
 
 ## Ordem de serviço — `ordens_servico`
 
-RF-004/RF-018. Todos os campos abaixo são obrigatórios, exceto `prazo_entrega`, `forma_pagamento` e `observacoes`.
+RF-004/RF-018. `prazo_entrega`, `forma_pagamento`, `observacoes` e `motivo_cancelamento` são opcionais; `motivo_cancelamento` passa a ser exigido pela API ao cancelar uma OS nova.
 
 | Campo (além de id) | Tipo / vínculo | Definição |
 |---|---|---|
 | cliente_id | integer → clientes.id | Cliente atendido |
 | responsavel_id | integer → funcionarios.id | Responsável atual pelo serviço; no cadastro, recebe o funcionário autenticado. A autoria original fica no evento de criação em `atividades`. |
-| descricao_calcado | text | Descrição do calçado |
-| servico | text | Descrição do serviço nesta etapa; não foi criado catálogo auxiliar |
+| descricao_calcado | text | Resumo legado das descrições dos itens, mantido para compatibilidade |
+| servico | text | Resumo legado dos serviços, mantido para compatibilidade |
 | valor | numeric | Valor informado, sem cálculo automático |
 | data_entrada | date | Padrão: data do registro em America/Sao_Paulo |
 | prazo_entrega | date, opcional | Sem prazo padrão |
 | status | text | Padrão Aberta; Em andamento, Pronta, Entregue ou Cancelada, conforme RN-010 |
 | forma_pagamento | text, opcional | pix, credito, debito ou dinheiro |
 | observacoes | text, opcional | Anotações |
+| motivo_cancelamento | text, opcional | Motivo não vazio exigido pela API ao cancelar; nulo em OS não cancelada e registros legados |
 
-Usos de materiais ficam em `materiais_os`. Cadastro, edição, avanço de status, consumo, devolução e cancelamento estão disponíveis na API, conforme RN-010/RN-012. O cálculo da OS foi adiado pelo usuário.
+Itens de serviço ficam em `itens_ordem_servico`, com uma linha por par descrição/serviço; as colunas legadas da OS preservam resumos para listas existentes. Materiais previstos ficam em `materiais_planejados_os` e não reservam nem baixam estoque. Usos efetivos ficam em `materiais_os` e movimentos vinculados; devoluções são movimentos inversos, sem exclusão do uso original. O valor permanece manual e não inclui automaticamente os materiais.
+
+**Migração incremental preparada:** `backend/src/database/migrations/20261028_ordens_servico_operacional.sql` adiciona o motivo, cria tabelas de itens e materiais previstos e converte cada OS existente em uma linha de item/serviço. Não foi aplicada ao banco configurado.
 
 ## Estoques — `materiais` e `produtos`
 
@@ -190,6 +193,14 @@ Todos os campos obrigatórios: `venda_id integer` → vendas.id; `produto_id int
 ## Material utilizado em OS — `materiais_os`
 
 Todos os campos obrigatórios: `ordem_servico_id integer` → ordens_servico.id; `material_id integer` → materiais.id; `quantidade_usada numeric`, além de id gerado. Quantidade não recebe padrão zero. Não há unicidade por OS/material nem fórmula de custo. Quantidade positiva, fracionável. Registrar um uso na API baixa o material e cria uma movimentação vinculada, na mesma transação. Consulta em `GET /ordens-servico/:id/materiais`; sem CRUD independente.
+
+## Itens de OS — `itens_ordem_servico`
+
+Cada linha liga uma OS a uma descrição de item e serviço solicitado. Ambos são textos não vazios; a OS atual exige ao menos uma linha na API. A migração inicial cria uma linha para cada OS legada usando suas colunas `descricao_calcado` e `servico` existentes.
+
+## Materiais previstos — `materiais_planejados_os`
+
+Cada linha liga OS e Material com quantidade positiva. São informações de planejamento, sem reserva, movimento, baixa ou efeito no valor da OS. Remoção de planejamento não afeta estoque. Consumo real continua registrado em `materiais_os`.
 
 ## Movimentação de estoque — `movimentacoes_estoque`
 

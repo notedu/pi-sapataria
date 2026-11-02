@@ -29,3 +29,13 @@ export function proximoStatus(status: string): string | null {
     ] ?? null
   )
 }
+
+export function statusAnterior(status: string): string | null {
+  return (
+    {
+      'Em andamento': 'Aberta',
+      Pronta: 'Em andamento',
+      Entregue: 'Pronta',
+    }[status] ?? null
+  )
+}

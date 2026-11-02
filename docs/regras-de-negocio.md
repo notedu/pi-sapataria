@@ -29,9 +29,9 @@ Essas decisões atualizam as pendências correspondentes de RN-001/RN-002/RN-004
 
 - RN-002: ambos os perfis operam os módulos de negócio; administração de funcionários continua exclusiva do administrador.
 - RN-009: PIX, crédito, débito e dinheiro, representados por `pix`, `credito`, `debito`, `dinheiro`. Pagamento opcional na OS e obrigatório na venda. Parcelas, descontos e reembolsos não foram definidos.
-- RN-010: OS nasce Aberta; sequência Aberta → Em andamento → Pronta → Entregue. Responsável ativo escolhido no cadastro. Edição e novos usos somente Aberta/Em andamento. Cancelamento permitido até Pronta; Entregue/Cancelada finais. Valor manual; cálculo automático adiado.
+- RN-010: OS nasce Aberta; sequência normal Aberta → Em andamento → Pronta → Entregue, com retorno de uma etapa permitido inclusive Entregue → Pronta. Responsável ativo escolhido no cadastro. Edição e novos usos somente Aberta/Em andamento. Cancelamento permitido até Pronta, exige motivo e é estado final. Valor total manual; materiais não são somados ao valor.
 - RN-011: venda com pelo menos um produto, vendedor da sessão, preço do cadastro preservado em cada item e total calculado pela soma de quantidade × preço. Cadastro da venda e baixa são uma transação. Preço não pode ser sobrescrito na venda.
-- RN-012: baixa no registro do uso efetivo, uma linha por uso. Cancelamento de OS não repõe materiais. Devolução de material não utilizado é registrada separadamente e limitada ao consumo ainda não revertido. Indicadores de custo/financeiro permanecem pendentes.
+- RN-012: materiais previstos podem ser associados à OS sem reserva nem baixa de estoque. A baixa ocorre ao registrar o uso efetivo, uma linha por uso. Cancelamento não repõe automaticamente materiais. Remoção de quantidade já baixada só ocorre como devolução registrada, limitada ao saldo ainda não revertido; o histórico de uso/movimentação é preservado. Indicadores de custo/financeiro permanecem pendentes.
 - RN-018/RN-019: materiais fracionáveis; produtos inteiros; valores monetários com até duas casas, zero permitido, negativos recusados. Saldos começam em zero quando o cadastro não informa saldo inicial, nunca ficam negativos; quantidade mínima não negativa. Entrada, uso, saída e venda exigem quantidade positiva. Custo do material corresponde à unidade informada. Saldo inicial positivo no cadastro cria uma entrada histórica na mesma transação.
 - Entradas e saídas manuais registram motivo, data automática e saldo na mesma transação. Não há edição direta de saldo. OS e vendas também têm data automática.
 - Correções preservam a origem e registram movimento inverso. Um movimento manual pode ser estornado integralmente uma vez; venda usa cancelamento próprio e consumo usa devolução própria. Venda cancelada repõe somente quantidades efetivamente devolvidas, informadas no cancelamento. Não se edita/apaga movimento original.
@@ -45,6 +45,8 @@ Essas decisões atualizam as pendências correspondentes de RN-001/RN-002/RN-004
 - Alertas automáticos de prazo continuam pendentes conforme RN-013/PD-N08. O alerta de estoque abaixo do mínimo considera Materiais e Produtos com mínimo cadastrado e é atualizado junto aos dados da tela. A lista de atividades é limitada a 250 resultados por consulta e notificações a 100; filtros permitem localizar eventos anteriores.
 
 **Decisão de João Contin em 27/10/2026 — autoria e responsável inicial de OS:** no cadastro, a API define `responsavel_id` a partir do funcionário autenticado e não aceita esse campo enviado pelo cliente. O evento de criação mantém o autor histórico. Edições podem alterar o responsável atual sem trocar o autor registrado; os detalhes exibem ambos. Para OS sem evento de criação, o autor aparece como não registrado.
+
+**Decisão de João Contin em 28/10/2026 — composição e fluxo de OS:** uma OS pode conter várias linhas, cada uma com descrição do item e serviço solicitado; o valor total continua manual e não soma materiais. Materiais previstos são informativos e não reservam saldo. Avanços e retornos adjacentes são permitidos; `Cancelada` permanece terminal, e cancelamento até `Pronta` exige motivo. A autoria continua registrada no evento original.
 
 Estas confirmações substituem as pendências correspondentes das sugestões originais abaixo. Financeiro, alertas automáticos e cadastro auxiliar de configurações continuam fora desta etapa.
 
@@ -168,14 +170,14 @@ Estas confirmações substituem as pendências correspondentes das sugestões or
 
 ### RN-010
 
-**Atualização aprovada:** Estados e sequência confirmados e implementados conforme decisões operacionais acima. Cancelada encerra a OS, inclusive após início, preservando consumo já registrado.
+**Atualização aprovada:** estados, avanço/retorno de uma etapa e cancelamento com motivo confirmados e implementados conforme decisões operacionais acima. `Cancelada` encerra a OS, inclusive após início, preservando consumo e autoria já registrados.
 
 **Estados e significados da OS.**
 
 - **Origem:** Guia §6.1; a marcação de Sugestão do §6 abrange todo o fluxo.
-- **Classificação:** Sugestão. **Situação da definição:** proposta não aprovada.
+- **Classificação da origem:** Sugestão. **Situação da decisão atual:** adotada com os limites abaixo por João Contin em 28/10/2026.
 
-| Estado proposto | Significado documentado |
+| Estado | Significado documentado |
 |---|---|
 | Aberta | OS registrada e calçado recebido. |
 | Em andamento | Serviço em execução. |
@@ -183,8 +185,9 @@ Estas confirmações substituem as pendências correspondentes das sugestões or
 | Entregue | Cliente retirou e pagou; efeito financeiro tratado em RN-014. |
 | Cancelada | OS encerrada sem execução do serviço. |
 
-- **Critério proposto:** representar esses estados com esses significados, se aprovados. A ordem da tabela não estabelece transições obrigatórias nem permite inferir quais mudanças de estado são válidas.
-- **Pendente de definição:** adoção dos estados, transições, tratamento de cancelamento após início do serviço, campos exatos e prazos; [PD-N03](#pd-n03) e [PD-N04](#pd-n04). Pagamento e faturamento: PD-N05 e PD-N06.
+- **Regra adotada e implementada em 28/10/2026:** avanço e retorno de uma etapa, incluindo `Entregue → Pronta`; não são permitidos saltos. Cancelamento permitido em Aberta, Em andamento ou Pronta e exige motivo não vazio; `Cancelada` é terminal. Não há confirmação adicional para avançar.
+- **Composição da OS adotada na mesma decisão:** várias linhas item/serviço; valor total manual, sem soma de custos de materiais. Materiais previstos não baixam nem reservam estoque; usos efetivos e devoluções seguem RN-012.
+- **Pendências mantidas:** prazo e demais detalhes não definidos continuam em [PD-N03](#pd-n03)/[PD-N04](#pd-n04); pagamento e faturamento em PD-N05/PD-N06.
 - **Requisitos relacionados:** [RF-004](requisitos.md#rf-004) e [RF-018](requisitos.md#rf-018).
 
 ### RN-011

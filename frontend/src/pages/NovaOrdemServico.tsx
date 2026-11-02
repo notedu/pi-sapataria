@@ -19,26 +19,48 @@ import type { Funcionario } from '../services/funcionarios'
 import {
   atualizarOrdem,
   cadastrarOrdem,
+  listarMateriaisDisponiveis,
   listarOrdens,
 } from '../services/ordensServico'
-import type { OrdemResumo } from '../services/ordensServico'
+import type {
+  ItemOrdemServico,
+  MaterialDisponivel,
+  OrdemDetalhada,
+} from '../services/ordensServico'
 import { formatarValorOs, valorOsParaApi } from '../utils/ordensServico'
 
 export default function NovaOrdemServico({
   inicial,
 }: {
-  inicial?: OrdemResumo
+  inicial?: OrdemDetalhada
 }) {
   const usuario = useOutletContext<Usuario>()
   const navigate = useNavigate()
   const { state } = useLocation()
   const rascunho = state?.rascunhoOs
   const editando = Boolean(inicial)
-  const servicoInicial =
-    inicial?.servico ??
-    (typeof rascunho?.servico === 'string' ? rascunho.servico : '')
+  const itensIniciais: ItemOrdemServico[] =
+    inicial?.itens?.length
+      ? inicial.itens
+      : typeof rascunho?.itens === 'object' && Array.isArray(rascunho.itens)
+        ? rascunho.itens
+        : [
+            {
+              descricao_item:
+                inicial?.descricao_calcado ??
+                (typeof rascunho?.item === 'string' ? rascunho.item : ''),
+              servico:
+                inicial?.servico ??
+                (typeof rascunho?.servico === 'string'
+                  ? rascunho.servico
+                  : ''),
+            },
+          ]
   const [clientes, setClientes] = useState<Cliente[] | null>(null)
   const [servicosDisponiveis, setServicosDisponiveis] = useState<string[]>([])
+  const [materiaisDisponiveis, setMateriaisDisponiveis] = useState<
+    MaterialDisponivel[]
+  >([])
   const [responsaveis, setResponsaveis] = useState<Funcionario[]>([])
   const [erroCarga, setErroCarga] = useState('')
   const [tentativa, setTentativa] = useState(0)
@@ -53,12 +75,18 @@ export default function NovaOrdemServico({
         ? rascunho.responsavelId
         : String(usuario.id),
   )
-  const [item, setItem] = useState(
-    inicial?.descricao_calcado ??
-      (typeof rascunho?.item === 'string' ? rascunho.item : ''),
+  const [itens, setItens] = useState<ItemOrdemServico[]>(itensIniciais)
+  const [materiaisPlanejados, setMateriaisPlanejados] = useState<
+    Array<{ material_id: string; quantidade: string }>
+  >(
+    inicial?.materiais_planejados?.map((material) => ({
+      material_id: String(material.material_id),
+      quantidade: material.quantidade,
+    })) ??
+      (Array.isArray(rascunho?.materiais_planejados)
+        ? rascunho.materiais_planejados
+        : []),
   )
-  const [servico, setServico] = useState(servicoInicial)
-  const [tipoServico, setTipoServico] = useState('')
   const [prazo, setPrazo] = useState(
     inicial?.prazo_entrega ??
       (typeof rascunho?.prazo === 'string' ? rascunho.prazo : ''),
@@ -86,26 +114,27 @@ export default function NovaOrdemServico({
     Promise.all([
       listarClientes(),
       listarOrdens(),
+      listarMateriaisDisponiveis(),
       editando && usuario.perfil === 'administrador'
         ? listarFuncionarios()
         : Promise.resolve([] as Funcionario[]),
     ])
-      .then(([pessoas, ordens, equipe]) => {
+      .then(([pessoas, ordens, materiais, equipe]) => {
         if (ativo) {
           setClientes(pessoas)
+          setMateriaisDisponiveis(materiais)
           setResponsaveis(equipe.filter((pessoa) => pessoa.ativo))
           const opcoes = [
             ...new Set(
-              ordens.map((ordem) => ordem.servico.trim()).filter(Boolean),
+              ordens
+                .flatMap((ordem) =>
+                  ordem.itens?.map((item) => item.servico) ?? [ordem.servico],
+                )
+                .map((servico) => servico.trim())
+                .filter(Boolean),
             ),
           ].sort((a, b) => a.localeCompare(b, 'pt-BR'))
           setServicosDisponiveis(opcoes)
-          if (servicoInicial)
-            setTipoServico(
-              opcoes.includes(servicoInicial)
-                ? servicoInicial
-                : '__novo_servico__',
-            )
           const selecionado = pessoas.find(
             (pessoa) =>
               pessoa.id ===
@@ -140,7 +169,7 @@ export default function NovaOrdemServico({
     usuario.perfil,
     state,
     inicial?.cliente_id,
-    servicoInicial,
+    inicial?.itens,
   ])
 
   async function salvar(event: React.FormEvent<HTMLFormElement>) {
@@ -149,14 +178,20 @@ export default function NovaOrdemServico({
     if (
       !clientes?.some((cliente) => cliente.id === Number(clienteId)) ||
       (inicial && !responsavelId) ||
-      !item.trim() ||
-      !servico.trim() ||
+      !itens.length ||
+      itens.some((item) => !item.descricao_item.trim() || !item.servico.trim()) ||
+      materiaisPlanejados.some(
+        (material) =>
+          !material.material_id ||
+          !/^\d+(?:[.,]\d+)?$/.test(material.quantidade.trim()) ||
+          Number(material.quantidade.replace(',', '.')) <= 0,
+      ) ||
       !valor
     ) {
       setErro(
         inicial
-          ? 'Selecione cliente e responsável, descreva o item e o serviço e informe o valor da OS.'
-          : 'Selecione cliente, descreva o item e o serviço e informe o valor da OS.',
+          ? 'Selecione cliente e responsável, preencha todos os itens e serviços e informe o valor da OS.'
+          : 'Selecione cliente, preencha todos os itens e serviços e informe o valor da OS.',
       )
       return
     }
@@ -170,8 +205,14 @@ export default function NovaOrdemServico({
     try {
       const dados = {
         cliente_id: Number(clienteId),
-        descricao_calcado: item.trim(),
-        servico: servico.trim(),
+        itens: itens.map((item) => ({
+          descricao_item: item.descricao_item.trim(),
+          servico: item.servico.trim(),
+        })),
+        materiais_planejados: materiaisPlanejados.map((material) => ({
+          material_id: Number(material.material_id),
+          quantidade: material.quantidade.trim().replace(',', '.'),
+        })),
         valor: valorOsParaApi(valor),
         prazo_entrega: prazo || null,
         forma_pagamento: pagamento || null,
@@ -208,8 +249,8 @@ export default function NovaOrdemServico({
     origemNovaOs: true,
     rascunhoOs: {
       responsavelId,
-      item,
-      servico,
+      itens,
+      materiais_planejados: materiaisPlanejados,
       prazo,
       valor,
       pagamento,
@@ -323,46 +364,79 @@ export default function NovaOrdemServico({
               Detalhes do serviço
             </h2>
             <div className="space-y-5">
-              <InputField
-                id="item-os"
-                label="Descrição do item *"
-                required
-                value={item}
-                onChange={(event) => setItem(event.target.value)}
-                placeholder="Ex.: Botas de couro marrom"
-              />
-              <SelectField
-                id="tipo-servico-os"
-                label="Serviço solicitado *"
-                required
-                value={tipoServico}
-                onChange={(event) => {
-                  setTipoServico(event.target.value)
-                  setServico(
-                    event.target.value === '__novo_servico__'
-                      ? ''
-                      : event.target.value,
-                  )
-                }}
-              >
-                <option value="">Selecione um serviço</option>
+              {itens.map((item, indice) => (
+                <fieldset
+                  key={indice}
+                  className="space-y-4 rounded-default border border-outline-variant bg-surface p-4"
+                >
+                  <legend className="px-2 text-label-md text-primary">
+                    Item e serviço {indice + 1}
+                  </legend>
+                  <InputField
+                    id={`item-os-${indice}`}
+                    label="Descrição do item *"
+                    required
+                    value={item.descricao_item}
+                    onChange={(event) =>
+                      setItens((atuais) =>
+                        atuais.map((atual, i) =>
+                          i === indice
+                            ? { ...atual, descricao_item: event.target.value }
+                            : atual,
+                        ),
+                      )
+                    }
+                    placeholder="Ex.: Botas de couro marrom"
+                  />
+                  <InputField
+                    id={`servico-os-${indice}`}
+                    label="Serviço solicitado *"
+                    required
+                    list="servicos-os-conhecidos"
+                    value={item.servico}
+                    onChange={(event) =>
+                      setItens((atuais) =>
+                        atuais.map((atual, i) =>
+                          i === indice
+                            ? { ...atual, servico: event.target.value }
+                            : atual,
+                        ),
+                      )
+                    }
+                    placeholder="Ex.: Ressola completa"
+                  />
+                  {indice > 0 && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="compact"
+                      onClick={() =>
+                        setItens((atuais) => atuais.filter((_, i) => i !== indice))
+                      }
+                    >
+                      Remover item
+                    </Button>
+                  )}
+                </fieldset>
+              ))}
+              <datalist id="servicos-os-conhecidos">
                 {servicosDisponiveis.map((opcao) => (
-                  <option key={opcao} value={opcao}>
-                    {opcao}
-                  </option>
+                  <option key={opcao} value={opcao} />
                 ))}
-                <option value="__novo_servico__">Outros</option>
-              </SelectField>
-              {tipoServico === '__novo_servico__' && (
-                <TextareaField
-                  id="servico-os"
-                  label="Descreva o serviço *"
-                  required
-                  value={servico}
-                  onChange={(event) => setServico(event.target.value)}
-                  placeholder="Descreva o reparo solicitado"
-                />
-              )}
+              </datalist>
+              <Button
+                type="button"
+                variant="secondary"
+                size="compact"
+                onClick={() =>
+                  setItens((atuais) => [
+                    ...atuais,
+                    { descricao_item: '', servico: '' },
+                  ])
+                }
+              >
+                Adicionar item e serviço
+              </Button>
               <TextareaField
                 id="observacoes-os"
                 label="Observações (opcional)"
@@ -370,6 +444,89 @@ export default function NovaOrdemServico({
                 onChange={(event) => setObservacoes(event.target.value)}
                 placeholder="Informações adicionais da OS"
               />
+            </div>
+          </section>
+          <section className="rounded-xl border border-outline-variant bg-secondary-container p-5 md:p-8">
+            <h2 className="mb-2 text-headline-md text-primary">
+              Materiais previstos
+            </h2>
+            <p className="mb-5 text-label-md text-on-surface-variant">
+              O planejamento não altera o estoque. A baixa é registrada quando
+              o material for efetivamente utilizado.
+            </p>
+            <div className="space-y-4">
+              {materiaisPlanejados.map((material, indice) => (
+                <div
+                  key={indice}
+                  className="grid gap-4 rounded-default border border-outline-variant bg-surface p-4 sm:grid-cols-[1fr_160px_auto]"
+                >
+                  <SelectField
+                    id={`material-planejado-${indice}`}
+                    label="Material"
+                    required
+                    value={material.material_id}
+                    onChange={(event) =>
+                      setMateriaisPlanejados((atuais) =>
+                        atuais.map((atual, i) =>
+                          i === indice
+                            ? { ...atual, material_id: event.target.value }
+                            : atual,
+                        ),
+                      )
+                    }
+                  >
+                    <option value="">Selecione</option>
+                    {materiaisDisponiveis.map((opcao) => (
+                      <option key={opcao.id} value={opcao.id}>
+                        {opcao.nome} ({opcao.unidade})
+                      </option>
+                    ))}
+                  </SelectField>
+                  <InputField
+                    id={`quantidade-planejada-${indice}`}
+                    label="Quantidade"
+                    inputMode="decimal"
+                    required
+                    value={material.quantidade}
+                    onChange={(event) =>
+                      setMateriaisPlanejados((atuais) =>
+                        atuais.map((atual, i) =>
+                          i === indice
+                            ? { ...atual, quantidade: event.target.value }
+                            : atual,
+                        ),
+                      )
+                    }
+                  />
+                  <div className="flex items-end">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="compact"
+                      onClick={() =>
+                        setMateriaisPlanejados((atuais) =>
+                          atuais.filter((_, i) => i !== indice),
+                        )
+                      }
+                    >
+                      Remover
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="secondary"
+                size="compact"
+                onClick={() =>
+                  setMateriaisPlanejados((atuais) => [
+                    ...atuais,
+                    { material_id: '', quantidade: '' },
+                  ])
+                }
+              >
+                Adicionar material
+              </Button>
             </div>
           </section>
           <div className="grid gap-5 md:grid-cols-2">

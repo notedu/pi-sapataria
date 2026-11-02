@@ -20,6 +20,9 @@ export default function OrdensServico() {
   const [tentativa, setTentativa] = useState(0)
   const [termo, setTermo] = useState('')
   const [status, setStatus] = useState('')
+  const [periodo, setPeriodo] = useState('todos')
+  const [dataInicial, setDataInicial] = useState('')
+  const [dataFinal, setDataFinal] = useState('')
   useEffect(() => {
     let ativo = true
     Promise.all([listarOrdens(), listarClientes()])
@@ -45,10 +48,52 @@ export default function OrdensServico() {
     }
   }, [navigate, tentativa])
   const nomes = new Map(clientes.map((cliente) => [cliente.id, cliente.nome]))
+  const hoje = new Date()
+  const dataLocal = (valor: Date) => {
+    const ano = valor.getFullYear()
+    const mes = String(valor.getMonth() + 1).padStart(2, '0')
+    const dia = String(valor.getDate()).padStart(2, '0')
+    return `${ano}-${mes}-${dia}`
+  }
+  const inicioSemana = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())
+  inicioSemana.setDate(inicioSemana.getDate() - ((inicioSemana.getDay() + 6) % 7))
+  const periodoPredefinido: Record<string, [string, string]> = {
+    hoje: [dataLocal(hoje), dataLocal(hoje)],
+    semana: [
+      dataLocal(inicioSemana),
+      dataLocal(
+        new Date(
+          inicioSemana.getFullYear(),
+          inicioSemana.getMonth(),
+          inicioSemana.getDate() + 6,
+        ),
+      ),
+    ],
+    mes: [
+      dataLocal(new Date(hoje.getFullYear(), hoje.getMonth(), 1)),
+      dataLocal(new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0)),
+    ],
+    ano: [
+      dataLocal(new Date(hoje.getFullYear(), 0, 1)),
+      dataLocal(new Date(hoje.getFullYear(), 11, 31)),
+    ],
+  }
+  const intervalo =
+    periodo === 'personalizado'
+      ? [dataInicial, dataFinal]
+      : periodoPredefinido[periodo]
+  const erroPeriodo =
+    periodo === 'personalizado' && (!dataInicial || !dataFinal)
+      ? 'Informe a data inicial e a data final do período.'
+      : periodo === 'personalizado' && dataInicial > dataFinal
+        ? 'A data inicial não pode ser posterior à data final.'
+        : ''
   const filtradas =
     ordens?.filter(
       (os) =>
         (!status || os.status === status) &&
+        (!intervalo ||
+          (os.data_entrada >= intervalo[0] && os.data_entrada <= intervalo[1])) &&
         (!termo.trim() ||
           `os ${os.id} ${os.servico} ${os.descricao_calcado} ${nomes.get(os.cliente_id) ?? ''}`
             .toLocaleLowerCase('pt-BR')
@@ -81,7 +126,7 @@ export default function OrdensServico() {
         />
       )}
       <section className="rounded-xl border border-primary/20 bg-surface-container-lowest p-5 md:p-6">
-        <div className="grid gap-4 md:grid-cols-[1fr_220px]">
+        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_190px_220px]">
           <div>
             <label htmlFor="filtro-os" className="mb-2 block text-label-md">
               Buscar OS ou cliente
@@ -101,6 +146,19 @@ export default function OrdensServico() {
             </div>
           </div>
           <SelectField
+            id="periodo-os"
+            label="Data de entrada"
+            value={periodo}
+            onChange={(event) => setPeriodo(event.target.value)}
+          >
+            <option value="todos">Qualquer data</option>
+            <option value="hoje">Hoje</option>
+            <option value="semana">Esta semana</option>
+            <option value="mes">Este mês</option>
+            <option value="ano">Este ano</option>
+            <option value="personalizado">Personalizado</option>
+          </SelectField>
+          <SelectField
             id="status-os"
             label="Status"
             value={status}
@@ -114,6 +172,40 @@ export default function OrdensServico() {
             )}
           </SelectField>
         </div>
+        {periodo === 'personalizado' && (
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div>
+              <label htmlFor="data-inicial-os" className="mb-2 block text-label-md">
+                Data inicial
+              </label>
+              <input
+                id="data-inicial-os"
+                type="date"
+                value={dataInicial}
+                onChange={(event) => setDataInicial(event.target.value)}
+                className="w-full rounded-default border border-primary/20 bg-surface-container-low px-4 py-3 focus:outline-2 focus:outline-primary"
+              />
+            </div>
+            <div>
+              <label htmlFor="data-final-os" className="mb-2 block text-label-md">
+                Data final
+              </label>
+              <input
+                id="data-final-os"
+                type="date"
+                value={dataFinal}
+                min={dataInicial || undefined}
+                onChange={(event) => setDataFinal(event.target.value)}
+                className="w-full rounded-default border border-primary/20 bg-surface-container-low px-4 py-3 focus:outline-2 focus:outline-primary"
+              />
+            </div>
+          </div>
+        )}
+        {erroPeriodo && (
+          <p role="alert" className="mt-4 text-error">
+            {erroPeriodo}
+          </p>
+        )}
         {erro ? (
           <div className="mt-6 space-y-3">
             <p role="alert">{erro}</p>
@@ -130,7 +222,7 @@ export default function OrdensServico() {
           <p role="status" className="mt-6">
             Carregando ordens…
           </p>
-        ) : filtradas.length === 0 ? (
+        ) : erroPeriodo ? null : filtradas.length === 0 ? (
           <p className="mt-6 rounded-lg border border-dashed border-outline-variant p-8 text-center text-on-surface-variant">
             {ordens.length
               ? 'Nenhuma ordem corresponde aos filtros.'

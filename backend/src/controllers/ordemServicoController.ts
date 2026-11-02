@@ -43,6 +43,18 @@ export async function listarMateriais(
   response.json({ dados: await materialOsModel.listarPorOrdemServico(id) });
 }
 
+export async function removerMaterialPlanejado(
+  request: Request,
+  response: Response,
+): Promise<void> {
+  await ordemServicoModel.removerMaterialPlanejado(
+    idValido(request.params.id),
+    idValido(request.params.planejadoId),
+    { id: request.funcionario!.id, nome: request.funcionario!.nome },
+  );
+  response.status(204).end();
+}
+
 export async function cadastrar(
   request: Request,
   response: Response,
@@ -77,7 +89,7 @@ export async function mudarStatus(
   request: Request,
   response: Response,
 ): Promise<void> {
-  const d = objeto(request.body, ['status']);
+  const d = objeto(request.body, ['status', 'motivo_cancelamento']);
   if (
     typeof d.status !== 'string' ||
     !['Aberta', 'Em andamento', 'Pronta', 'Entregue', 'Cancelada'].includes(
@@ -90,10 +102,15 @@ export async function mudarStatus(
       'Informe um status válido da OS.',
     );
   }
+  const motivo =
+    d.status === 'Cancelada'
+      ? texto(d.motivo_cancelamento, 'motivo_cancelamento')
+      : null;
   response.json({
     dados: await ordemServicoModel.mudarStatus(
       idValido(request.params.id),
       d.status,
+      motivo,
       { id: request.funcionario!.id, nome: request.funcionario!.nome },
     ),
   });

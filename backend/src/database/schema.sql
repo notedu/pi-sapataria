@@ -149,7 +149,22 @@ CREATE TABLE IF NOT EXISTS sapataria.ordens_servico (
   prazo_entrega date,
   status text NOT NULL,
   forma_pagamento text,
-  observacoes text
+  observacoes text,
+  motivo_cancelamento text CHECK (motivo_cancelamento IS NULL OR length(trim(motivo_cancelamento)) > 0)
+);
+
+CREATE TABLE IF NOT EXISTS sapataria.itens_ordem_servico (
+  id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  ordem_servico_id integer NOT NULL REFERENCES sapataria.ordens_servico (id),
+  descricao_item text NOT NULL CHECK (length(trim(descricao_item)) > 0),
+  servico text NOT NULL CHECK (length(trim(servico)) > 0)
+);
+
+CREATE TABLE IF NOT EXISTS sapataria.materiais_planejados_os (
+  id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  ordem_servico_id integer NOT NULL REFERENCES sapataria.ordens_servico (id),
+  material_id integer NOT NULL REFERENCES sapataria.materiais (id),
+  quantidade numeric NOT NULL CHECK (quantidade > 0 AND quantidade < 'Infinity'::numeric)
 );
 
 CREATE TABLE IF NOT EXISTS sapataria.vendas (
@@ -190,8 +205,11 @@ CREATE TABLE IF NOT EXISTS sapataria.movimentacoes_estoque (
 -- Facilitam a consulta dos registros pertencentes à venda ou OS.
 CREATE INDEX IF NOT EXISTS itens_venda_venda_id ON sapataria.itens_venda (venda_id);
 CREATE INDEX IF NOT EXISTS materiais_os_ordem_servico_id ON sapataria.materiais_os (ordem_servico_id);
+CREATE INDEX IF NOT EXISTS itens_os_ordem_servico_id ON sapataria.itens_ordem_servico (ordem_servico_id);
+CREATE INDEX IF NOT EXISTS materiais_planejados_os_ordem_servico_id ON sapataria.materiais_planejados_os (ordem_servico_id);
 
 REVOKE ALL ON TABLE sapataria.materiais, sapataria.produtos, sapataria.categorias_estoque, sapataria.ordens_servico,
+  sapataria.itens_ordem_servico, sapataria.materiais_planejados_os,
   sapataria.vendas, sapataria.itens_venda, sapataria.materiais_os, sapataria.movimentacoes_estoque FROM PUBLIC;
 
 -- Mantém o acesso pela aplicação. Os papéis abaixo só existem no Supabase.
@@ -200,7 +218,7 @@ DECLARE papel text;
 BEGIN
   FOREACH papel IN ARRAY ARRAY['anon', 'authenticated'] LOOP
     IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = papel) THEN
-      EXECUTE format('REVOKE ALL ON TABLE sapataria.materiais, sapataria.produtos, sapataria.categorias_estoque, sapataria.ordens_servico, sapataria.vendas, sapataria.itens_venda, sapataria.materiais_os, sapataria.movimentacoes_estoque FROM %I', papel);
+      EXECUTE format('REVOKE ALL ON TABLE sapataria.materiais, sapataria.produtos, sapataria.categorias_estoque, sapataria.ordens_servico, sapataria.itens_ordem_servico, sapataria.materiais_planejados_os, sapataria.vendas, sapataria.itens_venda, sapataria.materiais_os, sapataria.movimentacoes_estoque FROM %I', papel);
     END IF;
   END LOOP;
 END $$;
