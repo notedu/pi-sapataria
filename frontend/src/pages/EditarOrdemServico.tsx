@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import Button from '../components/Button'
 import { ErroApi } from '../services/api'
 import { buscarOrdem } from '../services/ordensServico'
-import type { OrdemResumo } from '../services/ordensServico'
+import type { OrdemDetalhada } from '../services/ordensServico'
 import NovaOrdemServico from './NovaOrdemServico'
 
 export default function EditarOrdemServico() {
@@ -13,7 +13,7 @@ export default function EditarOrdemServico() {
 
 function CarregarOrdem({ id }: { id: string }) {
   const navigate = useNavigate()
-  const [ordem, setOrdem] = useState<OrdemResumo | null>(null)
+  const [ordem, setOrdem] = useState<OrdemDetalhada | null>(null)
   const [erro, setErro] = useState('')
   const [tentativa, setTentativa] = useState(0)
   useEffect(() => {

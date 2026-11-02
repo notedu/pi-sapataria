@@ -19,29 +19,53 @@ export type OrdemResumo = {
   forma_pagamento: string | null
   observacoes: string | null
   cliente_nome?: string
+  motivo_cancelamento: string | null
+  itens?: ItemOrdemServico[]
+  materiais_planejados?: MaterialPlanejadoOs[]
 }
 export type OrdemDetalhada = OrdemResumo & {
   responsavel_nome: string
   responsavel_ativo: boolean
   criado_por_nome: string | null
+  motivo_cancelamento: string | null
+  itens: ItemOrdemServico[]
+  materiais_planejados: MaterialPlanejadoOs[]
+}
+
+export type ItemOrdemServico = {
+  id?: number
+  descricao_item: string
+  servico: string
+}
+
+export type MaterialPlanejadoOs = {
+  id: number
+  material_id: number
+  quantidade: string
 }
 
 export type DadosOrdem = Pick<
   OrdemResumo,
   | 'cliente_id'
   | 'responsavel_id'
-  | 'descricao_calcado'
-  | 'servico'
   | 'valor'
   | 'prazo_entrega'
   | 'forma_pagamento'
   | 'observacoes'
->
+> & {
+  itens: ItemOrdemServico[]
+  materiais_planejados: Array<{
+    material_id: number
+    quantidade: string
+  }>
+}
 export type DadosNovaOrdem = Omit<DadosOrdem, 'responsavel_id'>
 export type UsoMaterial = {
   id: number
   material_id: number
   quantidade_usada: string
+  quantidade_devolvida: string
+  quantidade_restante: string
 }
 export type MaterialDisponivel = {
   id: number
@@ -65,6 +89,8 @@ export function ordem(valor: unknown): valor is OrdemResumo {
     (valor.forma_pagamento === null ||
       typeof valor.forma_pagamento === 'string') &&
     (valor.observacoes === null || typeof valor.observacoes === 'string') &&
+    (valor.motivo_cancelamento === null ||
+      typeof valor.motivo_cancelamento === 'string') &&
     (valor.cliente_nome === undefined || typeof valor.cliente_nome === 'string')
   )
 }
@@ -76,6 +102,30 @@ export function ordemDetalhada(valor: unknown): valor is OrdemDetalhada {
       'string' &&
     typeof (valor as unknown as Record<string, unknown>).responsavel_ativo ===
       'boolean' &&
+    ((valor as unknown as Record<string, unknown>).motivo_cancelamento === null ||
+      typeof (valor as unknown as Record<string, unknown>)
+        .motivo_cancelamento === 'string') &&
+    Array.isArray((valor as unknown as Record<string, unknown>).itens) &&
+    ((valor as unknown as Record<string, unknown>).itens as unknown[]).every(
+      (item) =>
+        objeto(item) &&
+        Number.isInteger(item.id) &&
+        typeof item.descricao_item === 'string' &&
+        typeof item.servico === 'string',
+    ) &&
+    Array.isArray(
+      (valor as unknown as Record<string, unknown>).materiais_planejados,
+    ) &&
+    (
+      (valor as unknown as Record<string, unknown>)
+        .materiais_planejados as unknown[]
+    ).every(
+      (material) =>
+        objeto(material) &&
+        Number.isInteger(material.id) &&
+        Number.isInteger(material.material_id) &&
+        typeof material.quantidade === 'string',
+    ) &&
     ((valor as unknown as Record<string, unknown>).criado_por_nome === null ||
       typeof (valor as unknown as Record<string, unknown>).criado_por_nome ===
         'string')
@@ -139,19 +189,27 @@ export async function atualizarOrdem(
 export async function mudarStatusOrdem(
   id: number,
   status: string,
+  motivoCancelamento?: string,
 ): Promise<OrdemResumo> {
   let resposta: unknown
   try {
     resposta = await enviarComCsrf(
       `/ordens-servico/${id}/status`,
-      { status },
+      {
+        status,
+        ...(motivoCancelamento === undefined
+          ? {}
+          : { motivo_cancelamento: motivoCancelamento }),
+      },
       'PUT',
     )
   } catch (error) {
     if (error instanceof ErroApi && error.status === 409)
       throw new ErroApi(
         409,
-        'O estado da OS mudou. Atualize a página antes de tentar novamente.',
+        error.codigo === 'OS_PAGA_NAO_CANCELAVEL'
+          ? 'Não é possível cancelar uma OS que já possui pagamento.'
+          : 'A OS mudou de estado ou não permite essa transição. Atualize a página.',
         error.codigo,
       )
     throw error
@@ -173,11 +231,62 @@ export async function listarUsosOrdem(id: number): Promise<UsoMaterial[]> {
         objeto(uso) &&
         Number.isInteger(uso.id) &&
         Number.isInteger(uso.material_id) &&
-        typeof uso.quantidade_usada === 'string',
+        typeof uso.quantidade_usada === 'string' &&
+        typeof uso.quantidade_devolvida === 'string' &&
+        typeof uso.quantidade_restante === 'string',
     )
   )
     throw new Error('Não foi possível interpretar os materiais utilizados.')
   return resposta.dados
+}
+
+export async function registrarDevolucaoMaterial(
+  id: number,
+  usoId: number,
+  quantidade: string,
+  motivo: string,
+): Promise<void> {
+  let resposta: unknown
+  try {
+    resposta = await enviarComCsrf(
+      `/ordens-servico/${id}/materiais/${usoId}/devolucoes`,
+      { quantidade, motivo },
+    )
+  } catch (error) {
+    if (error instanceof ErroApi && error.status === 409)
+      throw new ErroApi(
+        409,
+        'A quantidade excede o que ainda pode ser devolvido. Atualize a OS e confira o saldo restante.',
+        error.codigo,
+      )
+    throw error
+  }
+  if (!objeto(resposta) || !objeto(resposta.dados))
+    throw new ResultadoIncerto(
+      'Não foi possível confirmar a devolução. Consulte a OS antes de repetir.',
+    )
+}
+
+
+export async function removerMaterialPlanejado(
+  id: number,
+  planejadoId: number,
+): Promise<void> {
+  try {
+    await enviarComCsrf(
+      `/ordens-servico/${id}/materiais-planejados/${planejadoId}`,
+      undefined,
+      'DELETE',
+    )
+  } catch (error) {
+    if (error instanceof ErroApi && error.status === 409)
+      throw new ErroApi(
+        409,
+        'O planejamento só pode ser alterado em OS Aberta ou Em andamento.',
+        error.codigo,
+      )
+    throw error
+  }
 }
 
 export async function listarMateriaisDisponiveis(): Promise<

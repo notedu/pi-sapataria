@@ -4,6 +4,7 @@ import Alerta from '../components/Alerta'
 import Button from '../components/Button'
 import InputField from '../components/InputField'
 import SelectField from '../components/SelectField'
+import TextareaField from '../components/TextareaField'
 import { ErroApi, ResultadoIncerto } from '../services/api'
 import { buscarCliente } from '../services/clientes'
 import type { Cliente } from '../services/clientes'
@@ -12,7 +13,9 @@ import {
   listarMateriaisDisponiveis,
   listarUsosOrdem,
   mudarStatusOrdem,
+  registrarDevolucaoMaterial,
   registrarUsoMaterial,
+  removerMaterialPlanejado,
 } from '../services/ordensServico'
 import type {
   MaterialDisponivel,
@@ -20,7 +23,12 @@ import type {
   UsoMaterial,
 } from '../services/ordensServico'
 import { formatarTelefone } from '../utils/clientes'
-import { data, dinheiro, proximoStatus } from '../utils/ordensServico'
+import {
+  data,
+  dinheiro,
+  proximoStatus,
+  statusAnterior,
+} from '../utils/ordensServico'
 
 export default function DetalhesOrdemServico() {
   const { id = '' } = useParams()
@@ -43,6 +51,11 @@ function Conteudo({ id }: { id: string }) {
   const [incerto, setIncerto] = useState(false)
   const [materialId, setMaterialId] = useState('')
   const [quantidade, setQuantidade] = useState('')
+  const [cancelamentoAberto, setCancelamentoAberto] = useState(false)
+  const [motivoCancelamento, setMotivoCancelamento] = useState('')
+  const [usoParaDevolver, setUsoParaDevolver] = useState<number | null>(null)
+  const [quantidadeDevolucao, setQuantidadeDevolucao] = useState('')
+  const [motivoDevolucao, setMotivoDevolucao] = useState('')
   const emCurso = useRef(false)
   useEffect(() => {
     let ativo = true
@@ -78,14 +91,16 @@ function Conteudo({ id }: { id: string }) {
     }
   }, [id, navigate, tentativa])
 
-  async function avancar(status: string) {
+  async function mudarStatus(status: string, motivo?: string) {
     if (!ordem || emCurso.current || incerto) return
     emCurso.current = true
     setOcupado(true)
     setErroAcao('')
     try {
-      const atualizada = await mudarStatusOrdem(ordem.id, status)
+      const atualizada = await mudarStatusOrdem(ordem.id, status, motivo)
       setOrdem({ ...ordem, ...atualizada })
+      setCancelamentoAberto(false)
+      setMotivoCancelamento('')
     } catch (error) {
       if (error instanceof ErroApi && error.status === 401)
         navigate('/login', { replace: true })
@@ -96,6 +111,86 @@ function Conteudo({ id }: { id: string }) {
             : 'Não foi possível atualizar a OS.',
         )
         if (error instanceof ResultadoIncerto) setIncerto(true)
+      }
+    } finally {
+      emCurso.current = false
+      setOcupado(false)
+    }
+  }
+
+  async function removerPlanejado(planejadoId: number) {
+    if (!ordem || emCurso.current || incerto) return
+    emCurso.current = true
+    setOcupado(true)
+    setErroAcao('')
+    let removido = false
+    try {
+      await removerMaterialPlanejado(ordem.id, planejadoId)
+      removido = true
+      setOrdem(await buscarOrdem(id))
+    } catch (error) {
+      if (error instanceof ErroApi && error.status === 401)
+        navigate('/login', { replace: true })
+      else {
+        setErroAcao(
+          removido
+            ? 'O material foi removido do planejamento, mas não foi possível atualizar a tela. Consulte a OS antes de repetir.'
+            : error instanceof Error
+              ? error.message
+              : 'Não foi possível remover o material planejado.',
+        )
+        if (removido || error instanceof ResultadoIncerto) setIncerto(true)
+      }
+    } finally {
+      emCurso.current = false
+      setOcupado(false)
+    }
+  }
+
+  async function devolver(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!ordem || usoParaDevolver === null || emCurso.current || incerto) return
+    if (
+      !/^\d+(?:[.,]\d+)?$/.test(quantidadeDevolucao.trim()) ||
+      Number(quantidadeDevolucao.replace(',', '.')) <= 0 ||
+      !motivoDevolucao.trim()
+    ) {
+      setErroAcao('Informe uma quantidade positiva e o motivo da devolução.')
+      return
+    }
+    emCurso.current = true
+    setOcupado(true)
+    setErroAcao('')
+    let registrado = false
+    try {
+      await registrarDevolucaoMaterial(
+        ordem.id,
+        usoParaDevolver,
+        quantidadeDevolucao.trim().replace(',', '.'),
+        motivoDevolucao.trim(),
+      )
+      registrado = true
+      const [lista, catalogo] = await Promise.all([
+        listarUsosOrdem(ordem.id),
+        listarMateriaisDisponiveis(),
+      ])
+      setUsos(lista)
+      setMateriais(catalogo)
+      setUsoParaDevolver(null)
+      setQuantidadeDevolucao('')
+      setMotivoDevolucao('')
+    } catch (error) {
+      if (error instanceof ErroApi && error.status === 401)
+        navigate('/login', { replace: true })
+      else {
+        setErroAcao(
+          registrado
+            ? 'A devolução foi registrada, mas não foi possível atualizar a tela. Consulte a OS antes de repetir.'
+            : error instanceof Error
+              ? error.message
+              : 'Não foi possível registrar a devolução.',
+        )
+        if (registrado || error instanceof ResultadoIncerto) setIncerto(true)
       }
     } finally {
       emCurso.current = false
@@ -283,21 +378,28 @@ function Conteudo({ id }: { id: string }) {
                 <h2 className="mb-6 text-label-md uppercase text-on-surface-variant">
                   Detalhes do serviço
                 </h2>
+                <div className="mb-6 space-y-3">
+                  {ordem.itens.map((item, indice) => (
+                    <div
+                      key={item.id}
+                      className="grid gap-3 rounded-default border border-outline-variant bg-surface-container-lowest p-4 sm:grid-cols-2"
+                    >
+                      <div>
+                        <p className="text-label-sm text-on-surface-variant">
+                          Item {indice + 1}
+                        </p>
+                        <p className="mt-1 break-words">{item.descricao_item}</p>
+                      </div>
+                      <div>
+                        <p className="text-label-sm text-on-surface-variant">
+                          Serviço
+                        </p>
+                        <p className="mt-1 break-words">{item.servico}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
                 <dl className="grid gap-6 sm:grid-cols-2">
-                  <div>
-                    <dt className="text-label-md text-on-surface-variant">
-                      Descrição do item
-                    </dt>
-                    <dd className="mt-2 break-words">
-                      {ordem.descricao_calcado}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-label-md text-on-surface-variant">
-                      Serviço solicitado
-                    </dt>
-                    <dd className="mt-2 break-words">{ordem.servico}</dd>
-                  </div>
                   <div>
                     <dt className="text-label-md text-on-surface-variant">
                       Data de entrada
@@ -323,6 +425,38 @@ function Conteudo({ id }: { id: string }) {
                 <p className="mb-5 whitespace-pre-wrap">
                   {ordem.observacoes || 'Nenhuma observação registrada.'}
                 </p>
+                <h3 className="mb-2 text-label-md">Materiais previstos</h3>
+                {ordem.materiais_planejados.length === 0 ? (
+                  <p className="mb-5 text-on-surface-variant">
+                    Nenhum material planejado nesta OS.
+                  </p>
+                ) : (
+                  <ul className="mb-5 space-y-2">
+                    {ordem.materiais_planejados.map((material) => (
+                      <li
+                        key={material.id}
+                        className="flex flex-wrap items-center justify-between gap-3 rounded-default border border-outline-variant bg-surface-container-lowest px-4 py-3"
+                      >
+                        <span>
+                          {nomes.get(material.material_id)?.nome ??
+                            `Material #${material.material_id}`}{' '}
+                          · {material.quantidade}{' '}
+                          {nomes.get(material.material_id)?.unidade ?? ''}
+                        </span>
+                        {['Aberta', 'Em andamento'].includes(ordem.status) && (
+                          <Button
+                            variant="secondary"
+                            size="compact"
+                            disabled={ocupado || incerto}
+                            onClick={() => void removerPlanejado(material.id)}
+                          >
+                            Remover planejamento
+                          </Button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 <h3 className="mb-2 text-label-md">Materiais utilizados</h3>
                 {usos.length === 0 ? (
                   <p className="text-on-surface-variant">
@@ -333,12 +467,73 @@ function Conteudo({ id }: { id: string }) {
                     {usos.map((uso) => (
                       <li
                         key={uso.id}
-                        className="rounded-default border border-outline-variant bg-surface-container-lowest px-4 py-3"
+                        className="space-y-3 rounded-default border border-outline-variant bg-surface-container-lowest px-4 py-3"
                       >
-                        {nomes.get(uso.material_id)?.nome ??
-                          `Material #${uso.material_id}`}{' '}
-                        · {uso.quantidade_usada}{' '}
-                        {nomes.get(uso.material_id)?.unidade ?? ''}
+                        <p>
+                          {nomes.get(uso.material_id)?.nome ??
+                            `Material #${uso.material_id}`}{' '}
+                          · usado {uso.quantidade_usada}{' '}
+                          {nomes.get(uso.material_id)?.unidade ?? ''}
+                          {Number(uso.quantidade_devolvida) > 0 &&
+                            ` · devolvido ${uso.quantidade_devolvida}`}
+                          {Number(uso.quantidade_restante) > 0 &&
+                            ` · disponível para devolução ${uso.quantidade_restante}`}
+                        </p>
+                        {Number(uso.quantidade_restante) > 0 && (
+                          usoParaDevolver === uso.id ? (
+                            <form onSubmit={devolver} className="grid gap-3">
+                              <InputField
+                                id={`quantidade-devolucao-${uso.id}`}
+                                label={`Quantidade não utilizada (até ${uso.quantidade_restante} ${nomes.get(uso.material_id)?.unidade ?? ''})`}
+                                inputMode="decimal"
+                                required
+                                value={quantidadeDevolucao}
+                                onChange={(event) =>
+                                  setQuantidadeDevolucao(event.target.value)
+                                }
+                              />
+                              <TextareaField
+                                id={`motivo-devolucao-${uso.id}`}
+                                label="Motivo da devolução *"
+                                required
+                                value={motivoDevolucao}
+                                onChange={(event) =>
+                                  setMotivoDevolucao(event.target.value)
+                                }
+                                rows={2}
+                              />
+                              <div className="flex flex-wrap gap-2">
+                                <Button
+                                  type="submit"
+                                  size="compact"
+                                  disabled={ocupado || incerto}
+                                >
+                                  Registrar devolução
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  size="compact"
+                                  onClick={() => setUsoParaDevolver(null)}
+                                >
+                                  Voltar
+                                </Button>
+                              </div>
+                            </form>
+                          ) : (
+                            <Button
+                              variant="secondary"
+                              size="compact"
+                              disabled={ocupado || incerto}
+                              onClick={() => {
+                                setUsoParaDevolver(uso.id)
+                                setQuantidadeDevolucao(uso.quantidade_restante)
+                              }}
+                            >
+                              Remover quantidade não utilizada
+                            </Button>
+                          )
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -385,6 +580,14 @@ function Conteudo({ id }: { id: string }) {
               </section>
             </div>
             <aside className="space-y-6">
+              {ordem.motivo_cancelamento && (
+                <section className="rounded-xl bg-surface-container-low p-6">
+                  <h2 className="mb-3 text-label-md uppercase text-on-surface-variant">
+                    Motivo do cancelamento
+                  </h2>
+                  <p className="whitespace-pre-wrap">{ordem.motivo_cancelamento}</p>
+                </section>
+              )}
               <section className="rounded-xl bg-surface-container-low p-6">
                 <h2 className="mb-5 text-label-md uppercase text-on-surface-variant">
                   Valor da OS
@@ -412,14 +615,28 @@ function Conteudo({ id }: { id: string }) {
                   <Button
                     className="w-full"
                     disabled={ocupado || incerto}
-                    onClick={() => avancar(proximo)}
+                    onClick={() => void mudarStatus(proximo)}
                   >
                     Avançar para {proximo}
                   </Button>
                 ) : (
                   <p className="text-on-surface-variant">
-                    Esta OS está em estado final.
+                    {ordem.status === 'Cancelada'
+                      ? 'Cancelada — estado final da OS.'
+                      : 'Etapa final do fluxo; é possível voltar uma etapa.'}
                   </p>
+                )}
+                {statusAnterior(ordem.status) && (
+                  <Button
+                    variant="secondary"
+                    className="mt-3 w-full"
+                    disabled={ocupado || incerto}
+                    onClick={() =>
+                      void mudarStatus(statusAnterior(ordem.status)!)
+                    }
+                  >
+                    Voltar para {statusAnterior(ordem.status)}
+                  </Button>
                 )}
                 {['Aberta', 'Em andamento', 'Pronta'].includes(
                   ordem.status,
@@ -428,17 +645,47 @@ function Conteudo({ id }: { id: string }) {
                     variant="dangerOutline"
                     className="mt-3 w-full"
                     disabled={ocupado || incerto}
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          'Cancelar esta OS? Materiais utilizados não serão devolvidos automaticamente.',
-                        )
-                      )
-                        void avancar('Cancelada')
-                    }}
+                    onClick={() => setCancelamentoAberto(true)}
                   >
                     Cancelar OS
                   </Button>
+                )}
+                {cancelamentoAberto && (
+                  <form
+                    className="mt-4 space-y-3 border-t border-outline-variant pt-4"
+                    onSubmit={(event) => {
+                      event.preventDefault()
+                      void mudarStatus('Cancelada', motivoCancelamento.trim())
+                    }}
+                  >
+                    <TextareaField
+                      id="motivo-cancelamento-os"
+                      label="Motivo do cancelamento *"
+                      required
+                      value={motivoCancelamento}
+                      onChange={(event) =>
+                        setMotivoCancelamento(event.target.value)
+                      }
+                      placeholder="Informe por que a OS está sendo cancelada"
+                      rows={3}
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="submit"
+                        variant="dangerOutline"
+                        disabled={ocupado || incerto}
+                      >
+                        Confirmar cancelamento
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => setCancelamentoAberto(false)}
+                      >
+                        Voltar
+                      </Button>
+                    </div>
+                  </form>
                 )}
                 {incerto && (
                   <Button

@@ -1,4 +1,4 @@
-import { ordemDetalhada } from './ordensServico'
+import { ordem } from './ordensServico'
 import type { OrdemDetalhada } from './ordensServico'
 import {
   ErroApi,
@@ -69,7 +69,35 @@ export async function buscarCliente(id: string): Promise<Cliente> {
   return resposta.dados
 }
 
-export type OrdemCliente = OrdemDetalhada
+export type OrdemCliente = Omit<OrdemDetalhada, 'criado_por_nome'>
+
+function ordemCliente(valor: unknown): valor is OrdemCliente {
+  if (!objeto(valor) || !ordem(valor)) return false
+
+  const dados = valor as Record<string, unknown>
+
+  return (
+    typeof dados.responsavel_nome === 'string' &&
+    typeof dados.responsavel_ativo === 'boolean' &&
+    Array.isArray(dados.itens) &&
+    dados.itens.every(
+      (item) =>
+        objeto(item) &&
+        Number.isInteger(item.id) &&
+        typeof item.descricao_item === 'string' &&
+        typeof item.servico === 'string',
+    ) &&
+    Array.isArray(dados.materiais_planejados) &&
+    dados.materiais_planejados.every(
+      (material) =>
+        objeto(material) &&
+        Number.isInteger(material.id) &&
+        Number.isInteger(material.material_id) &&
+        typeof material.quantidade === 'string',
+    )
+  )
+}
+
 export async function listarOrdensCliente(id: string): Promise<OrdemCliente[]> {
   const resposta = await requisitar(
     `/clientes/${encodeURIComponent(id)}/ordens-servico`,
@@ -77,7 +105,7 @@ export async function listarOrdensCliente(id: string): Promise<OrdemCliente[]> {
   if (
     !objeto(resposta) ||
     !Array.isArray(resposta.dados) ||
-    !resposta.dados.every(ordemDetalhada)
+    !resposta.dados.every(ordemCliente)
   ) {
     throw new Error(
       'Não foi possível interpretar as ordens de serviço do cliente.',

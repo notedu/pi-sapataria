@@ -51,6 +51,7 @@ O contrato combina como front-end e back-end trocam pedidos e respostas. **Clien
 | A11 | OS | `GET /ordens-servico/{id}` | Consultar detalhes da OS | Ambos os perfis autenticados | Implementado — consulta |
 | A12 | OS | `PUT /ordens-servico/{id}/status` | Alterar estado ou solicitar cancelamento | Ambos os perfis autenticados, com CSRF | Implementado |
 | A13 | OS | `POST /ordens-servico/{id}/materiais` | Registrar material utilizado | Ambos os perfis autenticados, com CSRF | Implementado |
+| — | OS | `DELETE /ordens-servico/{id}/materiais-planejados/{planejadoId}` | Remover material apenas do planejamento | Ambos os perfis autenticados, com CSRF | Implementado |
 | A14 | Materiais | `GET /materiais` | Consultar estoque de materiais | Ambos os perfis autenticados | Implementado — consulta |
 | A15 | Materiais | `POST /materiais` | Registrar cadastro de material | Ambos os perfis autenticados, com CSRF | Implementado |
 | A16 | Produtos | `GET /produtos` | Consultar produtos e saldo | Ambos os perfis autenticados | Implementado — consulta |
@@ -239,22 +240,24 @@ Implementado: `200`, `{"dados": [...]}`, lista de OS ordenada por id, sem filtro
 <a id="a10"></a>
 ### A10 — POST /ordens-servico
 
-Implementado. Corpo: `cliente_id`, `descricao_calcado`, `servico`, `valor`; opcionais `prazo_entrega`, `forma_pagamento`, `observacoes`. `responsavel_id` não é aceito no cadastro: a API atribui o funcionário autenticado, que deve estar ativo; cliente deve existir. Status inicial `Aberta` e data de entrada automáticos; enviar esses campos gera `400`. Pagamento: `pix`, `credito`, `debito` ou `dinheiro`; pode ser omitido na OS. Prazo deve ser uma data real YYYY-MM-DD. Retorna `201`, `{"dados": OS}`. O valor é informado, sem fórmula automática e sem baixa ao abrir a OS.
+Implementado. Corpo: `cliente_id`, `itens:[{descricao_item,servico}]`, `valor`; `materiais_planejados:[{material_id,quantidade}]` é opcional e pode ser vazio; também opcionais `prazo_entrega`, `forma_pagamento`, `observacoes`. Cada linha item/serviço exige textos não vazios; quantidade planejada positiva e fracionável. O formato antigo `descricao_calcado` + `servico` continua aceito para compatibilidade. `responsavel_id` não é aceito no cadastro: a API atribui o funcionário autenticado, que deve estar ativo; cliente e materiais planejados devem existir. Materiais planejados não reservam saldo nem geram movimentos. Status inicial `Aberta` e data de entrada automáticos; enviar esses campos gera `400`. Pagamento: `pix`, `credito`, `debito` ou `dinheiro`; pode ser omitido. Prazo deve ser data real YYYY-MM-DD. Retorna `201`, `{"dados": OS}`. Valor manual, sem soma de materiais ou fórmula automática.
 
 <a id="a11"></a>
 ### A11 — GET /ordens-servico/{id}
 
-Implementado: `200`, `{"dados": OS}` com `responsavel_nome`, `responsavel_ativo` e `criado_por_nome` adicionais. O nome do criador vem do evento de criação no histórico; OS antigas sem esse evento retornam `criado_por_nome: null`. ID inválido: `400`; inexistente: `404`. Os materiais são consultados separadamente em `GET /ordens-servico/:id/materiais`; não há campo materiais_utilizados embutido na resposta atual. RF-018.
+Implementado: `200`, `{"dados": OS}` com `responsavel_nome`, `responsavel_ativo`, `criado_por_nome`, `motivo_cancelamento`, `itens` e `materiais_planejados`. O autor vem do evento de criação; OS antigas sem evento retornam null. Usos reais continuam em `GET /ordens-servico/:id/materiais`, incluindo quantidades devolvidas/restantes. ID inválido: `400`; inexistente: `404`. RF-018.
 
 <a id="a12"></a>
 ### A12 — PUT /ordens-servico/{id}/status
 
-Implementado. Corpo `{"status":"Em andamento"}`. Sequência permitida: `Aberta → Em andamento → Pronta → Entregue`. Cancelamento por `{"status":"Cancelada"}` permitido em Aberta, Em andamento ou Pronta. Entregue e Cancelada são finais; retrocessos, saltos e repetição retornam `409`. Retorna `200`, `{"dados": OS}`. Cancelar preserva os usos já registrados e não devolve materiais automaticamente.
+Implementado. Corpo de mudança: `{"status":"Em andamento"}`. Só permite avançar ou voltar uma etapa: `Aberta ↔ Em andamento ↔ Pronta ↔ Entregue`. Cancelamento por `{"status":"Cancelada","motivo_cancelamento":"..."}` é permitido em Aberta, Em andamento ou Pronta; motivo não vazio é obrigatório. `Cancelada` é final; saltos, repetição e mudança após cancelamento retornam `409`. Não há confirmação extra para avançar. Retorna `200`, `{"dados": OS}`. Cancelar preserva usos e não devolve materiais automaticamente.
 
 <a id="a13"></a>
 ### A13 — POST /ordens-servico/{id}/materiais
 
 Implementado. Corpo `{"material_id":1,"quantidade_usada":"0.125"}`. Exige OS Aberta ou Em andamento; quantidade positiva, permitindo frações. Cria uma nova linha de uso, uma saída vinculada e baixa o estoque na mesma transação. Falta de saldo retorna `409` e desfaz tudo. Retorna `201`, `{"dados": uso}`. Usos repetidos do mesmo material são linhas distintas; não há cálculo automático do valor da OS.
+
+Planejamentos podem ser removidos por `DELETE /ordens-servico/:id/materiais-planejados/:planejadoId`, sem movimento de estoque; exige OS Aberta ou Em andamento e retorna `204`. A devolução de uso real continua sendo registrada por `POST /ordens-servico/:id/materiais/:usoId/devolucoes`, com motivo e quantidade limitada à parte ainda não devolvida; histórico de uso e movimentos é mantido.
 
 <a id="a14"></a>
 ### A14 — GET /materiais
@@ -308,6 +311,7 @@ Todas as rotas desta seção exigem sessão e CSRF; ambos os perfis podem execut
 | DELETE /produtos/:id | Mesma regra de Materiais. |
 | PUT /ordens-servico/:id | Campos de A10 mais `responsavel_id` para edição; apenas Aberta ou Em andamento. `200` ou `409` por estado. |
 | POST /ordens-servico/:id/materiais/:usoId/devolucoes | `{"quantidade":"0.05","motivo":"Sobra não utilizada"}`. Devolve parte não utilizada, até o uso menos devoluções anteriores. Funciona também após encerramento; nunca representa cola já consumida. `201`, `{"dados": movimentacao}`. |
+| DELETE /ordens-servico/:id/materiais-planejados/:planejadoId | Remove o planejamento sem alterar estoque; somente OS Aberta ou Em andamento; `204`, `404` se não pertencer à OS ou `409` por estado. |
 
 | POST /movimentacoes-estoque/:id/estorno | `{"motivo":"Correção de lançamento"}`. Inverte integralmente um movimento manual uma única vez, sem editar o original. Requer saldo se a reversão gerar saída. `201`, `{"dados": movimentacao}`. |
 | POST /vendas/:id/cancelamento | `{"itens_devolvidos":[{"item_venda_id":1,"quantidade":1}]}`. Lista explícita, podendo ser vazia. Cancela uma única vez (`200`); devolve somente as quantidades indicadas, limitadas às vendidas. Preserva itens, preços e total originais; preenche `cancelada_em`. |

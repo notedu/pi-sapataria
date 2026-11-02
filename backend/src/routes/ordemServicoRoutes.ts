@@ -8,6 +8,7 @@ import {
   mudarStatus,
   consumir,
   devolverMaterial,
+  removerMaterialPlanejado,
 } from '../controllers/ordemServicoController';
 
 const router = Router();
@@ -17,6 +18,7 @@ router.get('/:id/materiais', listarMateriais);
 router.post('/', cadastrar);
 router.put('/:id', atualizar);
 router.put('/:id/status', mudarStatus);
+router.delete('/:id/materiais-planejados/:planejadoId', removerMaterialPlanejado);
 router.post('/:id/materiais', consumir);
 router.post('/:id/materiais/:usoId/devolucoes', devolverMaterial);
 export default router;
