@@ -16,12 +16,16 @@ export function validarDados(corpo: unknown): DadosCliente {
     'cpf',
     'cep',
     'numero',
+    'logradouro',
+    'bairro',
+    'cidade',
+    'uf',
     'email',
     'observacoes',
   ];
   if (Object.keys(dados).some((campo) => !campos.includes(campo))) {
     throw new Error(
-      'Envie somente nome, telefone, cpf, cep, numero, email e observacoes.',
+      'Envie somente nome, telefone, cpf, cep, numero, logradouro, bairro, cidade, uf, email e observacoes.',
     );
   }
 
@@ -44,8 +48,12 @@ export function validarDados(corpo: unknown): DadosCliente {
     nome: texto('nome', true)!,
     telefone: texto('telefone', true)!,
     cpf: texto('cpf', false),
-    cep: texto('cep', true)!,
+    cep: texto('cep', false),
     numero: texto('numero', true)!,
+    logradouro: texto('logradouro', true)!,
+    bairro: texto('bairro', true)!,
+    cidade: texto('cidade', false),
+    uf: texto('uf', false),
     email: texto('email', false),
     observacoes: texto('observacoes', false),
   };
@@ -53,8 +61,10 @@ export function validarDados(corpo: unknown): DadosCliente {
     throw new Error('Informe um telefone com 11 dígitos.');
   if (cliente.cpf && !cpfValido(cliente.cpf))
     throw new Error('Informe um CPF válido.');
-  if (!/^\d{8}$/.test(cliente.cep))
+  if (cliente.cep && !/^\d{8}$/.test(cliente.cep))
     throw new Error('Informe um CEP com 8 dígitos.');
+  if (cliente.uf && !/^[A-Z]{2}$/.test(cliente.uf))
+    throw new Error('Selecione um estado válido.');
   if (cliente.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cliente.email)) {
     throw new Error('Informe um e-mail em formato válido.');
   }

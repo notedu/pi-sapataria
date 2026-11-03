@@ -18,6 +18,8 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Adicionado
 
+- Endereços: busca opcional de CEP por rua, cidade e estado nos formulários de Clientes, Fornecedores e Configurações. Sugestões podem ser confirmadas; resultados ausentes permitem preenchimento manual. Clientes agora persistem rua e bairro, com cidade, UF e CEP opcionais. Migrações preparadas; confira com a equipe quais já foram aplicadas ao banco.
+
 - Ordens de serviço: várias linhas de item/serviço, materiais previstos sem baixa, retorno de status, motivo obrigatório no cancelamento e devolução do saldo não utilizado sem apagar histórico. Migração incremental preparada em `backend/src/database/migrations/20261028_ordens_servico_operacional.sql`; não aplicada ao banco configurado.
 
 - `schema.sql` reúne também a conversão idempotente de lançamentos financeiros legados. Os scripts SQL separados foram removidos após a centralização; o arquivo consolidado continua destinado a bancos novos, não a atualizações de bancos existentes.

@@ -12,16 +12,27 @@ export type DadosCliente = {
   nome: string
   telefone: string
   cpf: string | null
-  cep: string
+  cep: string | null
   numero: string
+  logradouro: string
+  bairro: string
+  cidade: string | null
+  uf: string | null
   email: string | null
   observacoes: string | null
 }
-export type Cliente = Omit<DadosCliente, 'cpf' | 'cep' | 'numero'> & {
+export type Cliente = Omit<
+  DadosCliente,
+  'cpf' | 'cep' | 'numero' | 'logradouro' | 'bairro' | 'cidade' | 'uf'
+> & {
   id: number
   cpf: string | null
   cep: string | null
   numero: string | null
+  logradouro: string | null
+  bairro: string | null
+  cidade: string | null
+  uf: string | null
   endereco: string | null
   criado_em: string | null
 }
@@ -32,7 +43,17 @@ function cliente(valor: unknown): valor is Cliente {
     Number.isInteger(valor.id) &&
     typeof valor.nome === 'string' &&
     typeof valor.telefone === 'string' &&
-    ['cpf', 'cep', 'numero', 'endereco', 'criado_em'].every(
+    [
+      'cpf',
+      'cep',
+      'numero',
+      'logradouro',
+      'bairro',
+      'cidade',
+      'uf',
+      'endereco',
+      'criado_em',
+    ].every(
       (campo) => valor[campo] === null || typeof valor[campo] === 'string',
     ) &&
     (valor.email === null || typeof valor.email === 'string') &&

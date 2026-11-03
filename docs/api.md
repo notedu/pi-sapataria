@@ -12,9 +12,9 @@
 
 `GET /categorias-estoque` lista categorias cadastradas e aceita o filtro opcional `tipo=produtos|materiais`. `POST /categorias-estoque` recebe `{tipo,nome}` e retorna `201`; nomes repetidos para o mesmo tipo retornam `409`. A categoria é uma sugestão de formulário e não substitui o texto gravado no item.
 
-Prefixo `/api/v1`, sessão de Administrador ou Funcionário; alterações exigem CSRF. `GET /fornecedores` retorna `200`, com lista em `dados`: id, nome e os campos opcionais `cnpj`, `razao_social`, `nome_fantasia`, `cep`, `numero`, `email`, `telefone`, `prazo_pagamento`, `meios_pagamento`, `desconto` e `moeda` (string ou null). `POST /fornecedores` e `PUT /fornecedores/:id` aceitam nome obrigatório não vazio e esses opcionais. Retornam `201`/`200`, com cadastro em `dados`. Corpo antigo apenas com nome continua aceito; opcionais omitidos na edição são preservados; null/vazio limpa explicitamente o campo. `DELETE /fornecedores/:id` retorna `204`, `404` se ausente e `409` se associado a um item.
+Prefixo `/api/v1`, sessão de Administrador ou Funcionário; alterações exigem CSRF. `GET /fornecedores` retorna `200`, com lista em `dados`: id, nome e os campos opcionais `cnpj`, `razao_social`, `nome_fantasia`, `cep`, `numero`, `logradouro`, `bairro`, `cidade`, `uf`, `email`, `telefone`, `prazo_pagamento`, `meios_pagamento`, `desconto` e `moeda` (string ou null). `POST /fornecedores` e `PUT /fornecedores/:id` aceitam nome obrigatório não vazio e esses opcionais. Retornam `201`/`200`, com cadastro em `dados`. Corpo antigo apenas com nome continua aceito; opcionais omitidos na edição são preservados; null/vazio limpa explicitamente o campo. `DELETE /fornecedores/:id` retorna `204`, `404` se ausente e `409` se associado a um item.
 
-CNPJ aceita numérico ou alfanumérico com 12 caracteres A–Z/0–9 e dois dígitos, valida os verificadores e normaliza maiúsculas/sem máscara, sem consulta de situação cadastral ou unicidade presumida. CEP tem 8 números e telefone com DDD tem 10 ou 11; máscaras usuais são removidas pela API. E-mail informado deve ter formato válido. Falhas retornam `400` com CNPJ_INVALIDO, CEP_INVALIDO, TELEFONE_INVALIDO ou EMAIL_INVALIDO; tipos/estrutura incorretos usam DADOS_INVALIDOS. Exemplo fictício: `{"nome":"Fornecedor exemplo","cnpj":"12.ABC.345/01DE-35","razao_social":"Fornecedor Exemplo Ltda.","nome_fantasia":null,"cep":"01001000","numero":"123A","email":"teste@example.invalid","telefone":"1112345678"}`. Fórmula do CNPJ conforme [manual da Receita Federal](https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/documentos-tecnicos/cnpj/manual-dv-cnpj.pdf).
+CNPJ aceita numérico ou alfanumérico com 12 caracteres A–Z/0–9 e dois dígitos, valida os verificadores e normaliza maiúsculas/sem máscara, sem consulta de situação cadastral ou unicidade presumida. CEP, quando informado, tem 8 números; UF, quando informada, tem duas letras maiúsculas; telefone com DDD tem 10 ou 11 dígitos. Máscaras usuais são removidas pela API. E-mail informado deve ter formato válido. Falhas retornam `400` com CNPJ_INVALIDO, CEP_INVALIDO, TELEFONE_INVALIDO, EMAIL_INVALIDO ou UF_INVALIDA; tipos/estrutura incorretos usam DADOS_INVALIDOS. Exemplo fictício: `{"nome":"Fornecedor exemplo","cnpj":"12.ABC.345/01DE-35","razao_social":"Fornecedor Exemplo Ltda.","nome_fantasia":null,"cep":"01001000","numero":"123A","logradouro":"Rua Exemplo","bairro":"Centro","cidade":"Cidade Exemplo","uf":"SP","email":"teste@example.invalid","telefone":"1112345678"}`. Fórmula do CNPJ conforme [manual da Receita Federal](https://www.gov.br/receitafederal/pt-br/centrais-de-conteudo/publicacoes/documentos-tecnicos/cnpj/manual-dv-cnpj.pdf).
 
 `GET /fornecedores/vinculos/:tipo` aceita `produtos` ou `materiais` e retorna `200`, `{"dados":[{"item_id":1,"fornecedor_id":1}]}`. `PUT /fornecedores/vinculos/:tipo/:id` recebe `{"fornecedores_ids":[1,2]}`, substitui a seleção em uma transação e retorna `204`. Lista vazia remove associações; duplicados ou fornecedores inexistentes retornam `400`; item inexistente retorna `404`. Nenhum preço/saldo é alterado.
 
@@ -154,10 +154,10 @@ Retorna `200`, `{"dados": funcionario}` sem senha/hash/versão técnica. Sem ses
 <a id="a04"></a>
 ### A04 — POST /clientes
 
-- **Entrada:** `nome`, `telefone`, `cep` e `numero` obrigatórios; `cpf`, `email` e `observacoes` opcionais. CPF, se informado, deve ser válido; campo ausente, null ou vazio é salvo como null. Não aceita `id`, `criado_em`, `endereco` ou campos desconhecidos.
-- **Validação:** textos não vazios; telefone e CPF com 11 dígitos, CEP com 8, sem pontuação. CPF exige dígitos verificadores válidos e rejeita sequência repetida. Número é texto (ex.: `123A`, `S/N`). E-mail exige formato básico. Sem unicidade nova.
-- **Sucesso:** `201`, `{"dados": cliente}` com data e id gerados pelo banco. Campos retornados: id, nome, telefone, cpf, cep, numero, endereco legado, email, observacoes e criado_em. CPF/CEP/número/data podem ser nulos em registros anteriores à migração.
-- **Dependência:** `schema.sql` contém essa estrutura para banco novo. A evolução ainda não foi aplicada ao banco existente; não execute o esquema completo nesse banco. RF-003/RF-017.
+- **Entrada:** `nome`, `telefone`, `numero`, `logradouro` e `bairro` obrigatórios; `cep`, `cidade`, `uf`, `cpf`, `email` e `observacoes` opcionais. CPF, se informado, deve ser válido; opcionais ausentes, null ou vazios são salvos como null. Não aceita `id`, `criado_em`, `endereco` ou campos desconhecidos.
+- **Validação:** textos não vazios; telefone com 11 dígitos; CEP, quando informado, com 8 dígitos; UF, quando informada, com duas letras maiúsculas. CPF exige dígitos verificadores válidos e rejeita sequência repetida. Número é texto (ex.: `123A`, `S/N`). E-mail exige formato básico. Sem unicidade nova.
+- **Sucesso:** `201`, `{"dados": cliente}` com data e id gerados pelo banco. Campos retornados incluem logradouro, bairro, cidade e UF; CPF/CEP/número/detalhes de endereço/data podem ser nulos em registros anteriores à migração.
+- **Dependência:** `schema.sql` contém essa estrutura para banco novo. A migração `20261103b_endereco_localidade_opcional.sql` ajusta a validação de cidade/UF; se `20261103_endereco_sem_cep.sql` ainda não foi aplicada, aplique-a antes. Confirme o estado do banco com a equipe; não execute o esquema completo nesse banco. RF-003/RF-017/RF-026.
 
 <a id="a05"></a>
 ### A05 — GET /clientes/{id}
@@ -168,7 +168,7 @@ Retorna `200`, `{"dados": funcionario}` sem senha/hash/versão técnica. Sem ses
 <a id="a06"></a>
 ### A06 — PUT /clientes/{id}
 
-- **Entrada:** id no caminho e todos os campos obrigatórios de A04. Os sete campos de negócio são editáveis; endereço legado e data não são recebidos. Opcionais ausentes ficam nulos; o id não pode ser alterado.
+- **Entrada:** id no caminho e todos os campos obrigatórios de A04. Os campos de negócio cadastrais são editáveis; endereço legado e data não são recebidos. Opcionais ausentes ficam nulos; o id não pode ser alterado.
 - **Sucesso:** `200`, `{"dados": cliente}` atualizado. Id inválido ou corpo inválido: `400`; inexistente: `404`. RF-017.
 - Não exclui registros nem altera OS ou histórico.
 
@@ -365,7 +365,7 @@ Exemplo de sequência no Insomnia: login → cadastrar produto → registrar ent
 
 - **Caminho implementado:** `PUT /api/v1/configuracoes/loja`; Administrador autenticado e CSRF obrigatório.
 - **Entrada:** `{"endereco":"Texto de até 500 caracteres"}`. String vazia limpa o campo; campos extras ou tipos incompatíveis são rejeitados.
-- A interface monta essa string a partir do CEP consultado no ViaCEP e do número informado; a API e o banco continuam armazenando um único campo de endereço.
+- A interface monta essa string a partir dos campos de endereço preenchidos ou confirmados no ViaCEP e do número informado; a API e o banco continuam armazenando um único campo de endereço. O CEP é opcional, mas, quando informado, deve ter 8 dígitos.
 - **Sucesso:** `200`, com endereço confirmado em `dados`.
 - **Erros, efeitos e origem:** `400` para corpo inválido, `401` sem sessão, `403` para Funcionário. Altera apenas o endereço, nunca catálogos ou parâmetros financeiros. RF-024; RN-003.
 

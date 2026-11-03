@@ -2,8 +2,9 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import InputField from './InputField'
 import Button from './Button'
-import EnderecoPorCep from './EnderecoPorCep'
-import { digitos, formatarCep } from '../utils/clientes'
+import CampoEndereco from './CampoEndereco'
+import type { EnderecoFormulario } from './CampoEndereco'
+import { digitos } from '../utils/clientes'
 import {
   limparCnpj,
   formatarCnpj,
@@ -32,6 +33,10 @@ export default function FormularioFornecedor({
     nome_fantasia: inicial?.nome_fantasia ?? '',
     cep: inicial?.cep ?? '',
     numero: inicial?.numero ?? '',
+    logradouro: inicial?.logradouro ?? '',
+    bairro: inicial?.bairro ?? '',
+    cidade: inicial?.cidade ?? '',
+    uf: inicial?.uf ?? '',
     email: inicial?.email ?? '',
     telefone: inicial?.telefone ?? '',
     prazo_pagamento: inicial?.prazo_pagamento ?? '',
@@ -77,6 +82,10 @@ export default function FormularioFornecedor({
       nome_fantasia: dados.nome_fantasia.trim() || null,
       cep: dados.cep || null,
       numero: dados.numero.trim() || null,
+      logradouro: dados.logradouro.trim() || null,
+      bairro: dados.bairro.trim() || null,
+      cidade: dados.cidade || null,
+      uf: dados.uf || null,
       email: dados.email.trim() || null,
       telefone: dados.telefone || null,
       prazo_pagamento: dados.prazo_pagamento.trim() || null,
@@ -135,14 +144,6 @@ export default function FormularioFornecedor({
             onChange={(e) => campo('telefone', digitos(e.target.value, 11))}
           />
           <InputField
-            id="fornecedor-cep"
-            label="CEP (opcional)"
-            inputMode="numeric"
-            maxLength={9}
-            value={formatarCep(dados.cep)}
-            onChange={(e) => campo('cep', digitos(e.target.value, 8))}
-          />
-          <InputField
             id="fornecedor-numero"
             label="Número (opcional)"
             placeholder="Ex.: 123, 123A ou S/N"
@@ -150,10 +151,24 @@ export default function FormularioFornecedor({
             onChange={(e) => campo('numero', e.target.value)}
           />
         </div>
-        {dados.cep && <EnderecoPorCep cep={dados.cep} numero={dados.numero} />}
+        <CampoEndereco
+          prefixo="fornecedor"
+          cep={dados.cep}
+          endereco={{
+            logradouro: dados.logradouro,
+            bairro: dados.bairro,
+            cidade: dados.cidade,
+            uf: dados.uf,
+          }}
+          enderecoObrigatorio={false}
+          aoMudarCep={(valor) => campo('cep', valor)}
+          aoMudarEndereco={(valor: EnderecoFormulario) =>
+            setDados({ ...dados, ...valor })
+          }
+          desabilitado={bloqueado}
+        />
         <p className="text-body-sm text-on-surface-variant">
-          O cadastro salva CEP e número. A consulta de endereço pode falhar sem
-          impedir o salvamento.
+          Os dados do endereço são opcionais e podem ser preenchidos manualmente. O CEP é uma sugestão do ViaCEP.
         </p>
         <fieldset className="space-y-4 border-t border-outline-variant pt-4">
           <legend className="px-2 text-label-md">

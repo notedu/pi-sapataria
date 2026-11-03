@@ -26,6 +26,10 @@ export type DadosFornecedor = {
   nome_fantasia: string | null
   cep: string | null
   numero: string | null
+  logradouro: string | null
+  bairro: string | null
+  cidade: string | null
+  uf: string | null
   email: string | null
   telefone: string | null
   prazo_pagamento: string | null
@@ -144,6 +148,10 @@ export async function listarFornecedores(): Promise<Fornecedor[]> {
           'nome_fantasia',
           'cep',
           'numero',
+          'logradouro',
+          'bairro',
+          'cidade',
+          'uf',
           'email',
           'telefone',
           'prazo_pagamento',

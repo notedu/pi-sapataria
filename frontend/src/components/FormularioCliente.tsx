@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react'
 import type { SubmitEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import EnderecoPorCep from './EnderecoPorCep'
+import CampoEndereco from './CampoEndereco'
+import type { EnderecoFormulario } from './CampoEndereco'
 import {
   cpfValido,
   digitos,
   formatarCpf,
-  formatarCep,
   formatarTelefone,
 } from '../utils/clientes'
 import Button from './Button'
@@ -33,6 +33,12 @@ export default function FormularioCliente({
   const [cpf, setCpf] = useState(inicial?.cpf ?? '')
   const [telefone, setTelefone] = useState(inicial?.telefone ?? '')
   const [cep, setCep] = useState(inicial?.cep ?? '')
+  const [endereco, setEndereco] = useState<EnderecoFormulario>({
+    logradouro: inicial?.logradouro ?? '',
+    bairro: inicial?.bairro ?? '',
+    cidade: inicial?.cidade ?? '',
+    uf: inicial?.uf ?? '',
+  })
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
   const [incerto, setIncerto] = useState(false)
@@ -48,8 +54,8 @@ export default function FormularioCliente({
       numero = texto('numero')
     const email = texto('email'),
       observacoes = texto('observacoes')
-    if (!nome || !numero) {
-      setErro('Preencha nome e número do endereço.')
+    if (!nome || !numero || !endereco.logradouro.trim() || !endereco.bairro.trim()) {
+      setErro('Preencha nome, número, rua e bairro.')
       return
     }
     if (cpf && !cpfValido(cpf)) {
@@ -60,8 +66,8 @@ export default function FormularioCliente({
       setErro('Informe um telefone com 11 números.')
       return
     }
-    if (cep.length !== 8) {
-      setErro('Informe um CEP com 8 números.')
+    if (cep && cep.length !== 8) {
+      setErro('Informe um CEP com 8 números ou deixe o campo vazio.')
       return
     }
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -78,8 +84,12 @@ export default function FormularioCliente({
         nome,
         telefone,
         cpf: cpf || null,
-        cep,
+        cep: cep || null,
         numero,
+        logradouro: endereco.logradouro.trim(),
+        bairro: endereco.bairro.trim(),
+        uf: endereco.uf || null,
+        cidade: endereco.cidade || null,
         email: email || null,
         observacoes: observacoes || null,
       })
@@ -111,11 +121,11 @@ export default function FormularioCliente({
       className="rounded-lg border border-outline-variant bg-surface-container-lowest p-5 md:p-8"
     >
       <p className="mb-6 text-label-sm text-on-surface-variant">
-        Nome, telefone, CEP e número são obrigatórios. CPF é opcional.
+        Nome, telefone, rua, bairro e número são obrigatórios. CEP, cidade, estado e CPF são opcionais.
       </p>
-      {inicial && (!inicial.cep || !inicial.numero) && (
+      {inicial && (!inicial.logradouro || !inicial.bairro || !inicial.numero) && (
         <p className="mb-6 rounded-default bg-secondary-container p-4">
-          Complete CEP e número para atualizar este cadastro antigo.
+          Complete rua, bairro e número para atualizar este cadastro antigo.
           {inicial.endereco && (
             <span className="mt-2 block">
               Endereço anterior: {inicial.endereco}
@@ -168,17 +178,6 @@ export default function FormularioCliente({
           <h2 className="text-body-lg font-semibold">Endereço</h2>
           <div className="grid gap-6 sm:grid-cols-2">
             <InputField
-              id="cep"
-              name="cep"
-              label="CEP"
-              autoComplete="postal-code"
-              inputMode="numeric"
-              value={formatarCep(cep)}
-              onChange={(event) => setCep(digitos(event.target.value, 8))}
-              maxLength={9}
-              required
-            />
-            <InputField
               id="numero"
               name="numero"
               label="Número"
@@ -187,11 +186,14 @@ export default function FormularioCliente({
               required
             />
           </div>
-          <EnderecoPorCep cep={cep} />
-          <p className="text-label-md text-on-surface-variant">
-            O endereço é consultado no ViaCEP. O cadastro salva o CEP e o número
-            e pode ser concluído mesmo se a consulta estiver indisponível.
-          </p>
+          <CampoEndereco
+            prefixo="cliente"
+            cep={cep}
+            endereco={endereco}
+            aoMudarCep={setCep}
+            aoMudarEndereco={setEndereco}
+            desabilitado={enviando || incerto}
+          />
         </div>
         <TextareaField
           id="observacoes"

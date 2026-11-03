@@ -74,6 +74,10 @@ ALTER TABLE sapataria.clientes
   ADD COLUMN cpf text,
   ADD COLUMN cep text,
   ADD COLUMN numero text,
+  ADD COLUMN logradouro text,
+  ADD COLUMN bairro text,
+  ADD COLUMN cidade text,
+  ADD COLUMN uf text,
   ADD COLUMN criado_em timestamptz;
 -- O padrão só se aplica às próximas inserções: a data dos antigos é desconhecida.
 ALTER TABLE sapataria.clientes ALTER COLUMN criado_em SET DEFAULT CURRENT_TIMESTAMP;
@@ -81,8 +85,14 @@ ALTER TABLE sapataria.clientes ALTER COLUMN endereco DROP NOT NULL;
 -- NOT VALID preserva linhas antigas; novas inserções/atualizações exigem os campos.
 ALTER TABLE sapataria.clientes
   ADD CONSTRAINT clientes_cpf_formato CHECK (cpf IS NULL OR cpf ~ '^[0-9]{11}$') NOT VALID,
-  ADD CONSTRAINT clientes_cep_formato CHECK (cep IS NOT NULL AND cep ~ '^[0-9]{8}$') NOT VALID,
+  ADD CONSTRAINT clientes_cep_formato CHECK (cep IS NULL OR cep ~ '^[0-9]{8}$') NOT VALID,
   ADD CONSTRAINT clientes_numero_obrigatorio CHECK (numero IS NOT NULL AND btrim(numero) <> '') NOT VALID,
+  ADD CONSTRAINT clientes_endereco_completo CHECK (
+    logradouro IS NOT NULL AND btrim(logradouro) <> '' AND
+    bairro IS NOT NULL AND btrim(bairro) <> '' AND
+    (cidade IS NULL OR btrim(cidade) <> '') AND
+    (uf IS NULL OR uf ~ '^[A-Z]{2}$')
+  ) NOT VALID,
   ADD CONSTRAINT clientes_telefone_formato CHECK (telefone ~ '^[0-9]{11}$') NOT VALID;
 COMMIT;
 -- Evolução de Funcionários: CPF e telefone.
@@ -299,6 +309,10 @@ ALTER TABLE sapataria.fornecedores
   ADD COLUMN IF NOT EXISTS nome_fantasia text,
   ADD COLUMN IF NOT EXISTS cep text,
   ADD COLUMN IF NOT EXISTS numero text,
+  ADD COLUMN IF NOT EXISTS logradouro text,
+  ADD COLUMN IF NOT EXISTS bairro text,
+  ADD COLUMN IF NOT EXISTS cidade text,
+  ADD COLUMN IF NOT EXISTS uf text,
   ADD COLUMN IF NOT EXISTS email text,
   ADD COLUMN IF NOT EXISTS telefone text,
   ADD COLUMN IF NOT EXISTS prazo_pagamento text,
@@ -311,6 +325,7 @@ BEGIN
     ALTER TABLE sapataria.fornecedores ADD CONSTRAINT fornecedores_dados_formato CHECK (
       (cnpj IS NULL OR cnpj ~ '^[A-Z0-9]{12}[0-9]{2}$') AND
       (cep IS NULL OR cep ~ '^[0-9]{8}$') AND
+      (uf IS NULL OR uf ~ '^[A-Z]{2}$') AND
       (telefone IS NULL OR telefone ~ '^[0-9]{10,11}$') AND
       (razao_social IS NULL OR length(trim(razao_social)) > 0) AND
       (nome_fantasia IS NULL OR length(trim(nome_fantasia)) > 0) AND

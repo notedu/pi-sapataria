@@ -3,8 +3,10 @@ import type { ComponentProps, ReactNode, SubmitEvent } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import Alerta from '../components/Alerta'
 import Button from '../components/Button'
-import Icon from '../components/Icon'
+import CampoEndereco from '../components/CampoEndereco'
+import type { EnderecoFormulario } from '../components/CampoEndereco'
 import InputField from '../components/InputField'
+import Icon from '../components/Icon'
 import PasswordField from '../components/PasswordField'
 import { ErroApi, ResultadoIncerto } from '../services/api'
 import type { Usuario } from '../services/auth'
@@ -21,29 +23,18 @@ import {
   salvarPreferencias,
 } from '../services/preferencias'
 import type { PreferenciasUsuario } from '../services/preferencias'
-import { consultarCep } from '../services/cep'
-import type { EnderecoCep } from '../services/cep'
-import { digitos, formatarCep } from '../utils/clientes'
-
-type ResultadoCep = {
-  cep: string
-  carregando: boolean
-  endereco?: EnderecoCep
-  erro?: string
-}
+import { formatarCep } from '../utils/clientes'
 
 function formatarEnderecoLoja(
-  endereco: EnderecoCep | undefined,
+  endereco: EnderecoFormulario,
   cep: string,
   numero: string,
 ): string {
-  const rua = endereco?.logradouro
-    ? `${endereco.logradouro}, ${numero}`
-    : `Número ${numero}`
-  const localidade = [endereco?.localidade, endereco?.uf]
+  const rua = endereco.logradouro ? `${endereco.logradouro}, ${numero}` : ''
+  const localidade = [endereco.cidade, endereco.uf]
     .filter(Boolean)
     .join(' - ')
-  return [rua, endereco?.bairro, localidade, `CEP ${formatarCep(cep)}`]
+  return [rua, endereco.bairro, localidade, cep ? `CEP ${formatarCep(cep)}` : '']
     .filter(Boolean)
     .join(', ')
 }
@@ -118,8 +109,12 @@ export default function Configuracoes() {
   const [endereco, setEndereco] = useState('')
   const [cep, setCep] = useState('')
   const [numero, setNumero] = useState('')
-  const [resultadoCep, setResultadoCep] = useState<ResultadoCep | null>(null)
-  const [tentativaCep, setTentativaCep] = useState(0)
+  const [enderecoCampos, setEnderecoCampos] = useState<EnderecoFormulario>({
+    logradouro: '',
+    bairro: '',
+    cidade: '',
+    uf: '',
+  })
   const [carregandoEndereco, setCarregandoEndereco] = useState(true)
   const [editarEndereco, setEditarEndereco] = useState(false)
   const [mostrarSenha, setMostrarSenha] = useState(false)
@@ -164,28 +159,6 @@ export default function Configuracoes() {
       ativo = false
     }
   }, [navigate, usuario.id])
-
-  useEffect(() => {
-    if (!editarEndereco || cep.length !== 8) return
-    const controle = new AbortController()
-    consultarCep(cep, controle.signal)
-      .then((dados) => {
-        if (!controle.signal.aborted)
-          setResultadoCep({ cep, carregando: false, endereco: dados })
-      })
-      .catch((error) => {
-        if (!controle.signal.aborted)
-          setResultadoCep({
-            cep,
-            carregando: false,
-            erro:
-              error instanceof Error
-                ? error.message
-                : 'Não foi possível consultar o CEP. Tente novamente.',
-          })
-      })
-    return () => controle.abort()
-  }, [cep, editarEndereco, tentativaCep])
 
   function mudarPreferencias(alteracoes: Partial<PreferenciasUsuario>) {
     const novas = { ...preferencias, ...alteracoes }
@@ -232,22 +205,19 @@ export default function Configuracoes() {
     if (enviando) return
     const cepLimpo = cep
     const numeroLimpo = numero.trim()
-    const consultaAtual = resultadoCep?.cep === cepLimpo ? resultadoCep : null
     let enderecoSalvo = ''
-    if (cepLimpo || numeroLimpo) {
-      if (cepLimpo.length !== 8 || !numeroLimpo) {
-        setErro('Informe os 8 números do CEP e o número do endereço.')
+    const algumEndereco = Object.values(enderecoCampos).some((valor) => valor.trim())
+    if (cepLimpo || numeroLimpo || algumEndereco) {
+      if (
+        (cepLimpo && cepLimpo.length !== 8) ||
+        !numeroLimpo ||
+        !enderecoCampos.logradouro.trim() ||
+        !enderecoCampos.bairro.trim()
+      ) {
+        setErro('Preencha rua, bairro e número. CEP, cidade e estado são opcionais.')
         return
       }
-      if (!consultaAtual || consultaAtual.carregando) {
-        setErro('Aguarde a consulta do ViaCEP terminar antes de salvar.')
-        return
-      }
-      enderecoSalvo = formatarEnderecoLoja(
-        consultaAtual.endereco,
-        cepLimpo,
-        numeroLimpo,
-      )
+      enderecoSalvo = formatarEnderecoLoja(enderecoCampos, cepLimpo, numeroLimpo)
     }
     setEnviando(true)
     setErro('')
@@ -258,15 +228,8 @@ export default function Configuracoes() {
       setEditarEndereco(false)
       setCep('')
       setNumero('')
-      setResultadoCep(null)
-      setTentativaCep(0)
-      setSucesso(
-        consultaAtual?.erro
-          ? 'Endereço salvo com CEP e número. Os detalhes do ViaCEP não foram incluídos.'
-          : enderecoSalvo
-            ? 'Endereço da loja atualizado.'
-            : 'Endereço da loja removido.',
-      )
+      setEnderecoCampos({ logradouro: '', bairro: '', cidade: '', uf: '' })
+      setSucesso(enderecoSalvo ? 'Endereço da loja atualizado.' : 'Endereço da loja removido.')
     } catch (error) {
       if (error instanceof ErroApi && error.status === 401)
         navigate('/login', { replace: true })
@@ -449,32 +412,12 @@ export default function Configuracoes() {
             <form
               onSubmit={submeterEndereco}
               className="space-y-4"
-              aria-busy={enviando || resultadoCep?.carregando}
+              aria-busy={enviando}
             >
               <p className="text-label-sm text-on-surface-variant">
                 Endereço salvo: {endereco || 'ainda não informado'}
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
-                <InputField
-                  id="cep-loja"
-                  label="CEP"
-                  autoComplete="postal-code"
-                  inputMode="numeric"
-                  value={formatarCep(cep)}
-                  onChange={(event) => {
-                    const novoCep = digitos(event.target.value, 8)
-                    setCep(novoCep)
-                    if (novoCep !== cep)
-                      setResultadoCep(
-                        novoCep.length === 8
-                          ? { cep: novoCep, carregando: true }
-                          : null,
-                      )
-                    setErro('')
-                  }}
-                  maxLength={9}
-                  disabled={enviando}
-                />
                 <InputField
                   id="numero-loja"
                   label="Número"
@@ -486,90 +429,28 @@ export default function Configuracoes() {
                   disabled={enviando}
                 />
               </div>
-              {cep.length !== 8 ? (
-                <p className="text-label-sm text-on-surface-variant">
-                  Digite os 8 números do CEP para consultar o endereço.
-                </p>
-              ) : resultadoCep?.cep !== cep || resultadoCep.carregando ? (
-                <p
-                  role="status"
-                  className="text-label-sm text-on-surface-variant"
-                >
-                  Consultando endereço no ViaCEP…
-                </p>
-              ) : resultadoCep.erro ? (
-                <div className="space-y-2">
-                  <p role="alert" className="text-label-sm text-error">
-                    {resultadoCep.erro} Você ainda pode salvar o CEP e o número.
-                  </p>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="compact"
-                    onClick={() => {
-                      setResultadoCep({ cep, carregando: true })
-                      setTentativaCep((valor) => valor + 1)
-                    }}
-                    disabled={enviando}
-                  >
-                    Consultar novamente
-                  </Button>
-                </div>
-              ) : (
-                <dl
-                  className="grid gap-3 rounded-default bg-surface-container p-4 sm:grid-cols-2"
-                  aria-live="polite"
-                >
-                  <div>
-                    <dt className="text-label-sm text-on-surface-variant">
-                      Rua
-                    </dt>
-                    <dd className="text-label-md font-normal">
-                      {resultadoCep.endereco?.logradouro ||
-                        'Não informada pelo ViaCEP'}
-                      {numero.trim() && `, ${numero.trim()}`}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-label-sm text-on-surface-variant">
-                      Bairro
-                    </dt>
-                    <dd className="text-label-md font-normal">
-                      {resultadoCep.endereco?.bairro ||
-                        'Não informado pelo ViaCEP'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-label-sm text-on-surface-variant">
-                      Cidade / Estado
-                    </dt>
-                    <dd className="text-label-md font-normal">
-                      {[
-                        resultadoCep.endereco?.localidade,
-                        resultadoCep.endereco?.uf,
-                      ]
-                        .filter(Boolean)
-                        .join(' - ') || 'Não informados pelo ViaCEP'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-label-sm text-on-surface-variant">
-                      CEP
-                    </dt>
-                    <dd className="text-label-md font-normal">
-                      {formatarCep(cep)}
-                    </dd>
-                  </div>
-                </dl>
-              )}
+              <CampoEndereco
+                prefixo="loja"
+                cep={cep}
+                endereco={enderecoCampos}
+                aoMudarCep={(valor) => {
+                  setCep(valor)
+                  setErro('')
+                }}
+                aoMudarEndereco={(valor) => {
+                  setEnderecoCampos(valor)
+                  setErro('')
+                }}
+                desabilitado={enviando}
+              />
               <p className="text-label-sm text-on-surface-variant">
                 O endereço formatado poderá ser usado pela Landing Page. Deixe
-                CEP e número vazios para remover o endereço salvo.
+                rua, bairro, número, cidade, estado e CEP vazios para removê-lo.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button
                   type="submit"
-                  disabled={enviando || resultadoCep?.carregando}
+                  disabled={enviando}
                 >
                   {enviando ? 'Salvando…' : 'Salvar endereço'}
                 </Button>
@@ -580,7 +461,7 @@ export default function Configuracoes() {
                     setEditarEndereco(false)
                     setCep('')
                     setNumero('')
-                    setResultadoCep(null)
+                    setEnderecoCampos({ logradouro: '', bairro: '', cidade: '', uf: '' })
                     setErro('')
                   }}
                 >

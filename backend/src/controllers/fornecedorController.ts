@@ -27,6 +27,8 @@ export function validarFornecedor(corpo: unknown): model.DadosFornecedor {
     if (!/^\d{8}$/.test(dados.cep))
       throw new ErroHttp(400, 'CEP_INVALIDO', 'Informe um CEP com 8 números.');
   }
+  if (dados.uf && !/^[A-Z]{2}$/.test(dados.uf))
+    throw new ErroHttp(400, 'UF_INVALIDA', 'Informe um estado válido.');
   if (dados.telefone) {
     dados.telefone = dados.telefone.replace(/[()\s-]/g, '');
     if (!/^\d{10,11}$/.test(dados.telefone))

@@ -13,7 +13,7 @@ import {
   listarOrdensCliente,
 } from '../services/clientes'
 import type { Cliente, OrdemCliente } from '../services/clientes'
-import { formatarCpf, formatarTelefone } from '../utils/clientes'
+import { formatarCpf, formatarCep, formatarTelefone } from '../utils/clientes'
 
 const data = (valor: string) =>
   new Intl.DateTimeFormat('pt-BR').format(
@@ -261,7 +261,26 @@ function ConteudoPerfil({ id }: { id: string }) {
             </CartaoInformacoes>
             <div className="grid lg:col-span-2">
               <CartaoInformacoes titulo="Detalhes de endereço" icone="endereco">
-                {cliente.cep ? (
+                {cliente.logradouro || cliente.bairro || cliente.cidade || cliente.uf ? (
+                  <dl className="grid gap-3 text-label-md">
+                    <div>
+                      <dt className="text-label-sm uppercase text-on-surface-variant">Rua</dt>
+                      <dd>{[cliente.logradouro, cliente.numero].filter(Boolean).join(', ') || 'Não informada'}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-label-sm uppercase text-on-surface-variant">Bairro</dt>
+                      <dd>{cliente.bairro || 'Não informado'}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-label-sm uppercase text-on-surface-variant">Cidade / Estado</dt>
+                      <dd>{[cliente.cidade, cliente.uf].filter(Boolean).join(' - ') || 'Não informados'}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-label-sm uppercase text-on-surface-variant">CEP</dt>
+                      <dd>{cliente.cep ? formatarCep(cliente.cep) : 'Não informado'}</dd>
+                    </div>
+                  </dl>
+                ) : cliente.cep ? (
                   <>
                     <EnderecoPorCep
                       cep={cliente.cep}

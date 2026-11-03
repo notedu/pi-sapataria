@@ -12,7 +12,7 @@ Modelo do banco sujeito a evolução. O contrato da API e o documento de telas d
 - **Implementação aprovada:** tabelas de negócio em `sapataria`, com campos, tipos, chaves e obrigatoriedade descritos abaixo. Fluxos de gravação e total da venda implementados; cálculo automático da OS e indicadores financeiros pendentes.
 - **Pendências de negócio:** apontadas junto aos elementos afetados, por identificadores de [regras de negócio](regras-de-negocio.md#pendencias). Ausência de definição não significa campo opcional.
 
-**Situação atual:** `backend/src/database/schema.sql` reúne o esquema completo em ordem de dependência para instalar um banco novo. Não o execute no banco configurado: estruturas de Clientes, Funcionários, entidades, operações, fornecedores e estoque já foram aplicadas em etapas anteriores; as evoluções de perfil e a configuração comercial ainda estão pendentes nesse banco. Produtos legados permanecem sem mínimo até configuração. Há tabelas técnicas de autenticação.
+**Situação atual:** `backend/src/database/schema.sql` reúne o esquema completo em ordem de dependência para instalar um banco novo. Não o execute no banco configurado: estruturas de Clientes, Funcionários, entidades, operações, fornecedores e estoque já foram aplicadas em etapas anteriores; as migrações `20261103_endereco_sem_cep.sql` e `20261103b_endereco_localidade_opcional.sql` estão preparadas. A aplicação delas ao banco precisa ser confirmada pela equipe. Produtos legados permanecem sem mínimo até configuração. Há tabelas técnicas de autenticação.
 
 ## Convenções adotadas
 
@@ -82,13 +82,13 @@ O arquivo consolidado `backend/src/database/schema.sql` reúne a estrutura para 
 
 ### Dados comerciais da loja — `sapataria.configuracoes_loja`
 
-Decisão do Integrante 1 em 15/10/2026: manter o endereço da loja para consulta por ambos os perfis e uso na futura Landing Page; somente Administrador pode alterá-lo. A tabela tem um único registro (`id = 1`) e um campo `endereco text`; texto vazio é permitido para não inventar obrigatoriedade, e o limite é 500 caracteres. A interface consulta rua, bairro, cidade e UF pelo ViaCEP a partir do CEP informado, solicita também o número e persiste um único endereço formatado; indisponibilidade do ViaCEP permite salvar CEP e número sem os demais dados. Preferências de notificações e tema são específicas por funcionário, ficam no `localStorage` deste navegador e não criam colunas nem API.
+Decisão do Integrante 1 em 15/10/2026: manter o endereço da loja para consulta por ambos os perfis e uso na futura Landing Page; somente Administrador pode alterá-lo. Complemento solicitado em 03/11/2026: buscar CEP por rua/cidade/estado e permitir endereço manual sem resultado. A tabela continua com um único registro (`id = 1`) e um campo `endereco text`; a interface monta o endereço formatado com até 500 caracteres, sem novas colunas. Preferências de notificações e tema são específicas por funcionário, ficam no `localStorage` deste navegador e não criam colunas nem API.
 
 `backend/src/database/schema.sql` cria a tabela e seu registro inicial sem apagar dados em uma instalação nova. **Essa estrutura ainda não foi aplicada ao banco existente.** A seção comercial da tela dependerá da atualização do esquema desse banco. RF-024; RN-003.
 
 ## Cliente
 
-**Tabela:** `sapataria.clientes`. Evolução aprovada pelo Integrante 1 em 29/09/2026: CPF, telefone de 11 dígitos, CEP e número no lugar do endereço livre, data de cadastro e perfil com OS. Em 23/10/2026, a equipe definiu CPF opcional; quando informado, segue validado. Código atualizado; a definição consta no `schema.sql` para bancos novos. A atualização ainda não foi aplicada ao banco existente; o script incremental preparado foi removido na consolidação e precisará ser recriado para essa atualização.
+**Tabela:** `sapataria.clientes`. Evolução aprovada pelo Integrante 1 em 29/09/2026: CPF, telefone de 11 dígitos, CEP e número no lugar do endereço livre, data de cadastro e perfil com OS. Em 23/10/2026, a equipe definiu CPF opcional; quando informado, segue validado. Em 03/11/2026, foi solicitado permitir CEP opcional e persistir rua e bairro, com cidade/UF opcionais, para endereços manuais ou sugeridos pelo ViaCEP. A evolução consta no `schema.sql` e nas migrações `20261103_endereco_sem_cep.sql` e `20261103b_endereco_localidade_opcional.sql`; confirme com a equipe se a primeira já foi aplicada ao banco existente.
 
 | Campo | Tipo PostgreSQL / JSON | Obrigatoriedade |
 |---|---|---|
@@ -96,19 +96,22 @@ Decisão do Integrante 1 em 15/10/2026: manter o endereço da loja para consulta
 | `nome` | `text` / string | Obrigatório |
 | `telefone` | `text` / string | Obrigatório, 11 dígitos |
 | `cpf` | `text` / string ou null | Opcional; se informado, 11 dígitos e verificação dos dígitos na API |
-| `cep` | `text` / string | Obrigatório, 8 dígitos |
+| `cep` | `text` / string ou null | Opcional; quando informado, 8 dígitos |
 | `numero` | `text` / string | Obrigatório; aceita identificação como `123A` ou `S/N` |
+| `logradouro`, `bairro` | `text` / string | Obrigatórios em novos cadastros e edições; podem ser nulos em registros antigos |
+| `cidade` | `text` / string ou null | Opcional |
+| `uf` | `text` / string ou null | Opcional; se informada, sigla de duas letras |
 | `criado_em` | `timestamptz` / string ISO | Automático para novos registros; somente leitura |
 | `endereco` | `text` / string ou null | Preservado apenas como dado legado |
 | `email`, `observacoes` | `text` / string ou null | Opcionais |
 
 CPF, telefone e CEP são persistidos sem pontuação. A interface aplica máscaras. Não foi acrescentada unicidade de CPF ou contatos. A validação de CPF verifica o cálculo, sem consultar sua situação cadastral. CPF ausente ou vazio vira `NULL`; e-mail e observações opcionais vazios também viram `NULL`.
 
-A migração preserva CPF/CEP/número/data ausentes dos registros antigos, sem inventar valores nem converter endereço livre automaticamente. Restrições `CHECK ... NOT VALID` não revalidam linhas antigas; as de telefone, CEP e número exigem campos válidos nas novas inserções e atualizações. CPF pode ser nulo, mas deve ter 11 dígitos quando informado. A API também exige os demais campos obrigatórios no PUT. A data antiga permanece desconhecida, mesmo após edição. O script não remove o endereço legado nem altera vínculos de OS.
+A migração preserva CPF/CEP/número/data e detalhes de endereço ausentes dos registros antigos, sem inventar valores nem converter endereço livre automaticamente. Restrições `CHECK ... NOT VALID` não revalidam linhas antigas; as de telefone, número, rua e bairro exigem campos válidos nas novas inserções e atualizações. CEP pode ser nulo; quando informado, deve ter oito dígitos. Cidade e UF podem ficar nulas; UF deve ter duas letras quando informada. CPF pode ser nulo, mas deve ter 11 dígitos quando informado. A API também exige os demais campos obrigatórios no PUT. A data antiga permanece desconhecida, mesmo após edição. O script não remove o endereço legado nem altera vínculos de OS.
 
 No banco existente, a restrição `clientes_cpf_formato` foi encontrada exigindo CPF não nulo, em conflito com a decisão de 23/10/2026 e com a API. A migração incremental `backend/src/database/migrations/20261026_clientes_cpf_opcional.sql` foi preparada para permitir `NULL` e manter o formato de 11 dígitos quando informado. **Está preparada; sua aplicação ao banco não foi confirmada neste registro.**
 
-Somente CEP e número são gravados como novo endereço. Rua, bairro, cidade e UF são consultados no ViaCEP pela interface; campos ausentes na resposta são apresentados como não informados. Falha da consulta não impede salvar os dados informados e não equivale a validação da existência do CEP pela API. RF-003/RF-017/RF-026.
+Rua, bairro, número, cidade/UF selecionadas e CEP informado são gravados como endereço estruturado. Cidade e estado são opcionais; o ViaCEP sugere resultados quando ambos foram selecionados. A pessoa confirma a sugestão ou mantém rua e bairro digitados manualmente. Falha ou ausência de resultados não impede salvar. A API valida formato, não confirma a existência do logradouro. RF-003/RF-017/RF-026.
 
 <a id="pendencias-que-afetam-o-cadastro-e-a-listagem"></a>
 ### Pendências de Clientes
@@ -146,6 +149,8 @@ Itens de serviço ficam em `itens_ordem_servico`, com uma linha por par descriç
 **15/10/2026 — Correções da tela aplicadas:** `categorias_estoque` guarda sugestões por tipo (`produtos` ou `materiais`) com nome único dentro do tipo. O saldo inicial opcional informado no POST de Produto/Material é gravado como entrada `Saldo inicial do cadastro` junto ao cadastro e aos vínculos; saldo zero não cria movimento. A estrutura está consolidada no `schema.sql` e foi aplicada ao PostgreSQL configurado; o script incremental separado foi removido.
 
 **13/10/2026 — Cadastros de estoque aplicados ao PostgreSQL:** adiciona `cnpj`, `razao_social`, `nome_fantasia`, `cep`, `numero`, `email` e `telefone` como text nullable em fornecedores, com CHECK de formato; registros antigos mantêm null, sem preenchimento inventado ou unicidade nova. CNPJ armazenado sem máscara em maiúsculas, com 12 caracteres alfanuméricos e dois dígitos; CEP e telefone somente números. Nome continua obrigatório. Trigger `materiais_proteger_unidade` rejeita mudança de unidade com saldo antigo/novo não zero ou movimentações existentes, sem modificar saldos ou históricos. Categorias/unidades continuam textos, sem catálogo obrigatório ou conversão. `unidade_bloqueada` é informação derivada na API, não coluna do banco.
+
+**03/11/2026 — Endereço manual sem CEP solicitado:** Fornecedores recebe também `logradouro`, `bairro`, `cidade` e `uf`, todos text nullable para preservar a opcionalidade do endereço. A migração `backend/src/database/migrations/20261103_endereco_sem_cep.sql` está preparada e não foi aplicada ao banco configurado.
 
 **Atualização de 02/10/2026, aprovada por João Franco:** fornecedores cadastrados pelo nome, associação opcional de vários fornecedores a cada Produto para venda ou Material. A estrutura foi aplicada ao PostgreSQL nesta entrega e está representada em `schema.sql`. `fornecedores` possui `id` gerado e `nome text NOT NULL` não vazio; `produtos_fornecedores` e `materiais_fornecedores` usam chave primária composta (item, fornecedor) e FKs. A exclusão de fornecedor associado é bloqueada. Excluir um item permitido pelas regras existentes remove apenas suas associações de fornecedores.
 
