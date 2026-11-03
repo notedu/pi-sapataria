@@ -170,6 +170,11 @@ export default function Financeiro() {
 
   function selecionarPeriodo(valor: string) {
     setOpcao(valor)
+    if (valor === 'todo') {
+      setCarregando(true)
+      setErro('')
+      setPeriodo({ inicio: '', fim: '' })
+    }
     if (valor === 'hoje') {
       setCarregando(true)
       setPeriodo({ inicio: hoje, fim: hoje })
@@ -248,6 +253,7 @@ export default function Financeiro() {
             value={opcao}
             onChange={(event) => selecionarPeriodo(event.target.value)}
           >
+            <option value="todo">Todo</option>
             <option value="hoje">Hoje</option>
             <option value="semana">Esta semana</option>
             <option value="mes">Este mês</option>
