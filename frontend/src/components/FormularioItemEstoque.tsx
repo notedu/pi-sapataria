@@ -12,6 +12,21 @@ import type {
   TipoEstoque,
 } from '../services/estoque'
 
+const camposMonetarios = new Set(['preco_custo', 'preco_venda', 'custo'])
+const formatarMoedaDigitada = (valor: string) => {
+  const numero = Number(valor || 0)
+  return numero.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  })
+}
+const valorEmCentavos = (valor: string) => {
+  const digitos = valor.replace(/\D/g, '')
+  return digitos || '0'
+}
+const valorDecimal = (centavos: string) =>
+  (Number(centavos) / 100).toFixed(2)
+
 export default function FormularioItemEstoque({
   tipo,
   item,
@@ -186,8 +201,17 @@ export default function FormularioItemEstoque({
               id={`item-${campo}`}
               label={label}
               required
-              value={dados[campo]}
-              type={numerico ? 'number' : 'text'}
+              type={camposMonetarios.has(campo) ? 'text' : numerico ? 'number' : 'text'}
+              inputMode={camposMonetarios.has(campo) ? 'numeric' : undefined}
+              placeholder={camposMonetarios.has(campo) ? 'R$ 0,00' : undefined}
+              onChange={(event) =>
+                setDados({
+                  ...dados,
+                  [campo]: camposMonetarios.has(campo)
+                    ? valorDecimal(valorEmCentavos(event.target.value))
+                    : event.target.value,
+                })
+              }
               min={numerico ? '0' : undefined}
               step={
                 numerico
@@ -198,8 +222,10 @@ export default function FormularioItemEstoque({
                     : '0.01'
                   : undefined
               }
-              onChange={(event) =>
-                setDados({ ...dados, [campo]: event.target.value })
+              value={
+                camposMonetarios.has(campo)
+                  ? formatarMoedaDigitada(dados[campo])
+                  : dados[campo]
               }
             />
           )

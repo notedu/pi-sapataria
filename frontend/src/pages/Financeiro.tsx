@@ -72,6 +72,14 @@ const statusLabel = (status: ContaFinanceira['status']) =>
     parcial: 'Parcial',
   })[status]
 type Periodo = { inicio: string; fim: string }
+type ColunaConta =
+  | 'descricao'
+  | 'vencimento'
+  | 'numero'
+  | 'valor'
+  | 'valor_pago'
+  | 'status'
+type Ordenacao = { coluna: ColunaConta; direcao: 'asc' | 'desc' }
 
 export default function Financeiro() {
   const navigate = useNavigate()
@@ -94,6 +102,7 @@ export default function Financeiro() {
   const [detalhe, setDetalhe] = useState<
     MovimentoFinanceiro | ContaFinanceira | null
   >(null)
+  const [ordenacao, setOrdenacao] = useState<Ordenacao | null>(null)
 
   useEffect(() => {
     let ativo = true
@@ -130,6 +139,34 @@ export default function Financeiro() {
       ),
     [dados, tipoFiltro, origemFiltro],
   )
+  const contasOrdenadas = useMemo(() => {
+    const contas = [...(dados?.contas ?? [])]
+    if (!ordenacao) return contas
+    const multiplicador = ordenacao.direcao === 'asc' ? 1 : -1
+    return contas.sort((a, b) => {
+      const coluna = ordenacao.coluna
+      const comparacao =
+        coluna === 'descricao' || coluna === 'status'
+          ? (coluna === 'descricao' ? a.descricao : statusLabel(a.status)).localeCompare(
+              coluna === 'descricao' ? b.descricao : statusLabel(b.status),
+              'pt-BR',
+            )
+          : coluna === 'vencimento'
+            ? a.vencimento.localeCompare(b.vencimento)
+            : coluna === 'numero'
+              ? a.numero - b.numero || a.total_parcelas - b.total_parcelas
+              : Number(a[coluna]) - Number(b[coluna])
+      return comparacao * multiplicador
+    })
+  }, [dados?.contas, ordenacao])
+
+  function ordenarContas(coluna: ColunaConta) {
+    setOrdenacao((atual) => ({
+      coluna,
+      direcao:
+        atual?.coluna === coluna && atual.direcao === 'asc' ? 'desc' : 'asc',
+    }))
+  }
 
   function selecionarPeriodo(valor: string) {
     setOpcao(valor)
@@ -450,6 +487,9 @@ export default function Financeiro() {
               </h2>
               <p className="mt-1 text-label-sm text-on-surface-variant">
                 Acompanhamento de valores pendentes, pagos, vencidos e parciais.
+                Pago indica quitação; Parcial indica pagamento incompleto;
+                Pendente ainda não foi pago; Vencido passou da data de vencimento.
+                Selecione um cabeçalho para ordenar.
               </p>
             </div>
             {dados.contas.length === 0 ? (
@@ -466,22 +506,44 @@ export default function Financeiro() {
                 <table className="w-full min-w-[680px] text-left text-body-md">
                   <thead className="bg-surface-container-low text-label-md text-on-surface-variant">
                     <tr>
-                      {[
-                        'Descrição',
-                        'Vencimento',
-                        'Parcela',
-                        'Valor',
-                        'Pago',
-                        'Situação',
-                      ].map((titulo) => (
-                        <th key={titulo} scope="col" className="px-5 py-4">
-                          {titulo}
+                      {([
+                        ['Descrição', 'descricao'],
+                        ['Vencimento', 'vencimento'],
+                        ['Parcela', 'numero'],
+                        ['Valor', 'valor'],
+                        ['Pago', 'valor_pago'],
+                        ['Situação', 'status'],
+                      ] as const).map(([titulo, coluna]) => (
+                        <th
+                          key={titulo}
+                          scope="col"
+                          aria-sort={
+                            ordenacao?.coluna === coluna
+                              ? ordenacao.direcao === 'asc'
+                                ? 'ascending'
+                                : 'descending'
+                              : 'none'
+                          }
+                          className="px-5 py-4"
+                        >
+                          <button
+                            type="button"
+                            className="cursor-pointer text-left hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
+                            onClick={() => ordenarContas(coluna)}
+                          >
+                            {titulo}
+                            {ordenacao?.coluna === coluna
+                              ? ordenacao.direcao === 'asc'
+                                ? ' ↑'
+                                : ' ↓'
+                              : ''}
+                          </button>
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {dados.contas.map((item) => (
+                    {contasOrdenadas.map((item) => (
                       <tr
                         key={item.parcela_id}
                         className="border-t border-outline-variant/40"
