@@ -1,53 +1,53 @@
 ---
 name: Seda e Couro System
 colors:
-  surface: '#f9f9ff'
-  surface-dim: '#d7dae4'
-  surface-bright: '#f9f9ff'
+  surface: '#fff8f1'
+  surface-dim: '#e9d8c8'
+  surface-bright: '#fff8f1'
   surface-container-lowest: '#ffffff'
-  surface-container-low: '#f1f3fe'
-  surface-container: '#ebeef8'
-  surface-container-high: '#e5e8f3'
-  surface-container-highest: '#dfe2ed'
-  on-surface: '#181c23'
-  on-surface-variant: '#444652'
-  inverse-surface: '#2c3038'
-  inverse-on-surface: '#eef0fb'
-  outline: '#747683'
-  outline-variant: '#c4c6d4'
-  surface-tint: '#3759b3'
-  primary: '#002c7c'
-  on-primary: '#ffffff'
-  primary-container: '#1d439c'
-  on-primary-container: '#a0b6ff'
-  inverse-primary: '#b4c5ff'
-  secondary: '#605e59'
-  on-secondary: '#ffffff'
-  secondary-container: '#e6e2db'
-  on-secondary-container: '#66645f'
-  tertiary: '#18325c'
-  on-tertiary: '#ffffff'
-  tertiary-container: '#314974'
-  on-tertiary-container: '#a1b9eb'
+  surface-container-low: '#f8eee5'
+  surface-container: '#f1e3d6'
+  surface-container-high: '#ead9c9'
+  surface-container-highest: '#dfc9b6'
+  on-surface: '#270f01'
+  on-surface-variant: '#64422d'
+  inverse-surface: '#291709'
+  inverse-on-surface: '#fff8f1'
+  outline: '#81553e'
+  outline-variant: '#c7a88f'
+  surface-tint: '#50311d'
+  primary: '#50311d'
+  on-primary: '#fff8f1'
+  primary-container: '#64422d'
+  on-primary-container: '#fff8f1'
+  inverse-primary: '#d49f74'
+  secondary: '#81553e'
+  on-secondary: '#fff8f1'
+  secondary-container: '#e9cdb5'
+  on-secondary-container: '#270f01'
+  tertiary: '#64422d'
+  on-tertiary: '#fff8f1'
+  tertiary-container: '#d9b99d'
+  on-tertiary-container: '#270f01'
   error: '#ba1a1a'
   on-error: '#ffffff'
   error-container: '#ffdad6'
   on-error-container: '#93000a'
-  primary-fixed: '#dbe1ff'
-  primary-fixed-dim: '#b4c5ff'
-  on-primary-fixed: '#00174b'
-  on-primary-fixed-variant: '#194099'
-  secondary-fixed: '#e6e2db'
-  secondary-fixed-dim: '#c9c6bf'
-  on-secondary-fixed: '#1c1c18'
-  on-secondary-fixed-variant: '#484742'
-  tertiary-fixed: '#d7e2ff'
-  tertiary-fixed-dim: '#afc7fa'
-  on-tertiary-fixed: '#001b3f'
-  on-tertiary-fixed-variant: '#2e4772'
-  background: '#f9f9ff'
-  on-background: '#181c23'
-  surface-variant: '#dfe2ed'
+  primary-fixed: '#d49f74'
+  primary-fixed-dim: '#9d6d51'
+  on-primary-fixed: '#270f01'
+  on-primary-fixed-variant: '#50311d'
+  secondary-fixed: '#e9cdb5'
+  secondary-fixed-dim: '#c79a76'
+  on-secondary-fixed: '#270f01'
+  on-secondary-fixed-variant: '#50311d'
+  tertiary-fixed: '#e4c4a8'
+  tertiary-fixed-dim: '#c79a76'
+  on-tertiary-fixed: '#270f01'
+  on-tertiary-fixed-variant: '#50311d'
+  background: '#fff8f1'
+  on-background: '#270f01'
+  surface-variant: '#dfc9b6'
 typography:
   headline-xl:
     fontFamily: Hanken Grotesk
@@ -118,10 +118,10 @@ The visual style is **Modern Minimalist with a Handcrafted Soul**. It utilizes g
 
 The palette is derived directly from the brand’s core identity, emphasizing a professional yet warm environment.
 
-- **Primary (Cobalt Blue):** Extracted from the logo’s line art. This is used for key actions, brand accents, and structural borders to maintain a strong visual link to the illustration style.
-- **Secondary (Warm Linen):** A soft, off-white background color that provides a more organic and premium feel than pure white. It serves as the primary canvas for the UI.
-- **Tertiary (Dusty Blue):** A muted, lighter blue used for secondary backgrounds, hover states, and illustrative accents to add depth without increasing visual noise.
-- **Neutral (Slate Carbon):** A high-contrast dark tone for typography and icons, ensuring maximum legibility while feeling softer and more intentional than pure black.
+- **Primary (Marrom Café, `#3C1E0C`):** Used for actions and brand accents, with the darker `#50311D` and `#64422D` supporting navigation and structure.
+- **Secondary (Caramelo Queimado, `#9D6D51`):** Used for secondary surfaces and hover states.
+- **Highlight (Caramelo Claro, `#D49F74`):** Used for emphasis, readable text and important controls against the dark brand background.
+- **Deep backgrounds (`#291709` and `#270F01`):** Anchor the dark theme; the light theme uses warm off-white surfaces and dark brown text for comfortable reading.
 
 ## Typography
 
@@ -143,8 +143,8 @@ This design system employs a **Fluid Grid** model built on an 8px base unit.
 
 To maintain the "handcrafted" and professional aesthetic, this design system avoids heavy drop shadows. Depth is communicated through:
 
-- **Tonal Layers:** Using the Secondary (Linen) for the main page and a slightly darker or lighter variant (Tertiary Blue at 5% opacity) for container surfaces.
-- **Low-Contrast Outlines:** Elements like cards and inputs use subtle 1px borders in the Primary Blue (at 20% opacity) instead of shadows.
+- **Tonal Layers:** Warm off-white surfaces distinguish sections in the light theme; layered browns distinguish containers in the dark theme.
+- **Low-Contrast Outlines:** Elements like cards and inputs use subtle 1px brown or caramel borders instead of heavy shadows.
 - **Intentional Overlaps:** Images may slightly overlap container edges to create a sense of physical, layered materials, mimicking the process of shoemaking.
 
 ## Shapes
@@ -157,8 +157,8 @@ The shape language reflects the organic curves found in the logo's shoe illustra
 
 ## Components
 
-- **Buttons:** Primary buttons use a solid Primary Blue fill with Secondary (Linen) text. Secondary buttons use a Primary Blue 1px border and Primary Blue text.
-- **Input Fields:** Styled with a Secondary (Linen) background and a soft Primary Blue border. Focus states should slightly thicken the border.
-- **Cards:** Use a 1px Primary Blue border (low opacity) with a Secondary (Linen) background. No shadow. Product images within cards should have a consistent 4px internal margin to feel "framed."
-- **Chips/Labels:** Used for material tags (e.g., "Seda", "Couro"). These use the Tertiary Blue as a soft background with Primary Blue text to indicate categories without high visual weight.
+- **Buttons:** Primary buttons use a solid dark brown fill in the light theme and light caramel fill in the dark theme, each with a contrasting foreground. Secondary buttons use a subtle brown or caramel border.
+- **Input Fields:** Styled with a surface-container background and a soft brown or caramel border. Focus states use the primary color.
+- **Cards:** Use a subtle brown or caramel border with a surface-container background. Product images within cards should have a consistent 4px internal margin to feel "framed."
+- **Chips/Labels:** Used for material tags (e.g., "Seda", "Couro"). These use a caramel-tinted background with contrasting brown text.
 - **Decorative Lines:** Inspired by the wavy lines in the logo, thin horizontal dividers can use a subtle "wave" SVG instead of a straight line to reinforce the brand's unique identity.

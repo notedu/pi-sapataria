@@ -25,38 +25,27 @@ function derivar(senha: string, salt: string): Promise<Buffer> {
 }
 
 export function validarSenha(valor: unknown): string {
-  if (
-    typeof valor !== 'string' ||
-    [...valor].length < 15 ||
-    [...valor].length > 128
-  ) {
-    throw new ErroHttp(
-      400,
-      'SENHA_INVALIDA',
-      'A senha deve conter entre 15 e 128 caracteres.',
-    );
-  }
-  return valor; // Não remove espaços nem modifica a senha escolhida.
-}
-
-// Política aplicada somente à troca da própria senha em Configurações.
-export function validarSenhaAlteracao(valor: unknown): string {
   const senha = typeof valor === 'string' ? valor : '';
   const tamanho = [...senha].length;
   if (
     typeof valor !== 'string' ||
     tamanho < 8 ||
-    !/[A-Z]/.test(senha) ||
-    !/[a-z]/.test(senha) ||
+    !/\p{Lu}/u.test(senha) ||
+    !/\p{Ll}/u.test(senha) ||
     !/[^\p{L}\p{N}]/u.test(senha)
   ) {
     throw new ErroHttp(
       400,
       'SENHA_INVALIDA',
-      'A nova senha deve ter pelo menos 8 caracteres, com maiúscula, minúscula e caractere especial.',
+      'A senha deve ter pelo menos 8 caracteres, com maiúscula, minúscula e caractere especial.',
     );
   }
-  return senha;
+  return valor; // Não remove espaços nem modifica a senha escolhida.
+}
+
+// A mesma política vale no cadastro de contas e na troca da própria senha.
+export function validarSenhaAlteracao(valor: unknown): string {
+  return validarSenha(valor);
 }
 
 export async function protegerSenha(
