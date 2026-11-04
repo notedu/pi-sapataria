@@ -188,7 +188,7 @@ Implementado. Apenas administrador. `200`, `{"dados": [...]}` com id, nome, usua
 <a id="a08"></a>
 ### A08 — POST /funcionarios
 
-Implementado. Apenas administrador, com CSRF. Campos obrigatórios: nome, usuario, email, cpf, telefone, senha (15–128 caracteres), perfil. CPF: 11 dígitos sem pontuação, validação dos dígitos verificadores e rejeição de repetidos. Telefone: 11 dígitos sem pontuação. CPF/telefone não têm unicidade nova. Ambos podem ser nulos nas respostas de registros antigos. `ativo` é booleano opcional na entrada, com padrão true; null não é aceito. Perfil: administrador ou funcionario, sem padrão. Campo desconhecido ou `senha_protegida` na entrada é rejeitado. E-mail exige formato básico; a senha não é modificada.
+Implementado. Apenas administrador, com CSRF. Campos obrigatórios: nome, usuario, email, cpf, telefone, senha e perfil. A senha precisa ter pelo menos 8 caracteres, uma letra maiúscula, uma minúscula e um caractere especial, sem limite máximo. CPF: 11 dígitos sem pontuação, validação dos dígitos verificadores e rejeição de repetidos. Telefone: 11 dígitos sem pontuação. CPF/telefone não têm unicidade nova. Ambos podem ser nulos nas respostas de registros antigos. `ativo` é booleano opcional na entrada, com padrão true; null não é aceito. Perfil: administrador ou funcionario, sem padrão. Campo desconhecido ou `senha_protegida` na entrada é rejeitado. E-mail exige formato básico; a senha não é modificada.
 
 Retorna `201`, `{"dados": funcionario}` sem senha. Usuário duplicado (incluindo diferença de caixa): `409`; entrada inválida: `400`. Primeiro administrador: comando local `npm run criar:admin`, que também exige CPF/telefone, sem conta pública/padrão.
 
@@ -201,7 +201,7 @@ Implementado. Administrador consulta qualquer funcionário; Funcionário comum c
 
 Apenas Administrador, sessão e CSRF. Corpo completo: `{"nome":"Pessoa Fictícia","email":"pessoa@example.com","cpf":"52998224725","telefone":"11999999999","senha_admin":"senha do Administrador conectado"}`. A senha é sempre do autor, inclusive quando edita outra pessoa. Não permite alterar usuário, senha de login, perfil, ativo ou enviar campos extras. Valida os mesmos quatro campos pessoais do cadastro. Legados precisam completá-los.
 
-Retorna `200`, `{"dados": funcionario}`. Não muda id, vínculos, credenciais nem versão de acesso. Confirmação incorreta: `403/SENHA_CONFIRMACAO_INVALIDA`, sem alterar o registro. Ausente/vazia ou acima de 128 caracteres: `400/CONFIRMACAO_OBRIGATORIA`. Sessão inválida: `401`; inexistente: `404`; limite: `429`. Autor e alvo são bloqueados em ordem de id, com nova checagem de sessão/perfil sob bloqueio; uma desativação concorrente do autor impede a edição.
+Retorna `200`, `{"dados": funcionario}`. Não muda id, vínculos, credenciais nem versão de acesso. Confirmação incorreta: `403/SENHA_CONFIRMACAO_INVALIDA`, sem alterar o registro. Senha ausente ou vazia: `400/CONFIRMACAO_OBRIGATORIA`. Sessão inválida: `401`; inexistente: `404`; limite: `429`. Autor e alvo são bloqueados em ordem de id, com nova checagem de sessão/perfil sob bloqueio; uma desativação concorrente do autor impede a edição.
 
 ### GET /funcionarios/{id}/ordens-servico
 
@@ -221,7 +221,7 @@ Retorna `200`, `{"dados": funcionario}` sem senha/hash. Mudança de perfil ou at
 Corpo: `{"senha_admin":"senha do administrador conectado"}`. Preserva o perfil atual e os históricos; somente altera `ativo` para false e incrementa `versao_acesso` se houver mudança. Repetir a operação sobre uma conta já inativa, com confirmação válida, retorna o estado atual sem incrementar novamente. Não existe exclusão física.
 
 - `200`: `{"dados": funcionario}` inativo, sem segredos.
-- `400`: ID/corpo inválido ou `CONFIRMACAO_OBRIGATORIA` para senha ausente/vazia ou maior que 128 caracteres.
+- `400`: ID/corpo inválido ou `CONFIRMACAO_OBRIGATORIA` para senha ausente/vazia.
 - `401`: sessão ausente, expirada ou invalidada.
 - `403`: `ACESSO_NEGADO`, `CSRF_INVALIDO`, `AUTODESATIVACAO_PROIBIDA` ou `SENHA_CONFIRMACAO_INVALIDA`. Senha incorreta não encerra a sessão do Administrador e não altera o alvo.
 - `404`: funcionário inexistente.
@@ -348,7 +348,7 @@ Exemplo de sequência no Insomnia: login → cadastrar produto → registrar ent
 ### A25 — PUT /auth/senha
 
 - **Caminho implementado:** `PUT /api/v1/auth/senha`; exige sessão autenticada e token CSRF.
-- **Entrada:** `{ "senha_atual": "...", "senha_nova": "...", "confirmar_senha_nova": "..." }`. A nova senha deve ter pelo menos 8 caracteres, sem limite máximo, com pelo menos uma letra maiúscula, uma minúscula e um caractere especial; a confirmação deve coincidir. Senhas nunca são devolvidas pela API.
+- **Entrada:** `{ "senha_atual": "...", "senha_nova": "...", "confirmar_senha_nova": "..." }`. A nova senha deve ter pelo menos 8 caracteres, sem limite máximo, com pelo menos uma letra maiúscula, uma minúscula e um caractere especial; a confirmação deve coincidir. Senhas nunca são devolvidas pela API. A mesma política é aplicada no cadastro de funcionários e na criação do primeiro Administrador.
 - **Sucesso:** `204`, sem corpo. Incrementa `versao_acesso`, encerra a sessão atual e invalida todas as demais; é necessário entrar novamente.
 - **Erros e efeitos:** `400` para campos inválidos, senha fora da política ou confirmação divergente; `401` para sessão inválida; `403 SENHA_ATUAL_INVALIDA` para senha atual incorreta; `429` após 10 tentativas por funcionário ou 50 por IP em 15 minutos. Contadores próprios não alteram os limites de login. Guia §5.9; RF-023; RN-004.
 

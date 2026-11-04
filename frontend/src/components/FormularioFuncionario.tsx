@@ -31,6 +31,7 @@ export default function FormularioFuncionario({
   const navigate = useNavigate()
   const [cpf, setCpf] = useState(inicial?.cpf ?? '')
   const [telefone, setTelefone] = useState(inicial?.telefone ?? '')
+  const [senhaCadastro, setSenhaCadastro] = useState('')
   const [pendentes, setPendentes] = useState<DadosPessoaisFuncionario | null>(
     null,
   )
@@ -79,8 +80,15 @@ export default function FormularioFuncionario({
       setErro('Preencha o usuário de login.')
       return
     }
-    if ([...senha].length < 15 || [...senha].length > 128) {
-      setErro('A senha deve conter entre 15 e 128 caracteres.')
+    if (
+      [...senha].length < 8 ||
+      !/\p{Lu}/u.test(senha) ||
+      !/\p{Ll}/u.test(senha) ||
+      !/[^\p{L}\p{N}]/u.test(senha)
+    ) {
+      setErro(
+        'A senha deve ter pelo menos 8 caracteres, com maiúscula, minúscula e caractere especial.',
+      )
       return
     }
     if (senha !== confirmacao) {
@@ -96,6 +104,7 @@ export default function FormularioFuncionario({
     try {
       await cadastrarFuncionario({ ...pessoais, usuario, senha, perfil })
       form.reset()
+      setSenhaCadastro('')
       onSalvo()
     } catch (error) {
       redirecionar(error)
@@ -110,6 +119,7 @@ export default function FormularioFuncionario({
           'input[type="password"]',
         ))
           campo.value = ''
+        setSenhaCadastro('')
       }
     } finally {
       envioEmCurso.current = false
@@ -222,6 +232,9 @@ export default function FormularioFuncionario({
                   label="Senha"
                   type="password"
                   autoComplete="new-password"
+                  minLength={8}
+                  value={senhaCadastro}
+                  onChange={(event) => setSenhaCadastro(event.target.value)}
                   aria-describedby="orientacao-senha"
                   required
                 />
@@ -234,13 +247,38 @@ export default function FormularioFuncionario({
                   required
                 />
               </div>
-              <p
+              <div
                 id="orientacao-senha"
-                className="text-label-sm text-on-surface-variant"
+                className="grid gap-1 text-label-sm text-on-surface-variant"
+                aria-live="polite"
               >
-                Use de 15 a 128 caracteres. A senha não será exibida na
-                listagem.
-              </p>
+                <p>A senha precisa ter:</p>
+                <ul className="grid gap-1">
+                  {[
+                    {
+                      texto: 'Pelo menos 8 caracteres',
+                      ok: [...senhaCadastro].length >= 8,
+                    },
+                    {
+                      texto: 'Pelo menos uma letra maiúscula',
+                      ok: /\p{Lu}/u.test(senhaCadastro),
+                    },
+                    {
+                      texto: 'Pelo menos uma letra minúscula',
+                      ok: /\p{Ll}/u.test(senhaCadastro),
+                    },
+                    {
+                      texto: 'Pelo menos um caractere especial',
+                      ok: /[^\p{L}\p{N}]/u.test(senhaCadastro),
+                    },
+                  ].map((regra) => (
+                    <li key={regra.texto}>
+                      {regra.ok ? '✓' : '○'} {regra.texto}
+                    </li>
+                  ))}
+                </ul>
+                <p>A senha não será exibida na listagem.</p>
+              </div>
             </>
           )}
         </fieldset>

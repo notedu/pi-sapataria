@@ -43,7 +43,7 @@ async function executar(): Promise<void> {
     const cpf = await perguntar('CPF (11 números, sem pontuação): ');
     const telefone = await perguntar('Telefone com DDD (11 números): ');
     const senha = await lerSenha(
-      'Senha (15 a 128 caracteres; não será exibida): ',
+      'Senha (mínimo 8 caracteres, com maiúscula, minúscula e caractere especial; não será exibida): ',
     );
     const confirmacao = await lerSenha('Repita a senha: ');
     if (senha !== confirmacao)

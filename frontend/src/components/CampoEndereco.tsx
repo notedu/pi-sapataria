@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import InputField from './InputField'
 import Button from './Button'
+import Dialog from './Dialog'
 import { buscarCepPorEndereco, consultarCep } from '../services/cep'
 import type { EnderecoCep } from '../services/cep'
 import { listarMunicipios } from '../services/municipios'
@@ -56,9 +57,11 @@ export default function CampoEndereco({
     carregando: boolean
   } | null>(null)
   const [statusCep, setStatusCep] = useState<{ cep: string; texto: string } | null>(null)
+  const [dialogSugestoesAberto, setDialogSugestoesAberto] = useState(false)
+  const [filtroSugestoes, setFiltroSugestoes] = useState('')
+  const [enderecoConfirmado, setEnderecoConfirmado] = useState<string | null>(null)
   const atualizarEnderecoRef = useRef(aoMudarEndereco)
   const cepAnteriorRef = useRef(cep && !endereco.logradouro ? '' : cep)
-  const enderecoConfirmadoRef = useRef<string | null>(null)
 
   useEffect(() => {
     atualizarEnderecoRef.current = aoMudarEndereco
@@ -72,6 +75,7 @@ export default function CampoEndereco({
     consultarCep(cep, controle.signal)
       .then((dados) => {
         if (controle.signal.aborted) return
+        setEnderecoConfirmado(`${dados.uf}|${dados.localidade}|${dados.logradouro}`)
         atualizarEnderecoRef.current({
           logradouro: dados.logradouro,
           bairro: dados.bairro,
@@ -106,7 +110,7 @@ export default function CampoEndereco({
     if (!aberto || !endereco.uf || !endereco.cidade || endereco.logradouro.trim().length < 3) return
     const controle = new AbortController()
     const chave = `${endereco.uf}|${endereco.cidade}|${endereco.logradouro}`
-    if (enderecoConfirmadoRef.current === chave) return
+    if (enderecoConfirmado === chave) return
     const atraso = window.setTimeout(() => {
       setBusca({ chave, sugestoes: [], erro: '', carregando: true })
       buscarCepPorEndereco(
@@ -128,14 +132,14 @@ export default function CampoEndereco({
       window.clearTimeout(atraso)
       controle.abort()
     }
-  }, [aberto, endereco.uf, endereco.cidade, endereco.logradouro])
+  }, [aberto, endereco.uf, endereco.cidade, endereco.logradouro, enderecoConfirmado])
 
   function atualizar(campo: keyof EnderecoFormulario, valor: string) {
     aoMudarEndereco({ ...endereco, [campo]: valor })
   }
 
   function confirmar(sugestao: EnderecoCep & { cep: string }) {
-    enderecoConfirmadoRef.current = `${sugestao.uf}|${sugestao.localidade}|${sugestao.logradouro}`
+    setEnderecoConfirmado(`${sugestao.uf}|${sugestao.localidade}|${sugestao.logradouro}`)
     aoMudarEndereco({
       logradouro: sugestao.logradouro,
       bairro: sugestao.bairro,
@@ -144,10 +148,47 @@ export default function CampoEndereco({
     })
     aoMudarCep(sugestao.cep)
     setBusca(null)
+    setDialogSugestoesAberto(false)
+    setFiltroSugestoes('')
   }
 
   const chaveBusca = `${endereco.uf}|${endereco.cidade}|${endereco.logradouro}`
   const resultadoBusca = busca?.chave === chaveBusca ? busca : null
+  const sugestoes = resultadoBusca?.sugestoes ?? []
+  const termoFiltro = filtroSugestoes
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('pt-BR')
+  const sugestoesFiltradas = sugestoes.filter((sugestao) =>
+    `${sugestao.logradouro} ${sugestao.bairro} ${sugestao.cep}`
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLocaleLowerCase('pt-BR')
+      .includes(termoFiltro),
+  )
+
+  function exibirSugestao(sugestao: EnderecoCep & { cep: string }) {
+    return (
+      <div
+        key={`${sugestao.cep}-${sugestao.logradouro}-${sugestao.bairro}`}
+        className="flex flex-wrap items-center justify-between gap-3 rounded-default bg-surface-container p-3"
+      >
+        <p className="text-label-sm">
+          {sugestao.logradouro} · {sugestao.bairro || 'Bairro não informado'} · CEP {formatarCep(sugestao.cep)}
+        </p>
+        <Button
+          type="button"
+          size="compact"
+          variant="secondary"
+          onClick={() => confirmar(sugestao)}
+          disabled={desabilitado}
+        >
+          Selecionar endereço
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -157,7 +198,12 @@ export default function CampoEndereco({
         autoComplete="postal-code"
         inputMode="numeric"
         value={formatarCep(cep)}
-        onChange={(event) => aoMudarCep(digitos(event.target.value, 8))}
+        onChange={(event) => {
+          const novoCep = digitos(event.target.value, 8)
+          aoMudarCep(novoCep)
+          setStatusCep(null)
+          if (novoCep.length === 8) setAberto(true)
+        }}
         maxLength={9}
         disabled={desabilitado}
       />
@@ -256,32 +302,62 @@ export default function CampoEndereco({
           {endereco.logradouro.trim().length >= 3 && (
             <div className="space-y-3" aria-live="polite">
               {resultadoBusca?.carregando && <p role="status">Buscando endereços no ViaCEP…</p>}
-              {resultadoBusca && resultadoBusca.sugestoes.length === 0 && !resultadoBusca.carregando && !resultadoBusca.erro && (
+              {resultadoBusca && sugestoes.length === 0 && !resultadoBusca.carregando && !resultadoBusca.erro && (
                 <p role="status">Nenhum resultado encontrado. Você pode salvar o endereço preenchido manualmente.</p>
               )}
               {resultadoBusca?.erro && <p role="status">{resultadoBusca.erro}</p>}
-              {(resultadoBusca?.sugestoes ?? []).map((sugestao) => (
-                <div
-                  key={`${sugestao.cep}-${sugestao.logradouro}`}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-default bg-surface-container p-3"
+              {sugestoes.length === 1 && exibirSugestao(sugestoes[0])}
+              {sugestoes.length > 1 && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setFiltroSugestoes('')
+                    setDialogSugestoesAberto(true)
+                  }}
+                  disabled={desabilitado}
                 >
-                  <p className="text-label-sm">
-                    {sugestao.logradouro} · {sugestao.bairro || 'Bairro não informado'} · CEP {formatarCep(sugestao.cep)}
-                  </p>
-                  <Button
-                    type="button"
-                    size="compact"
-                    variant="secondary"
-                    onClick={() => confirmar(sugestao)}
-                    disabled={desabilitado}
-                  >
-                    Confirmar endereço
-                  </Button>
-                </div>
-              ))}
+                  Ver sugestões ({sugestoes.length})
+                </Button>
+              )}
             </div>
           )}
         </div>
+      )}
+      {dialogSugestoesAberto && sugestoes.length > 1 && (
+        <Dialog
+          titulo="Selecione o endereço"
+          onCancelar={() => setDialogSugestoesAberto(false)}
+          largura="ampla"
+        >
+          <div className="space-y-4">
+            <InputField
+              id={`${prefixo}-filtro-sugestoes`}
+              label="Buscar nas sugestões"
+              placeholder="Digite rua, bairro ou CEP"
+              autoComplete="off"
+              value={filtroSugestoes}
+              onChange={(event) => setFiltroSugestoes(event.target.value)}
+            />
+            <p role="status" className="text-label-sm text-on-surface-variant">
+              {sugestoesFiltradas.length} de {sugestoes.length} endereços
+            </p>
+            {sugestoesFiltradas.length ? (
+              <div className="max-h-[50vh] space-y-2 overflow-y-auto pr-1">
+                {sugestoesFiltradas.map(exibirSugestao)}
+              </div>
+            ) : (
+              <p role="status">Nenhuma sugestão corresponde à busca.</p>
+            )}
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setDialogSugestoesAberto(false)}
+            >
+              Fechar
+            </Button>
+          </div>
+        </Dialog>
       )}
     </div>
   )

@@ -108,7 +108,13 @@ export default function NovaOrdemServico({
   const [erro, setErro] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [incerto, setIncerto] = useState(false)
+  const erroRef = useRef<HTMLParagraphElement>(null)
   const envioEmCurso = useRef(false)
+
+  useEffect(() => {
+    if (erro) erroRef.current?.focus()
+  }, [erro])
+
   useEffect(() => {
     let ativo = true
     Promise.all([
@@ -190,8 +196,8 @@ export default function NovaOrdemServico({
     ) {
       setErro(
         inicial
-          ? 'Selecione cliente e responsável, preencha todos os itens e serviços e informe o valor da OS.'
-          : 'Selecione cliente, preencha todos os itens e serviços e informe o valor da OS.',
+          ? 'Selecione cliente e responsável, preencha todos os itens e serviços, confira os materiais planejados e informe o valor da OS.'
+          : 'Selecione cliente, preencha todos os itens e serviços e informe o valor da OS. Se adicionar materiais planejados, complete material e quantidade.',
       )
       return
     }
@@ -301,7 +307,23 @@ export default function NovaOrdemServico({
       ) : !clientes ? (
         <p role="status">Carregando formulário…</p>
       ) : (
-        <form onSubmit={salvar} className="space-y-5">
+        <form
+          onSubmit={salvar}
+          noValidate
+          aria-describedby={erro ? 'erro-os' : undefined}
+          className="space-y-5"
+        >
+          {erro && (
+            <p
+              ref={erroRef}
+              id="erro-os"
+              tabIndex={-1}
+              role="alert"
+              className="rounded-default bg-error-container p-4 text-on-error-container focus:outline-2 focus:outline-offset-2 focus:outline-error"
+            >
+              {erro}
+            </p>
+          )}
           <section className="rounded-xl border border-outline-variant bg-secondary-container p-5 md:p-8">
             <h2 className="mb-6 text-headline-md text-primary">
               Informações do cliente
@@ -365,59 +387,68 @@ export default function NovaOrdemServico({
             </h2>
             <div className="space-y-5">
               {itens.map((item, indice) => (
-                <fieldset
+                <div
                   key={indice}
-                  className="space-y-4 rounded-default border border-outline-variant bg-surface p-4"
+                  role="group"
+                  aria-labelledby={`titulo-item-servico-${indice}`}
+                  className="rounded-default border border-outline-variant bg-surface p-4"
                 >
-                  <legend className="px-2 text-label-md text-primary">
+                  <h3
+                    id={`titulo-item-servico-${indice}`}
+                    className="mb-4 border-b border-outline-variant/70 pb-2 text-label-md text-primary"
+                  >
                     Item e serviço {indice + 1}
-                  </legend>
-                  <InputField
-                    id={`item-os-${indice}`}
-                    label="Descrição do item *"
-                    required
-                    value={item.descricao_item}
-                    onChange={(event) =>
-                      setItens((atuais) =>
-                        atuais.map((atual, i) =>
-                          i === indice
-                            ? { ...atual, descricao_item: event.target.value }
-                            : atual,
-                        ),
-                      )
-                    }
-                    placeholder="Ex.: Botas de couro marrom"
-                  />
-                  <InputField
-                    id={`servico-os-${indice}`}
-                    label="Serviço solicitado *"
-                    required
-                    list="servicos-os-conhecidos"
-                    value={item.servico}
-                    onChange={(event) =>
-                      setItens((atuais) =>
-                        atuais.map((atual, i) =>
-                          i === indice
-                            ? { ...atual, servico: event.target.value }
-                            : atual,
-                        ),
-                      )
-                    }
-                    placeholder="Ex.: Ressola completa"
-                  />
-                  {indice > 0 && (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="compact"
-                      onClick={() =>
-                        setItens((atuais) => atuais.filter((_, i) => i !== indice))
+                  </h3>
+                  <div className="space-y-4">
+                    <InputField
+                      id={`item-os-${indice}`}
+                      label="Descrição do item *"
+                      required
+                      value={item.descricao_item}
+                      onChange={(event) =>
+                        setItens((atuais) =>
+                          atuais.map((atual, i) =>
+                            i === indice
+                              ? { ...atual, descricao_item: event.target.value }
+                              : atual,
+                          ),
+                        )
                       }
-                    >
-                      Remover item
-                    </Button>
-                  )}
-                </fieldset>
+                      placeholder="Ex.: Botas de couro marrom"
+                    />
+                    <InputField
+                      id={`servico-os-${indice}`}
+                      label="Serviço solicitado *"
+                      required
+                      list="servicos-os-conhecidos"
+                      value={item.servico}
+                      onChange={(event) =>
+                        setItens((atuais) =>
+                          atuais.map((atual, i) =>
+                            i === indice
+                              ? { ...atual, servico: event.target.value }
+                              : atual,
+                          ),
+                        )
+                      }
+                      placeholder="Ex.: Ressola completa"
+                    />
+                    {indice > 0 && (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="compact"
+                        onClick={() =>
+                          setItens((atuais) =>
+                            atuais.filter((_, i) => i !== indice),
+                          )
+                        }
+                      >
+                        Remover item
+                      </Button>
+                    )}
+                  </div>
+                </div>
               ))}
               <datalist id="servicos-os-conhecidos">
                 {servicosDisponiveis.map((opcao) => (
@@ -578,14 +609,6 @@ export default function NovaOrdemServico({
               </div>
             </section>
           </div>
-          {erro && (
-            <p
-              role="alert"
-              className="rounded-default bg-error-container p-4 text-on-error-container"
-            >
-              {erro}
-            </p>
-          )}
           <div className="mobile-action-group justify-end border-t border-outline-variant pt-6">
             <Link
               to={inicial ? `/ordens-servico/${inicial.id}` : '/ordens-servico'}

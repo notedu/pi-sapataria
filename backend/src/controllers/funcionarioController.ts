@@ -143,7 +143,7 @@ async function prepararConfirmacao(
   const sessao = request.session.autenticacao;
   if (!sessao)
     throw new ErroHttp(401, 'NAO_AUTENTICADO', 'Faça login para continuar.');
-  if (typeof senha !== 'string' || !senha || [...senha].length > 128) {
+  if (typeof senha !== 'string' || !senha) {
     throw new ErroHttp(
       400,
       'CONFIRMACAO_OBRIGATORIA',

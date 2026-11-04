@@ -9,6 +9,8 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 ### Corrigido
 
 - Estoque: corrigida a validação HTML de quantidade em compras, removida a opção de importação CSV da tela, centralizadas as colunas e destacado em negrito o alerta de mínimo.
+- Endereços: ao informar um CEP válido, os campos do endereço são abertos e preenchidos automaticamente. Na busca por rua, uma sugestão aparece no formulário; várias sugestões ficam em uma caixa rolável com busca por rua, bairro ou CEP.
+- Senhas de contas novas: cadastro de Funcionários e criação do primeiro Administrador agora usam a mesma política da troca de senha, com mínimo de 8 caracteres e exigência de maiúscula, minúscula e caractere especial.
 
 - Contraste dos ícones nas ações rápidas da Busca no tema escuro.
 - Troca de unidade de Material com saldo ou movimentações bloqueada na interface, API e PostgreSQL, inclusive quando o saldo retorna a zero, preservando a interpretação de custo e histórico.

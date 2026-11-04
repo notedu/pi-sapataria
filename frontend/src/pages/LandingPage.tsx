@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import logo from '../assets/logo-sapataria.png'
-import { aplicarTemaEscuro } from '../services/preferencias'
 
 const whatsapp =
   'https://wa.me/5519989800297?text=Ol%C3%A1%2C%20gostaria%20de%20conhecer%20os%20servi%C3%A7os%20da%20Seda%20e%20Couro.'
@@ -111,20 +110,20 @@ function PinIcon() {
 
 export default function LandingPage() {
   const galeriaRef = useRef<HTMLDivElement>(null)
+  const landingRef = useRef<HTMLDivElement>(null)
   const transicaoTemaRef = useRef<number | null>(null)
   const [reducaoDeMovimento, setReducaoDeMovimento] = useState(false)
   const [mouseNaGaleria, setMouseNaGaleria] = useState(false)
   const [focoNaGaleria, setFocoNaGaleria] = useState(false)
   const [modoEscuro, setModoEscuro] = useState(() => {
     try {
-      return localStorage.getItem(chaveTemaLanding) === 'true'
+      return localStorage.getItem(chaveTemaLanding) !== 'false'
     } catch {
-      return false
+      return true
     }
   })
 
   useEffect(() => {
-    aplicarTemaEscuro(modoEscuro)
     try {
       localStorage.setItem(chaveTemaLanding, String(modoEscuro))
     } catch {
@@ -136,7 +135,7 @@ export default function LandingPage() {
     () => () => {
       if (transicaoTemaRef.current !== null)
         window.clearTimeout(transicaoTemaRef.current)
-      document.documentElement.classList.remove('theme-transition')
+      landingRef.current?.classList.remove('theme-transition')
     },
     [],
   )
@@ -177,19 +176,23 @@ export default function LandingPage() {
   }, [mouseNaGaleria, focoNaGaleria, moverGaleria, reducaoDeMovimento])
 
   const alternarTema = () => {
-    const raiz = document.documentElement
-    raiz.classList.add('theme-transition')
+    const raiz = landingRef.current
+    raiz?.classList.add('theme-transition')
     if (transicaoTemaRef.current !== null)
       window.clearTimeout(transicaoTemaRef.current)
     setModoEscuro((temaAtual) => !temaAtual)
     transicaoTemaRef.current = window.setTimeout(() => {
-      raiz.classList.remove('theme-transition')
+      raiz?.classList.remove('theme-transition')
       transicaoTemaRef.current = null
     }, 300)
   }
 
   return (
-    <div className="landing-root min-h-screen bg-surface text-on-surface">
+    <div
+      ref={landingRef}
+      data-theme={modoEscuro ? 'dark' : 'light'}
+      className="landing-root min-h-screen bg-surface text-on-surface"
+    >
       <header className="sticky top-0 z-20 border-b border-outline-variant/60 bg-surface/95 backdrop-blur">
         <div className="mx-auto flex max-w-container-max items-center justify-between gap-4 px-5 py-3 md:px-8">
           <a
@@ -257,17 +260,17 @@ export default function LandingPage() {
           />
           <div
             aria-hidden="true"
-            className="absolute inset-0 -z-10 bg-gradient-to-r from-[#07142a]/90 via-[#07142a]/65 to-[#07142a]/20"
+            className="absolute inset-0 -z-10 bg-gradient-to-r from-[#291709]/95 via-[#291709]/75 to-[#291709]/25"
           />
           <div className="mx-auto w-full max-w-container-max px-5 pb-16 pt-24 md:px-8 md:pb-24">
-            <div className="max-w-3xl text-white">
-              <p className="mb-5 inline-flex rounded-full border border-white/35 bg-white/10 px-4 py-2 text-label-sm uppercase tracking-[0.16em] backdrop-blur-sm">
+            <div className="max-w-3xl text-[#D49F74]">
+              <p className="mb-5 inline-flex rounded-full border border-[#D49F74]/50 bg-[#291709]/40 px-4 py-2 text-label-sm uppercase tracking-[0.16em] backdrop-blur-sm">
                 Seda e Couro · Sapataria profissional
               </p>
               <h1 className="max-w-2xl text-4xl font-semibold leading-tight tracking-tight sm:text-5xl md:text-6xl">
                 Cuidado que renova. Consertos que acompanham você.
               </h1>
-              <p className="mt-6 max-w-xl text-body-lg text-white/90">
+              <p className="mt-6 max-w-xl text-body-lg text-[#D49F74]">
                 Higienização, manutenção, restauração e hidratação de calçados e
                 jaquetas, com atenção a cada detalhe.
               </p>
@@ -276,13 +279,13 @@ export default function LandingPage() {
                   href={whatsapp}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex min-h-12 items-center gap-3 rounded-full bg-white px-6 text-label-md text-on-primary-fixed transition hover:bg-secondary-container focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                  className="inline-flex min-h-12 items-center gap-3 rounded-full bg-[#D49F74] px-6 text-label-md text-[#270F01] transition hover:bg-[#9D6D51] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#D49F74]"
                 >
                   Fale com a loja pelo WhatsApp <Seta />
                 </a>
                 <a
                   href="#servicos"
-                  className="inline-flex min-h-12 items-center rounded-full border border-white/70 px-6 text-label-md text-white transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                  className="inline-flex min-h-12 items-center rounded-full border border-[#D49F74]/80 px-6 text-label-md text-[#D49F74] transition hover:bg-[#D49F74]/10 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#D49F74]"
                 >
                   Conheça os serviços
                 </a>
@@ -543,7 +546,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-white/10 bg-[#181c23] px-5 py-7 text-white md:px-8">
+      <footer className="border-t border-[#D49F74]/20 bg-[#270F01] px-5 py-7 text-[#F8E8DA] md:px-8">
         <div className="mx-auto flex max-w-container-max flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <img
@@ -553,21 +556,21 @@ export default function LandingPage() {
             />
             <p className="text-label-md">
               Seda e Couro{' '}
-              <span className="block text-label-sm font-normal text-white/70">
+              <span className="block text-label-sm font-normal text-[#D49F74]">
                 Sapataria profissional · Santa Cruz das Palmeiras - SP
               </span>
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-label-sm text-white/85">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-label-sm text-[#D49F74]">
             <a
               href={instagram}
               target="_blank"
               rel="noreferrer"
-              className="group relative isolate overflow-hidden rounded-full px-3 py-2 text-white/85 transition-colors duration-300 hover:text-white hover:shadow-md focus-visible:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              className="group relative isolate overflow-hidden rounded-full px-3 py-2 text-[#D49F74] transition-colors duration-300 hover:text-[#270F01] hover:shadow-md focus-visible:text-[#270F01] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D49F74]"
             >
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 z-0 rounded-full bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
+                className="pointer-events-none absolute inset-0 z-0 rounded-full bg-gradient-to-r from-[#9D6D51] via-[#D49F74] to-[#D49F74] opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
               />
               <span className="relative z-10">Instagram</span>
             </a>
@@ -575,15 +578,15 @@ export default function LandingPage() {
               href={whatsapp}
               target="_blank"
               rel="noreferrer"
-              className="group relative isolate overflow-hidden rounded-full px-3 py-2 text-white/85 transition-colors duration-300 hover:text-white hover:shadow-md focus-visible:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              className="group relative isolate overflow-hidden rounded-full px-3 py-2 text-[#D49F74] transition-colors duration-300 hover:text-[#270F01] hover:shadow-md focus-visible:text-[#270F01] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D49F74]"
             >
               <span
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 z-0 rounded-full bg-gradient-to-r from-[#075e54] via-[#128c7e] to-[#25d366] opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
+                className="pointer-events-none absolute inset-0 z-0 rounded-full bg-gradient-to-r from-[#9D6D51] via-[#D49F74] to-[#D49F74] opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
               />
               <span className="relative z-10">WhatsApp</span>
             </a>
-            <Link to="/login" className="hover:text-white">
+            <Link to="/login" className="hover:text-[#F8E8DA]">
               Acessar o sistema
             </Link>
             <button
@@ -592,15 +595,15 @@ export default function LandingPage() {
               aria-checked={modoEscuro}
               aria-label="Modo escuro"
               onClick={alternarTema}
-              className="inline-flex items-center gap-2 rounded-full px-1 py-1 text-white transition hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              className="inline-flex items-center gap-2 rounded-full px-1 py-1 text-[#F8E8DA] transition hover:text-[#D49F74] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D49F74]"
             >
               <span>Modo escuro</span>
               <span
                 aria-hidden="true"
-                className={`relative h-6 w-11 rounded-full border border-white/50 transition-colors duration-250 ease-in-out ${modoEscuro ? 'bg-white/30' : 'bg-white/10'}`}
+                className={`relative h-6 w-11 rounded-full border border-[#D49F74]/60 transition-colors duration-250 ease-in-out ${modoEscuro ? 'bg-[#D49F74]/30' : 'bg-[#D49F74]/10'}`}
               >
                 <span
-                  className={`interruptor-tema-thumb absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow ${modoEscuro ? 'translate-x-5' : ''}`}
+                  className={`interruptor-tema-thumb absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-[#D49F74] shadow ${modoEscuro ? 'translate-x-5' : ''}`}
                 />
               </span>
             </button>

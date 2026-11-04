@@ -96,7 +96,7 @@ Os valores apresentados seguem o regime de caixa definido para os registros disp
 ## Funcionários — cadastro, perfil e edição
 
 
-Como Administrador, abra **Funcionários → Novo funcionário**. Informe nome, CPF válido, telefone de 11 dígitos, e-mail, usuário, perfil, senha de 15–128 caracteres e confirmação. CPF/telefone usam máscaras e são enviados sem pontuação. A conta começa ativa; somente o hash da senha é gravado.
+Como Administrador, abra **Funcionários → Novo funcionário**. Informe nome, CPF válido, telefone de 11 dígitos, e-mail, usuário, perfil, senha com pelo menos 8 caracteres (uma maiúscula, uma minúscula e um caractere especial) e confirmação. CPF/telefone usam máscaras e são enviados sem pontuação. A conta começa ativa; somente o hash da senha é gravado.
 
 A lupa na lista abre `/funcionarios/:id`, com identificação, dados pessoais, informações de acesso e OS por responsável. **Meu perfil**, na sidebar, abre `/meu-perfil` para qualquer conta: Funcionário comum só consulta a si mesmo; Administrador consulta os demais e pode editar.
 
@@ -158,7 +158,7 @@ Dentro de `backend/`, execute:
 npm run criar:admin
 ```
 
-Informe seu nome, usuário, e-mail, CPF, telefone e senha. A senha não aparece no terminal; precisa ter entre 15 e 128 caracteres. O comando só permite o cadastro inicial enquanto não houver funcionários; os próximos são cadastrados pelo administrador autenticado. Nenhuma conta padrão ou fictícia foi criada.
+Informe seu nome, usuário, e-mail, CPF, telefone e senha. A senha não aparece no terminal; precisa ter pelo menos 8 caracteres, uma letra maiúscula, uma minúscula e um caractere especial, sem limite máximo. O comando só permite o cadastro inicial enquanto não houver funcionários; os próximos são cadastrados pelo administrador autenticado. Nenhuma conta padrão ou fictícia foi criada.
 
 ### Testar no Insomnia
 
@@ -197,7 +197,7 @@ Exemplo fictício de cadastro (substitua a senha; não há conta criada com esse
 
 Todos esses campos são obrigatórios; `ativo` pode ser omitido e começa como `true`. O usuário é único, mesmo com diferenças de maiúsculas/minúsculas; e-mail não é identificador de login nem tem unicidade exigida. Para desativar pela alteração de acesso, envie `{"perfil":"funcionario","ativo":false,"senha_admin":"sua senha"}`. A própria desativação é proibida. A mudança invalida as sessões anteriores; reativar exige novo login. Alterar o próprio perfil também invalida a própria sessão.
 
-Senhas recebem hash scrypt com salt individual e nunca são devolvidas. A sessão tem limite absoluto de 8 horas. Há limite de 10 tentativas por usuário e 50 por IP a cada janela de 15 minutos; um login correto limpa o contador do usuário, mas não o do IP. A mensagem de credenciais inválidas é igual para usuário inexistente, senha incorreta e conta inativa. Recuperação/troca de senha, exclusão e a tela de login ficam para etapas posteriores.
+Senhas recebem hash scrypt com salt individual e nunca são devolvidas. Cadastro e troca de senha exigem pelo menos 8 caracteres, uma maiúscula, uma minúscula e um caractere especial, sem limite máximo. A sessão tem limite absoluto de 8 horas. Há limite de 10 tentativas por usuário e 50 por IP a cada janela de 15 minutos; um login correto limpa o contador do usuário, mas não o do IP. A mensagem de credenciais inválidas é igual para usuário inexistente, senha incorreta e conta inativa. Recuperação de senha permanece pendente.
 
 ### Estrutura e verificação
 

@@ -344,11 +344,11 @@ export default function Configuracoes() {
                       },
                       {
                         texto: 'Pelo menos uma letra maiúscula',
-                        ok: /[A-Z]/.test(senhaNova),
+                        ok: /\p{Lu}/u.test(senhaNova),
                       },
                       {
                         texto: 'Pelo menos uma letra minúscula',
-                        ok: /[a-z]/.test(senhaNova),
+                        ok: /\p{Ll}/u.test(senhaNova),
                       },
                       {
                         texto: 'Pelo menos um caractere especial',

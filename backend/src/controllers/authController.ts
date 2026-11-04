@@ -23,13 +23,12 @@ export async function login(
   const usuario = texto(dados.usuario, 'usuario').toLowerCase();
   if (
     typeof dados.senha !== 'string' ||
-    !dados.senha ||
-    [...dados.senha].length > 128
+    !dados.senha
   ) {
     throw new ErroHttp(
       400,
       'DADOS_INVALIDOS',
-      'Informe a senha com até 128 caracteres.',
+      'Informe sua senha.',
     );
   }
   await limitarTentativas(usuario, request.ip ?? 'desconhecido');
@@ -90,8 +89,7 @@ export async function alterarSenha(
     throw new ErroHttp(401, 'NAO_AUTENTICADO', 'Faça login para continuar.');
   if (
     typeof dados.senha_atual !== 'string' ||
-    !dados.senha_atual ||
-    [...dados.senha_atual].length > 128
+    !dados.senha_atual
   ) {
     throw new ErroHttp(400, 'DADOS_INVALIDOS', 'Informe sua senha atual.');
   }

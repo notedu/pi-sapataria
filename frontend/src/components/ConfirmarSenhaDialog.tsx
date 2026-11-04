@@ -37,8 +37,8 @@ export default function ConfirmarSenhaDialog({
     if (emCurso.current || incerto) return
     const form = event.currentTarget
     const senha = String(new FormData(form).get('senha_admin') ?? '')
-    if (!senha || [...senha].length > 128) {
-      setErro('Informe sua senha, com até 128 caracteres.')
+    if (!senha) {
+      setErro('Informe sua senha.')
       return
     }
     emCurso.current = true
