@@ -109,7 +109,7 @@ export default function Login() {
   }
 
   return (
-    <main className="flex min-h-dvh bg-surface text-on-surface">
+    <main className="login-root flex min-h-dvh bg-surface text-on-surface">
       <div className="relative hidden w-1/2 items-center justify-center overflow-hidden bg-secondary-container md:flex">
         <svg
           aria-hidden="true"
