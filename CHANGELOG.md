@@ -8,6 +8,7 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Corrigido
 
+- Identidade visual: sistema interno mantém o tema azul anterior; login e Landing Page continuam com a paleta marrom/caramelo.
 - Estoque: corrigida a validação HTML de quantidade em compras, removida a opção de importação CSV da tela, centralizadas as colunas e destacado em negrito o alerta de mínimo.
 - Endereços: ao informar um CEP válido, os campos do endereço são abertos e preenchidos automaticamente. Na busca por rua, uma sugestão aparece no formulário; várias sugestões ficam em uma caixa rolável com busca por rua, bairro ou CEP.
 - Senhas de contas novas: cadastro de Funcionários e criação do primeiro Administrador agora usam a mesma política da troca de senha, com mínimo de 8 caracteres e exigência de maiúscula, minúscula e caractere especial.
