@@ -1,6 +1,6 @@
 // VITE_* é público: este endereço nunca deve conter segredos.
 const apiUrl = (
-  import.meta.env.VITE_API_URL || 'http://localhost:3333/api/v1'
+  import.meta.env.VITE_API_URL || 'http://localhost:3030/api/v1'
 ).replace(/\/$/, '')
 
 export class ErroApi extends Error {

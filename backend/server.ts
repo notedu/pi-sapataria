@@ -245,7 +245,7 @@ const tratarErro: ErrorRequestHandler = (error, _request, response, _next) => {
 };
 app.use(tratarErro);
 
-// Importar app permite verificar as rotas sem iniciar outro servidor na porta 3333.
+// Importar app permite verificar as rotas sem iniciar outro servidor na porta 3030.
 if (require.main === module) {
   const host = process.env.HOST ?? '127.0.0.1';
   const server = app.listen(port, host, (error?: Error) => {

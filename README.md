@@ -42,7 +42,7 @@ npm run dev
 
 Abra `/login` no endereço exibido no terminal, normalmente `http://localhost:5173/login`. A tela utiliza o tema de `frontend/src/index.css` e o logo local. Para encerrar o servidor, pressione `Ctrl+C`.
 
-Para autenticar, execute também o back-end e use uma conta de teste autorizada já cadastrada. O front-end usa `http://localhost:3333/api/v1` por padrão. Para outro endereço, copie `frontend/.env.example` para `frontend/.env`, ajuste `VITE_API_URL` e reinicie o Vite. Essa variável é pública e não deve conter segredos. O `APP_ORIGIN` do back-end deve corresponder à origem exata do front-end; utilize o mesmo hostname nos dois serviços (por exemplo, `localhost`).
+Para autenticar, execute também o back-end e use uma conta de teste autorizada já cadastrada. O front-end usa `http://localhost:3030/api/v1` por padrão. Para outro endereço, copie `frontend/.env.example` para `frontend/.env`, ajuste `VITE_API_URL` e reinicie o Vite. Essa variável é pública e não deve conter segredos. O `APP_ORIGIN` do back-end deve corresponder à origem exata do front-end; utilize o mesmo hostname nos dois serviços (por exemplo, `localhost`).
 
 O login obtém CSRF e envia usuário/senha com cookie de sessão. Exibe erros na tela e bloqueia novos envios durante a requisição. Após sucesso confirmado pela API, limpa o formulário e abre `/dashboard`. Recuperação de senha continua pendente. Componentes `Button` e `InputField` centralizam os controles; `src/services/auth.ts` concentra a autenticação e reutiliza `src/services/api.ts` para requisições com cookie e CSRF. A fonte Hanken Grotesk é carregada pelo Google Fonts, com alternativa `sans-serif`.
 
@@ -120,10 +120,10 @@ npm run dev
 
 `npm run dev` reinicia o servidor quando o código muda. `npm start` inicia sem observar alterações. Ambos executam TypeScript com `tsx`, sem gerar uma pasta `dist`.
 
-O servidor lê `PORT` do `.env`; quando ausente, usa `3030`. O `.env.example` atual define `3333`. Com esse valor, consulte no navegador ou Insomnia:
+O servidor lê `PORT` do `.env`; quando ausente, usa `3030`. O `.env.example` também define `3030`. Consulte no navegador ou Insomnia:
 
 ```http
-GET http://localhost:3333/api/v1/health
+GET http://localhost:3030/api/v1/health
 ```
 
 Resposta HTTP `200`:
@@ -142,7 +142,7 @@ Essa rota verifica somente a resposta do servidor; não conecta ao banco nem exi
 
 A autenticação é da aplicação Express, com PostgreSQL. Não usa Supabase Auth. Cada pessoa tem sua conta; o e-mail é contato, e o login usa `usuario` (sem diferenciar maiúsculas/minúsculas) e `senha`.
 
-O `.env` deve conter `DATABASE_URL`, `DATABASE_CA_CERT`, `SESSION_SECRET`, `PORT`, `HOST` e `APP_ORIGIN`, conforme `.env.example`. A chave `SESSION_SECRET` já foi gerada no ambiente local; ao configurar outro ambiente, gere uma chave aleatória própria (32 bytes ou mais):
+O `.env` deve conter `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME`, `DATABASE_SSL`, `SESSION_SECRET`, `PORT`, `HOST` e `APP_ORIGIN`, conforme `.env.example`. `DATABASE_CA_CERT` é opcional e permite informar a CA em PEM, com quebras de linha representadas por `\n`. Em produção no RDS, habilite `DATABASE_SSL=true`; a conexão valida o certificado do servidor. A chave `SESSION_SECRET` deve ser aleatória (32 bytes ou mais):
 
 ```bash
 node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
@@ -164,7 +164,7 @@ Informe seu nome, usuário, e-mail, CPF, telefone e senha. A senha não aparece 
 
 Use sempre o mesmo host (`localhost`, por exemplo) e mantenha os cookies habilitados. Com o servidor iniciado por `npm run dev`:
 
-1. Faça `GET http://localhost:3333/api/v1/auth/csrf`. Copie `csrfToken` da resposta. O Insomnia guarda o cookie automaticamente.
+1. Faça `GET http://localhost:3030/api/v1/auth/csrf`. Copie `csrfToken` da resposta. O Insomnia guarda o cookie automaticamente.
 2. Faça `POST /api/v1/auth/login`, com `Content-Type: application/json` e `X-CSRF-Token: <token copiado>`. Envie `{"usuario":"seu.usuario","senha":"sua senha cadastrada"}`.
 3. O login devolve os dados públicos da pessoa e um **novo** `csrfToken`. Use esse novo token nas próximas requisições POST/PUT/DELETE; o cookie também é renovado.
 4. Consulte `GET /api/v1/auth/me`, `GET /api/v1/clientes` ou, sendo administrador, `GET /api/v1/funcionarios`.
@@ -206,13 +206,13 @@ Senhas recebem hash scrypt com salt individual e nunca são devolvidas. Cadastro
 - `src/routes/authRoutes.ts` e `funcionarioRoutes.ts`: endereços da API.
 - `src/middlewares/`: verificação de login, perfil e token CSRF.
 - `src/config/sessao.ts`: cookie e sessões persistidas; `src/utils/senha.ts`: hash de senha.
-- `src/database/schema.sql`: esquema completo ordenado para instalação em banco novo. As tabelas de Funcionários e de sessão foram aplicadas ao Supabase em etapas anteriores; não execute o arquivo completo nesse banco.
+- `src/database/schema.sql`: esquema completo ordenado para instalação em banco PostgreSQL novo. Histórico do ambiente anterior: tabelas de Funcionários e de sessão foram aplicadas ao Supabase; não execute o arquivo completo em um banco já atualizado.
 
 `npm run typecheck` verifica os tipos usando `backend/tsconfig.json`, que também orienta o editor e inclui as declarações de sessão. A opção `noEmit` impede a geração de JavaScript ou da pasta `dist`. Foram executadas verificações HTTP com o PostgreSQL real, em uma transação desfeita ao final: cadastro, usuário duplicado, senha, login/logout, expiração, CSRF, permissões, inativação/reativação e limites de tentativas. Registros existentes de Clientes foram preservados; nenhum funcionário de teste permaneceu.
 
-### Migração futura para AWS
+### Configuração de produção na AWS/RDS
 
-O código de login e as tabelas acompanham a aplicação. Em produção, configure `NODE_ENV=production`, `APP_ORIGIN` com a origem HTTPS exata do front-end e os dados TLS do novo PostgreSQL. O cookie passa a exigir HTTPS. Ajuste `HOST` conforme a implantação. Se houver proxy/load balancer, configure `TRUST_PROXY` somente com seus endereços ou redes confiáveis; isso determina a identificação de HTTPS e do IP do cliente. Com SameSite=Lax, mantenha front-end e API no mesmo site (por exemplo, subdomínios do mesmo domínio ou proxy para `/api`). Não foi feito deploy nem teste na AWS.
+O código de login e as tabelas acompanham a aplicação. No ambiente da AWS, configure as variáveis `DATABASE_*` para o endpoint, porta, usuário, senha e nome do banco RDS; use `DATABASE_SSL=true` e, se necessário, informe a CA do RDS em `DATABASE_CA_CERT`. Configure `NODE_ENV=production` e `APP_ORIGIN` com a origem HTTPS exata do front-end. O cookie passa a exigir HTTPS. Ajuste `HOST` conforme a implantação. Se houver proxy/load balancer, configure `TRUST_PROXY` somente com seus endereços ou redes confiáveis; isso determina a identificação de HTTPS e do IP do cliente. Com SameSite=Lax, mantenha front-end e API no mesmo site (por exemplo, subdomínios do mesmo domínio ou proxy para `/api`). A implantação e a conexão com RDS ainda não foram realizadas.
 
 ## Clientes — interface
 
@@ -228,7 +228,7 @@ Verificado: lint/build/typecheck, 29 verificações HTTP com PostgreSQL local de
 
 ## Clientes — desenvolvimento local
 
-Por padrão, o servidor escuta somente nesta máquina (`127.0.0.1`). Clientes exige login e permite os perfis administrador e funcionario. Nas operações POST/PUT, envie também o cabeçalho `X-CSRF-Token` recebido após o login. No Insomnia, use `http://localhost:3333/api/v1/clientes` (ou a porta definida no `.env`).
+Por padrão, o servidor escuta somente nesta máquina (`127.0.0.1`). Clientes exige login e permite os perfis administrador e funcionario. Nas operações POST/PUT, envie também o cabeçalho `X-CSRF-Token` recebido após o login. No Insomnia, use `http://localhost:3030/api/v1/clientes` (ou a porta definida no `.env`).
 
 | Método e caminho | Finalidade |
 |---|---|
@@ -252,19 +252,15 @@ Exemplo fictício para POST/PUT, com `Content-Type: application/json`:
 
 `email` e `observacoes` são opcionais. No PUT, envie novamente todos os campos obrigatórios; opcionais ausentes ficam nulos. Respostas de sucesso usam `{"dados": ...}`.
 
-`clienteRoutes.ts` define os caminhos; `clienteController.ts` valida entradas e responde; `clienteModel.ts` executa SQL parametrizado; `config/db.ts` compartilha a conexão PostgreSQL usando `DATABASE_URL` e validação TLS.
+`clienteRoutes.ts` define os caminhos; `clienteController.ts` valida entradas e responde; `clienteModel.ts` executa SQL parametrizado; `config/db.ts` compartilha a conexão PostgreSQL configurada com host, porta, usuário, senha e banco. TLS é controlado por `DATABASE_SSL`; `DATABASE_CA_CERT` pode fornecer uma CA específica quando necessário.
 
-**Conexão configurada:** `DATABASE_CA_CERT` contém o certificado oficial em formato PEM no `.env`, com quebras de linha representadas por `\n`. `db.ts` lê esse conteúdo e mantém `rejectUnauthorized: true`; não há pasta `certs`. Preencha essa variável ao copiar `.env.example`. Não acrescente `sslmode`, `sslrootcert`, `sslcert` ou `sslkey` à URL, pois o driver substituiria as opções SSL.
-
-O certificado foi obtido do [endereço usado pelo painel oficial](https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt), identificado na [configuração pública do Supabase](https://github.com/supabase/supabase/blob/master/apps/studio/hooks/custom-content/custom-content.json).
-
-**Verificado:** conexão Node–pooler com TLS 1.3 e certificado validado. O SQL de Clientes foi aplicado e as colunas foram conferidas. Cadastro, listagem, consulta e edição foram verificados por HTTP com o Supabase em uma transação revertida ao final. Nenhum registro fictício permaneceu. IDs consumidos na verificação não são recuperados pelo rollback; lacunas são normais.
+**Histórico de verificação no ambiente anterior:** conexão Node–pooler com TLS 1.3 e certificado validado; cadastro, listagem, consulta e edição foram verificados por HTTP com o Supabase em uma transação revertida ao final. Nenhum registro fictício permaneceu. Isso não valida a nova configuração PostgreSQL/RDS.
 
 ## Consultas de Materiais, Produtos, OS, Vendas e Movimentações
 
-As sete tabelas restantes foram aplicadas no Supabase em etapa anterior; sua definição atual está em `backend/src/database/schema.sql`. Clientes, Funcionários e dados existentes foram preservados. Novos Models executam as consultas; Controllers validam o ID e respondem; Routes definem os endereços. Nenhuma dependência foi acrescentada nesta etapa.
+Histórico do ambiente anterior: as sete tabelas restantes foram aplicadas no Supabase em etapa anterior. A definição atual, sem dependências dos papéis de autenticação do Supabase, está em `backend/src/database/schema.sql` para instalação em um banco PostgreSQL novo. Novos Models executam as consultas; Controllers validam o ID e respondem; Routes definem os endereços. Nenhuma dependência foi acrescentada nesta etapa.
 
-No Insomnia, faça login conforme explicado acima e mantenha o cookie. Todos os endereços abaixo são **GET** e começam com `http://localhost:3333/api/v1`:
+No Insomnia, faça login conforme explicado acima e mantenha o cookie. Todos os endereços abaixo são **GET** e começam com `http://localhost:3030/api/v1`:
 
 | Recurso | Listar | Consultar um registro |
 |---|---|---|
@@ -284,7 +280,7 @@ As listagens não têm filtros/paginação nesta etapa. Retornam `{"dados": [...
 
 O saldo inicia em zero e muda somente por operações de estoque. Vendas e consumo usam transações: qualquer falta de saldo desfaz a operação inteira. Datas são automáticas. Preço da venda vem do produto e fica no histórico; total é calculado no back-end. Valor da OS continua manual.
 
-As restrições e vínculos de operações já foram aplicados e conferidos no Supabase; a definição atual está em `backend/src/database/schema.sql`. O arquivo completo destina-se a um banco novo e não deve ser executado em banco já atualizado.
+Histórico do ambiente anterior: as restrições e vínculos de operações foram aplicados e conferidos no Supabase. A definição atual está em `backend/src/database/schema.sql`; o arquivo completo destina-se a um banco PostgreSQL novo e não deve ser executado em banco já atualizado.
 
 Verificação desta entrega: `npm run typecheck` e 190 verificações HTTP/PostgreSQL, incluindo concorrência real, CSRF, precisão decimal, rollback e histórico, em schema temporário removido ao final. Os registros existentes foram preservados. Não foi criada pasta de testes nem arquivos compilados.
 

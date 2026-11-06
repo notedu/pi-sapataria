@@ -12,7 +12,7 @@
 
 A base Express usa `server.ts`, `src/routes`, `src/controllers`, `src/models` e `src/config`. `src/middlewares` verifica sessão, perfil e CSRF; `src/utils` reúne validação e hash de senha. O histórico de planejamento abaixo não representa a ausência desses módulos já implementados.
 
-A autenticação é da aplicação Node.js: scrypt para senhas, express-session para cookie e connect-pg-simple para sessões no mesmo PostgreSQL. `SESSION_SECRET` assina cookies; `DATABASE_URL`/`DATABASE_CA_CERT` configuram o banco. O Supabase hospeda o PostgreSQL temporariamente, sem uso de Supabase Auth; as tabelas e a lógica de login podem acompanhar a aplicação para AWS. Não houve implantação na AWS.
+A autenticação é da aplicação Node.js: scrypt para senhas, express-session para cookie e connect-pg-simple para sessões no mesmo PostgreSQL. `SESSION_SECRET` assina cookies; `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USER`, `DATABASE_PASSWORD` e `DATABASE_NAME` configuram o banco. `DATABASE_SSL` habilita TLS com validação do certificado; `DATABASE_CA_CERT` permite informar uma CA específica. A configuração aceita PostgreSQL gerenciado, incluindo Amazon RDS. A implantação na AWS ainda não foi realizada.
 
 A sessão guarda somente identidade, versão de acesso, expiração e token CSRF. A API consulta perfil/ativo atuais e exige novo login quando a versão muda. Clientes exige sessão; a gestão de Funcionários exige Administrador, e a consulta individual também permite o próprio Funcionário. Bootstrap do primeiro administrador é local e transacional, pelo comando `npm run criar:admin`. A futura interface usa cookies com `credentials: include` e `X-CSRF-Token` em alterações.
 
