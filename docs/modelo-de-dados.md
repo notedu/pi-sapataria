@@ -239,6 +239,8 @@ O Guia §5.10 sugere cadastros auxiliares, mas ainda não resolve seu formato. A
 
 Login, Perfil e Dashboard não são novas entidades só por serem telas. A integração financeira implementada em 20/10/2026 usa `lancamentos_financeiros` (origem, categoria, tipo, valor e estorno), `parcelas_financeiras` (vencimento e divisão do lançamento) e `pagamentos_financeiros` (valor, forma e data efetiva). `movimentacoes_estoque` mantém `custo_unitario` e `custo_total` para apuração pelo custo médio ponderado. A estrutura e a conversão idempotente de registros operacionais legados estão em `backend/src/database/schema.sql` para uma instalação nova. O script incremental financeiro foi removido na consolidação; não execute o esquema completo em um banco existente. Impostos, notas fiscais e lucro líquido continuam fora do modelo até decisão da equipe.
 
+**Fechamento diário (RF-028, decisões de 05 e 06/11/2026):** `fechamentos_caixa` usa `data` como chave primária para permitir um fechamento por dia. Guarda modo, recebimentos brutos, saídas, total líquido, mapas JSONB por forma/origem/categoria, pagamentos selecionados e itens manuais, instante e funcionário responsável. Os itens manuais pertencem somente à fotografia; não criam lançamentos. Pagamentos lançados depois não alteram o histórico. A estrutura está em `schema.sql`; as migrações incrementais `20261105_fechamento_caixa.sql` e `20261106_fechamento_caixa_manual.sql` estão preparadas e não foram aplicadas ao banco existente.
+
 ## Sequência sugerida de implementação
 
 A estrutura, consultas e operações aprovadas foram implementadas. A sequência histórica abaixo foi atendida nos pontos descritos nesta atualização; ampliações continuam sujeitas às decisões da equipe:

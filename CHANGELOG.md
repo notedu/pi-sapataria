@@ -29,6 +29,8 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 - Financeiro: demonstração com dados locais substituída por consulta à API, com períodos, filtros, resumos, movimentações e contas/parcelas. Operações financeiras seguem protegidas por perfil e CSRF; impostos, lucro líquido e emissão fiscal permanecem indisponíveis até definição das regras.
 
+- Financeiro: fechamento automático ou manual, com seleção de pagamentos, lançamento de valores avulsos, detalhamento e histórico. Migrações `20261105_fechamento_caixa.sql` e `20261106_fechamento_caixa_manual.sql` preparadas; ainda não aplicadas ao banco existente.
+
 - Estoque: cadastro opcional de saldo inicial com entrada histórica transacionada, histórico geral colorido para cadastros/entradas/saídas e cadastro de categorias por tipo. A estrutura foi aplicada ao banco configurado e está consolidada no `schema.sql` para novas instalações.
 
 - Nome do cliente nas ordens de serviço exibidas no perfil do funcionário, incluído pela consulta da API sem alteração no banco.

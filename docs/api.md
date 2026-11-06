@@ -71,6 +71,9 @@ O contrato combina como front-end e back-end trocam pedidos e respostas. **Clien
 | A26 | Dashboard | `GET /dashboard` | Consultar resumo operacional | Pendente; acesso amplo é sugestão | Proposto |
 | A30 | Financeiro | `GET /financeiro` | Consultar painel financeiro | Administrador — RN-003 | Implementado |
 | A31 | Financeiro | `GET /financeiro/{indicador}` | Consultar indicador detalhado | Administrador — RN-003 | Implementado |
+| — | Financeiro | `GET /financeiro/fechamentos` | Consultar histórico dos últimos 90 fechamentos | Administrador — RN-003 | Implementado |
+| — | Financeiro | `GET /financeiro/fechamentos/{data}` | Consultar fechamento salvo ou prévia diária | Administrador — RN-003 | Implementado |
+| — | Financeiro | `POST /financeiro/fechamentos` | Salvar fechamento diário único | Administrador, com CSRF — RN-003 | Implementado |
 
 ## Consultas adicionais implementadas
 
@@ -397,6 +400,14 @@ Exemplo de sequência no Insomnia: login → cadastrar produto → registrar ent
 - **Sucesso:** `200`, com o valor do resumo correspondente e as movimentações do período. Impostos retornam `null` enquanto a regra não for definida.
 - **Erros, efeitos e origem:** `400` para período inválido, `401` sem sessão, `403` para Funcionário e `404` para indicador desconhecido.
 
+### Fechamento diário de caixa — RF-028
+
+- `GET /financeiro/fechamentos`: retorna até 90 registros em ordem decrescente de data.
+- `GET /financeiro/fechamentos/{data}`: recebe data `YYYY-MM-DD`; retorna a prévia automática ou a fotografia salva, junto aos pagamentos selecionáveis daquele dia. A apuração usa o calendário de São Paulo.
+- `POST /financeiro/fechamentos`: recebe `data`, `modo` (`automatico` ou `manual`), `pagamentos_ids` e `itens_manuais`. O modo automático soma todos os pagamentos do dia. No modo manual, somente os pagamentos selecionados são somados, junto aos itens avulsos no formato `{ "descricao", "tipo", "valor", "forma_pagamento", "origem" }`; entradas exigem forma válida, e saídas não. Salva os totais, agrupamentos, itens escolhidos e digitados, instante e Administrador responsável. Uma data só pode ser gravada uma vez; repetição retorna `409 CAIXA_JA_FECHADO`.
+- As formas e origens refletem pagamentos registrados (`pix`, `credito`, `debito`, `dinheiro`; `ordem_servico` e `venda`). Saídas registradas agregam pagamentos de lançamentos marcados como `saida`. O total líquido é recebimentos menos saídas. Itens avulsos pertencem somente ao fechamento e não criam lançamentos financeiros. O fechamento não bloqueia novas operações; elas não atualizam a fotografia já salva.
+- Todas as rotas exigem sessão de Administrador; gravação também exige CSRF. Datas inválidas retornam `400`; sessão ausente `401`; Funcionário `403`.
+
 ### Operações financeiras administrativas
 
 Implementadas sob `/api/v1/financeiro`, sempre com sessão de Administrador e CSRF nas gravações:
@@ -405,7 +416,7 @@ Implementadas sob `/api/v1/financeiro`, sempre com sessão de Administrador e CS
 - `POST /pagamentos`: registra pagamento parcial ou total de uma parcela, com forma `pix`, `credito`, `debito` ou `dinheiro` e data efetiva opcional.
 - `POST /lancamentos/{id}/estorno`: cria lançamento inverso uma única vez, exige motivo e mantém a origem.
 
-Vendas, ordens de serviço, compras de estoque e custos de movimentação são registrados automaticamente nas transações dos respectivos módulos. A estrutura financeira e a conversão de registros anteriores estão no `backend/src/database/schema.sql`, destinado a instalações novas. O script incremental que atualizava bancos existentes foi removido na consolidação; uma atualização futura desses bancos exigirá recriar um script incremental próprio.
+Vendas, ordens de serviço, compras de estoque e custos de movimentação são registrados automaticamente nas transações dos respectivos módulos. A estrutura financeira está no `backend/src/database/schema.sql`, destinado a instalações novas. As migrações `20261105_fechamento_caixa.sql` e `20261106_fechamento_caixa_manual.sql` preparam criação e ampliação da tabela em bancos existentes; não foram aplicadas.
 
 ## Atividades e notificações implementadas em 15/10/2026
 

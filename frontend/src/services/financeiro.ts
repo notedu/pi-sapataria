@@ -50,6 +50,47 @@ export type DadosFinanceiros = {
   contas: ContaFinanceira[]
 }
 
+export type FechamentoCaixa = {
+  data: string
+  recebimentos_brutos: string
+  saidas: string
+  total_liquido: string
+  por_forma_pagamento: Record<string, string>
+  por_origem: Record<string, string>
+  saidas_por_categoria: Record<string, string>
+  modo: 'automatico' | 'manual'
+  pagamentos_selecionados: PagamentoFechamento[]
+  itens_manuais: ItemManualFechamento[]
+  fechado: boolean
+  fechado_em: string | null
+  fechado_por: number | null
+}
+
+export type PagamentoFechamento = {
+  id: number
+  valor: string
+  forma_pagamento: 'pix' | 'credito' | 'debito' | 'dinheiro'
+  tipo: 'entrada' | 'saida'
+  categoria: string
+  descricao: string
+  origem_tipo: string | null
+  origem_id: number | null
+  pago_em: string
+}
+
+export type ItemManualFechamento = {
+  descricao: string
+  tipo: 'entrada' | 'saida'
+  valor: string
+  forma_pagamento: 'pix' | 'credito' | 'debito' | 'dinheiro' | null
+  origem: 'ordem_servico' | 'venda' | 'outro'
+}
+
+export type DadosFechamentoDia = {
+  fechamento: FechamentoCaixa
+  pagamentos_disponiveis: PagamentoFechamento[]
+}
+
 function decimal(valor: unknown) {
   return typeof valor === 'string' && /^-?\d+(\.\d+)?$/.test(valor)
 }
@@ -111,4 +152,98 @@ export async function consultarFinanceiro(
   )
     throw new Error('Não foi possível interpretar os dados financeiros.')
   return resposta.dados as DadosFinanceiros
+}
+
+function fechamento(valor: unknown): valor is FechamentoCaixa {
+  const mapaDecimal = (item: unknown) =>
+    objeto(item) && Object.values(item).every(decimal)
+  return (
+    objeto(valor) &&
+    typeof valor.data === 'string' &&
+    decimal(valor.recebimentos_brutos) &&
+    decimal(valor.saidas) &&
+    decimal(valor.total_liquido) &&
+    mapaDecimal(valor.por_forma_pagamento) &&
+    mapaDecimal(valor.por_origem) &&
+    mapaDecimal(valor.saidas_por_categoria) &&
+    (valor.modo === 'automatico' || valor.modo === 'manual') &&
+    Array.isArray(valor.pagamentos_selecionados) &&
+    valor.pagamentos_selecionados.every(pagamentoFechamento) &&
+    Array.isArray(valor.itens_manuais) &&
+    valor.itens_manuais.every(itemManualFechamento) &&
+    typeof valor.fechado === 'boolean' &&
+    (valor.fechado_em === null || typeof valor.fechado_em === 'string') &&
+    (valor.fechado_por === null || Number.isInteger(valor.fechado_por))
+  )
+}
+
+function pagamentoFechamento(valor: unknown): valor is PagamentoFechamento {
+  return (
+    objeto(valor) &&
+    Number.isInteger(valor.id) &&
+    decimal(valor.valor) &&
+    ['pix', 'credito', 'debito', 'dinheiro'].includes(String(valor.forma_pagamento)) &&
+    (valor.tipo === 'entrada' || valor.tipo === 'saida') &&
+    typeof valor.categoria === 'string' &&
+    typeof valor.descricao === 'string' &&
+    (valor.origem_tipo === null || typeof valor.origem_tipo === 'string') &&
+    (valor.origem_id === null || Number.isInteger(valor.origem_id)) &&
+    typeof valor.pago_em === 'string'
+  )
+}
+
+function itemManualFechamento(valor: unknown): valor is ItemManualFechamento {
+  return (
+    objeto(valor) &&
+    typeof valor.descricao === 'string' &&
+    (valor.tipo === 'entrada' || valor.tipo === 'saida') &&
+    decimal(valor.valor) &&
+    (valor.forma_pagamento === null ||
+      ['pix', 'credito', 'debito', 'dinheiro'].includes(String(valor.forma_pagamento))) &&
+    ['ordem_servico', 'venda', 'outro'].includes(String(valor.origem))
+  )
+}
+
+export async function consultarFechamento(data: string): Promise<DadosFechamentoDia> {
+  const resposta = await requisitar(`/financeiro/fechamentos/${data}`)
+  if (
+    !objeto(resposta) ||
+    !objeto(resposta.dados) ||
+    !fechamento(resposta.dados.fechamento) ||
+    !Array.isArray(resposta.dados.pagamentos_disponiveis) ||
+    !resposta.dados.pagamentos_disponiveis.every(pagamentoFechamento)
+  )
+    throw new Error('Não foi possível interpretar o fechamento de caixa.')
+  return resposta.dados as DadosFechamentoDia
+}
+
+export async function listarFechamentos() {
+  const resposta = await requisitar('/financeiro/fechamentos')
+  if (
+    !objeto(resposta) ||
+    !Array.isArray(resposta.dados) ||
+    !resposta.dados.every(fechamento)
+  )
+    throw new Error('Não foi possível interpretar o histórico do caixa.')
+  return resposta.dados as FechamentoCaixa[]
+}
+
+export async function fecharCaixa(
+  data: string,
+  modo: 'automatico' | 'manual',
+  pagamentosIds: number[] = [],
+  itensManuais: ItemManualFechamento[] = [],
+) {
+  const resposta = await requisitar('/financeiro/fechamentos', {
+    method: 'POST',
+    body: JSON.stringify({
+      data,
+      modo,
+      pagamentos_ids: pagamentosIds,
+      itens_manuais: itensManuais,
+    }),
+  })
+  if (!objeto(resposta) || !fechamento(resposta.dados))
+    throw new Error('Não foi possível interpretar o fechamento de caixa.')
+  return resposta.dados
 }

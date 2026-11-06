@@ -5,6 +5,42 @@ import { ErroHttp } from '../utils/validacao';
 export type TipoFinanceiro = 'entrada' | 'saida';
 export type FormaPagamento = 'pix' | 'credito' | 'debito' | 'dinheiro';
 
+export type FechamentoCaixa = {
+  data: string;
+  recebimentos_brutos: string;
+  saidas: string;
+  total_liquido: string;
+  por_forma_pagamento: Record<string, string>;
+  por_origem: Record<string, string>;
+  saidas_por_categoria: Record<string, string>;
+  modo: 'automatico' | 'manual';
+  pagamentos_selecionados: PagamentoFechamento[];
+  itens_manuais: ItemManualFechamento[];
+  fechado: boolean;
+  fechado_em: string | null;
+  fechado_por: number | null;
+};
+
+export type PagamentoFechamento = {
+  id: number;
+  valor: string;
+  forma_pagamento: FormaPagamento;
+  tipo: TipoFinanceiro;
+  categoria: string;
+  descricao: string;
+  origem_tipo: string | null;
+  origem_id: number | null;
+  pago_em: string;
+};
+
+export type ItemManualFechamento = {
+  descricao: string;
+  tipo: TipoFinanceiro;
+  valor: string;
+  forma_pagamento: FormaPagamento | null;
+  origem: 'ordem_servico' | 'venda' | 'outro';
+};
+
 type NovoLancamento = {
   tipo: TipoFinanceiro;
   categoria: string;
@@ -404,4 +440,142 @@ export async function contas(inicio: string, fim: string) {
             : 'pendente';
     return { ...item, status, parcelado: Number(item.total_parcelas) > 1 };
   });
+}
+
+async function pagamentosDoDia(data: string, ids?: number[]) {
+  const resultado = await pool.query<PagamentoFechamento>(
+    `SELECT p.id,p.valor::text,p.forma_pagamento,l.tipo,l.categoria,l.descricao,
+            l.origem_tipo,l.origem_id,p.pago_em
+       FROM sapataria.pagamentos_financeiros p
+       JOIN sapataria.parcelas_financeiras pa ON pa.id=p.parcela_id
+       JOIN sapataria.lancamentos_financeiros l ON l.id=pa.lancamento_id
+      WHERE (p.pago_em AT TIME ZONE 'America/Sao_Paulo')::date=$1::date
+        AND ($2::integer[] IS NULL OR p.id=ANY($2::integer[]))
+      ORDER BY p.pago_em,p.id`,
+    [data, ids ?? null],
+  );
+  return resultado.rows;
+}
+
+function somarPagamentos(
+  data: string,
+  pagamentos: PagamentoFechamento[],
+  itensManuais: ItemManualFechamento[] = [],
+  modo: 'automatico' | 'manual' = 'automatico',
+) {
+  const porForma: Record<string, number> = {};
+  const porOrigem: Record<string, number> = {
+    ordem_servico: 0,
+    venda: 0,
+    outro: 0,
+  };
+  const saidasPorCategoria: Record<string, number> = {};
+  let recebimentos = 0;
+  let saidas = 0;
+  for (const linha of pagamentos) {
+    const valor = Number(linha.valor);
+    if (linha.tipo === 'entrada') recebimentos += valor;
+    else saidas += valor;
+    if (linha.tipo === 'entrada')
+      porForma[linha.forma_pagamento] =
+        (porForma[linha.forma_pagamento] ?? 0) + valor;
+    if (linha.tipo === 'entrada') {
+      const origem =
+        linha.categoria === 'ordem_servico' || linha.categoria === 'venda'
+          ? linha.categoria
+          : 'outro';
+      porOrigem[origem] += valor;
+    } else {
+      saidasPorCategoria[linha.categoria] =
+        (saidasPorCategoria[linha.categoria] ?? 0) + valor;
+    }
+  }
+  for (const item of itensManuais) {
+    const valor = Number(item.valor);
+    if (item.tipo === 'entrada') {
+      recebimentos += valor;
+      if (item.forma_pagamento)
+        porForma[item.forma_pagamento] =
+          (porForma[item.forma_pagamento] ?? 0) + valor;
+      porOrigem[item.origem] += valor;
+    } else {
+      saidas += valor;
+      saidasPorCategoria.manual = (saidasPorCategoria.manual ?? 0) + valor;
+    }
+  }
+  const moeda = (valor: number) => valor.toFixed(2);
+  return {
+    data,
+    modo,
+    recebimentos_brutos: moeda(recebimentos),
+    saidas: moeda(saidas),
+    total_liquido: moeda(recebimentos - saidas),
+    por_forma_pagamento: Object.fromEntries(
+      Object.entries(porForma).map(([chave, valor]) => [chave, moeda(valor)]),
+    ),
+    por_origem: Object.fromEntries(
+      Object.entries(porOrigem).map(([chave, valor]) => [chave, moeda(valor)]),
+    ),
+    saidas_por_categoria: Object.fromEntries(
+      Object.entries(saidasPorCategoria).map(([chave, valor]) => [chave, moeda(valor)]),
+    ),
+    pagamentos_selecionados: pagamentos,
+    itens_manuais: itensManuais,
+  };
+}
+
+export async function consultarFechamento(data: string) {
+  const resultado = await pool.query<FechamentoCaixa>(
+    'SELECT data::text,recebimentos_brutos::text,saidas::text,total_liquido::text,por_forma_pagamento,por_origem,saidas_por_categoria,modo,pagamentos_selecionados,itens_manuais,true AS fechado,fechado_em,fechado_por FROM sapataria.fechamentos_caixa WHERE data=$1::date',
+    [data],
+  );
+  const pagamentos = await pagamentosDoDia(data);
+  return {
+    ...(resultado.rows[0] ?? {
+      ...somarPagamentos(data, pagamentos),
+      fechado: false,
+      fechado_em: null,
+      fechado_por: null,
+    }),
+    pagamentos_disponiveis: pagamentos,
+  };
+}
+
+export async function listarFechamentos() {
+  const resultado = await pool.query<FechamentoCaixa>(
+    'SELECT data::text,recebimentos_brutos::text,saidas::text,total_liquido::text,por_forma_pagamento,por_origem,saidas_por_categoria,modo,pagamentos_selecionados,itens_manuais,true AS fechado,fechado_em,fechado_por FROM sapataria.fechamentos_caixa ORDER BY data DESC LIMIT 90',
+  );
+  return resultado.rows;
+}
+
+export async function criarFechamento(
+  data: string,
+  funcionarioId: number,
+  modo: 'automatico' | 'manual',
+  idsPagamentos: number[] = [],
+  itensManuais: ItemManualFechamento[] = [],
+) {
+  const pagamentosDisponiveis = await pagamentosDoDia(data);
+  const pagamentos =
+    modo === 'automatico'
+      ? pagamentosDisponiveis
+      : await pagamentosDoDia(data, idsPagamentos);
+  if (modo === 'manual' && pagamentos.length !== new Set(idsPagamentos).size)
+    throw new ErroHttp(
+      400,
+      'PAGAMENTO_FORA_DO_DIA',
+      'Um ou mais pagamentos selecionados não pertencem à data do fechamento.',
+    );
+  const apurado = somarPagamentos(data, pagamentos, itensManuais, modo);
+  const resultado = await pool.query<FechamentoCaixa>(
+    `INSERT INTO sapataria.fechamentos_caixa
+       (data,recebimentos_brutos,saidas,total_liquido,por_forma_pagamento,por_origem,saidas_por_categoria,modo,pagamentos_selecionados,itens_manuais,fechado_por)
+     VALUES ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7::jsonb,$8,$9::jsonb,$10::jsonb,$11)
+     RETURNING data::text,recebimentos_brutos::text,saidas::text,total_liquido::text,por_forma_pagamento,por_origem,saidas_por_categoria,modo,pagamentos_selecionados,itens_manuais,true AS fechado,fechado_em,fechado_por`,
+    [data, apurado.recebimentos_brutos, apurado.saidas, apurado.total_liquido,
+      JSON.stringify(apurado.por_forma_pagamento), JSON.stringify(apurado.por_origem),
+      JSON.stringify(apurado.saidas_por_categoria), modo,
+      JSON.stringify(pagamentos), JSON.stringify(itensManuais), funcionarioId],
+  );
+  return resultado.rows[0]!;
 }
