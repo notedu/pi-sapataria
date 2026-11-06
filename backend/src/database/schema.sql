@@ -4,7 +4,7 @@
 -- alterações abaixo são incrementais e não foram convertidas em migrações repetíveis.
 
 -- Estrutura base de Clientes.
--- O schema separado preserva o padrão anterior e evita expor a tabela na API pública do Supabase.
+-- O schema separado organiza as tabelas da aplicação.
 BEGIN;
 
 CREATE SCHEMA IF NOT EXISTS sapataria;
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS sapataria.clientes (
   observacoes text
 );
 
-REVOKE ALL ON TABLE sapataria.clientes FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON TABLE sapataria.clientes FROM PUBLIC;
 
 COMMIT;
 
@@ -57,16 +57,6 @@ CREATE TABLE IF NOT EXISTS sapataria.tentativas_login (
 CREATE INDEX IF NOT EXISTS tentativas_login_expiracao ON sapataria.tentativas_login (expira_em);
 
 REVOKE ALL ON TABLE sapataria.funcionarios, sapataria.sessoes, sapataria.tentativas_login FROM PUBLIC;
--- Estes perfis só existem no Supabase; o SQL também funciona no PostgreSQL da AWS.
-DO $$
-DECLARE papel text;
-BEGIN
-  FOREACH papel IN ARRAY ARRAY['anon', 'authenticated'] LOOP
-    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = papel) THEN
-      EXECUTE format('REVOKE ALL ON TABLE sapataria.funcionarios, sapataria.sessoes, sapataria.tentativas_login FROM %I', papel);
-    END IF;
-  END LOOP;
-END $$;
 COMMIT;
 -- Evolução de Clientes: dados pessoais, CEP e data de cadastro.
 BEGIN;
@@ -222,16 +212,6 @@ REVOKE ALL ON TABLE sapataria.materiais, sapataria.produtos, sapataria.categoria
   sapataria.itens_ordem_servico, sapataria.materiais_planejados_os,
   sapataria.vendas, sapataria.itens_venda, sapataria.materiais_os, sapataria.movimentacoes_estoque FROM PUBLIC;
 
--- Mantém o acesso pela aplicação. Os papéis abaixo só existem no Supabase.
-DO $$
-DECLARE papel text;
-BEGIN
-  FOREACH papel IN ARRAY ARRAY['anon', 'authenticated'] LOOP
-    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = papel) THEN
-      EXECUTE format('REVOKE ALL ON TABLE sapataria.materiais, sapataria.produtos, sapataria.categorias_estoque, sapataria.ordens_servico, sapataria.itens_ordem_servico, sapataria.materiais_planejados_os, sapataria.vendas, sapataria.itens_venda, sapataria.materiais_os, sapataria.movimentacoes_estoque FROM %I', papel);
-    END IF;
-  END LOOP;
-END $$;
 COMMIT;
 -- Restrições e relações para operações de negócio.
 -- Não modifica saldos/dados existentes. Valores incompatíveis fazem a transação falhar.
@@ -291,15 +271,6 @@ CREATE TABLE IF NOT EXISTS sapataria.materiais_fornecedores (
 -- Mesmo limite de acesso dos demais cadastros: somente pela API autenticada.
 REVOKE ALL ON TABLE sapataria.fornecedores, sapataria.produtos_fornecedores,
   sapataria.materiais_fornecedores FROM PUBLIC;
-DO $$
-DECLARE papel text;
-BEGIN
-  FOREACH papel IN ARRAY ARRAY['anon', 'authenticated'] LOOP
-    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = papel) THEN
-      EXECUTE format('REVOKE ALL ON TABLE sapataria.fornecedores, sapataria.produtos_fornecedores, sapataria.materiais_fornecedores FROM %I', papel);
-    END IF;
-  END LOOP;
-END $$;
 COMMIT;
 -- Evolução dos cadastros de estoque e Fornecedores; preserva valores legados.
 BEGIN;
@@ -434,16 +405,6 @@ BEGIN
 END $$;
 
 REVOKE ALL ON TABLE sapataria.compras_estoque, sapataria.itens_compra_estoque FROM PUBLIC;
-DO $$
-DECLARE papel text;
-BEGIN
-  FOREACH papel IN ARRAY ARRAY['anon', 'authenticated'] LOOP
-    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = papel) THEN
-      EXECUTE format('REVOKE ALL ON TABLE sapataria.compras_estoque, sapataria.itens_compra_estoque FROM %I', papel);
-    END IF;
-  END LOOP;
-END $$;
-
 COMMIT;
 -- Dados comerciais da loja.
 BEGIN;
@@ -454,15 +415,6 @@ CREATE TABLE IF NOT EXISTS sapataria.configuracoes_loja (
 INSERT INTO sapataria.configuracoes_loja (id, endereco) VALUES (1, '')
 ON CONFLICT (id) DO NOTHING;
 REVOKE ALL ON TABLE sapataria.configuracoes_loja FROM PUBLIC;
-DO $$
-DECLARE papel text;
-BEGIN
-  FOREACH papel IN ARRAY ARRAY['anon', 'authenticated'] LOOP
-    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = papel) THEN
-      EXECUTE format('REVOKE ALL ON TABLE sapataria.configuracoes_loja FROM %I', papel);
-    END IF;
-  END LOOP;
-END $$;
 COMMIT;
 
 -- Histórico de atividades e notificações individuais.
@@ -645,13 +597,4 @@ BEGIN
 END $$;
 
 REVOKE ALL ON TABLE sapataria.lancamentos_financeiros, sapataria.parcelas_financeiras, sapataria.pagamentos_financeiros, sapataria.fechamentos_caixa FROM PUBLIC;
-DO $$
-DECLARE papel text;
-BEGIN
-  FOREACH papel IN ARRAY ARRAY['anon', 'authenticated'] LOOP
-    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = papel) THEN
-      EXECUTE format('REVOKE ALL ON TABLE sapataria.lancamentos_financeiros, sapataria.parcelas_financeiras, sapataria.pagamentos_financeiros, sapataria.fechamentos_caixa FROM %I', papel);
-    END IF;
-  END LOOP;
-END $$;
 COMMIT;
