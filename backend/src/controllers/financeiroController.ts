@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { emTransacao } from '../config/transacao';
 import * as model from '../models/financeiroModel';
+import type { ItemManualFechamento } from '../models/financeiroModel';
 import { decimal, idCorpo, lista, pagamento } from '../utils/operacoes';
 import { ErroHttp, idValido, objeto, texto } from '../utils/validacao';
 
@@ -46,6 +47,89 @@ export async function consultar(request: Request, response: Response) {
       contas: await model.contas(inicio, fim),
     },
   });
+}
+
+export async function consultarFechamentos(_request: Request, response: Response) {
+  response.json({ dados: await model.listarFechamentos() });
+}
+
+export async function fechamentoPorData(request: Request, response: Response) {
+  const dataFechamento = data(request.params.data, 'data');
+  response.json({ dados: await model.consultarFechamento(dataFechamento) });
+}
+
+export async function fecharCaixa(request: Request, response: Response) {
+  const d = objeto(request.body, [
+    'data',
+    'modo',
+    'pagamentos_ids',
+    'itens_manuais',
+  ]);
+  const dataFechamento = data(d.data, 'data');
+  const modo = d.modo ?? 'automatico';
+  if (modo !== 'automatico' && modo !== 'manual')
+    throw new ErroHttp(400, 'DADOS_INVALIDOS', 'modo deve ser automatico ou manual.');
+  const idsPagamentos =
+    d.pagamentos_ids === undefined
+      ? []
+      : lista(d.pagamentos_ids, 'pagamentos_ids', true).map(idCorpo);
+  if (new Set(idsPagamentos).size !== idsPagamentos.length)
+    throw new ErroHttp(400, 'DADOS_INVALIDOS', 'Não repita pagamentos no fechamento.');
+  const itensManuais: ItemManualFechamento[] =
+    d.itens_manuais === undefined
+      ? []
+      : lista(d.itens_manuais, 'itens_manuais', true).map((valor, indice) => {
+          const item = objeto(valor, [
+            'descricao',
+            'tipo',
+            'valor',
+            'forma_pagamento',
+            'origem',
+          ]);
+          const descricao = texto(item.descricao, `itens_manuais[${indice}].descricao`);
+          if (descricao.length > 200)
+            throw new ErroHttp(400, 'DADOS_INVALIDOS', 'A descrição aceita até 200 caracteres.');
+          if (item.tipo !== 'entrada' && item.tipo !== 'saida')
+            throw new ErroHttp(400, 'DADOS_INVALIDOS', 'O tipo manual deve ser entrada ou saida.');
+          const origem = item.origem ?? 'outro';
+          if (!['ordem_servico', 'venda', 'outro'].includes(String(origem)))
+            throw new ErroHttp(400, 'DADOS_INVALIDOS', 'Origem manual inválida.');
+          const forma =
+            item.tipo === 'entrada' ? pagamento(item.forma_pagamento) : null;
+          return {
+            descricao,
+            tipo: item.tipo,
+            valor: decimal(item.valor, `itens_manuais[${indice}].valor`, {
+              positivo: true,
+              dinheiro: true,
+            }),
+            forma_pagamento: forma as ItemManualFechamento['forma_pagamento'],
+            origem: origem as ItemManualFechamento['origem'],
+          };
+        });
+  if (modo === 'automatico' && (idsPagamentos.length || itensManuais.length))
+    throw new ErroHttp(400, 'DADOS_INVALIDOS', 'O fechamento automático não recebe itens manuais.');
+  try {
+    const fechamento = await model.criarFechamento(
+      dataFechamento,
+      request.funcionario!.id,
+      modo,
+      idsPagamentos,
+      itensManuais,
+    );
+    response.status(201).json({ dados: fechamento });
+  } catch (error) {
+    if (
+      typeof error === 'object' && error !== null &&
+      'code' in error && error.code === '23505'
+    )
+      throw new ErroHttp(
+        409,
+        'CAIXA_JA_FECHADO',
+        'O caixa desta data já foi fechado.',
+      );
+    throw error;
+  }
 }
 
 export async function indicador(request: Request, response: Response) {

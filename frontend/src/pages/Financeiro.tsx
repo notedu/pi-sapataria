@@ -7,11 +7,19 @@ import Dialog from '../components/Dialog'
 import InputField from '../components/InputField'
 import SelectField from '../components/SelectField'
 import { ErroApi } from '../services/api'
-import { consultarFinanceiro } from '../services/financeiro'
+import {
+  consultarFechamento,
+  consultarFinanceiro,
+  fecharCaixa,
+  listarFechamentos,
+} from '../services/financeiro'
 import type {
   ContaFinanceira,
   DadosFinanceiros,
+  FechamentoCaixa,
+  ItemManualFechamento,
   MovimentoFinanceiro,
+  PagamentoFechamento,
 } from '../services/financeiro'
 
 const moeda = new Intl.NumberFormat('pt-BR', {
@@ -81,6 +89,64 @@ type ColunaConta =
   | 'status'
 type Ordenacao = { coluna: ColunaConta; direcao: 'asc' | 'desc' }
 
+function apurarFechamentoManual(
+  pagamentos: PagamentoFechamento[],
+  idsSelecionados: number[],
+  itens: ItemManualFechamento[],
+) {
+  let entradasCentavos = 0
+  let saidasCentavos = 0
+  const formas: Record<string, number> = {}
+  const origens: Record<string, number> = {
+    ordem_servico: 0,
+    venda: 0,
+    outro: 0,
+  }
+  const categoriasSaida: Record<string, number> = {}
+  const somar = (mapa: Record<string, number>, chave: string, centavos: number) => {
+    mapa[chave] = (mapa[chave] ?? 0) + centavos
+  }
+  const selecionados = pagamentos.filter((item) => idsSelecionados.includes(item.id))
+  for (const item of selecionados) {
+    const centavos = Math.round(Number(item.valor) * 100)
+    if (item.tipo === 'entrada') {
+      entradasCentavos += centavos
+      somar(formas, item.forma_pagamento, centavos)
+      const origem =
+        item.categoria === 'ordem_servico' || item.categoria === 'venda'
+          ? item.categoria
+          : 'outro'
+      somar(origens, origem, centavos)
+    } else {
+      saidasCentavos += centavos
+      somar(categoriasSaida, item.categoria, centavos)
+    }
+  }
+  for (const item of itens) {
+    const centavos = Math.round(Number(item.valor) * 100)
+    if (item.tipo === 'entrada') {
+      entradasCentavos += centavos
+      if (item.forma_pagamento) somar(formas, item.forma_pagamento, centavos)
+      somar(origens, item.origem, centavos)
+    } else {
+      saidasCentavos += centavos
+      somar(categoriasSaida, 'manual', centavos)
+    }
+  }
+  const mapaMoeda = (mapa: Record<string, number>) =>
+    Object.fromEntries(
+      Object.entries(mapa).map(([chave, valor]) => [chave, (valor / 100).toFixed(2)]),
+    )
+  return {
+    recebimentos_brutos: (entradasCentavos / 100).toFixed(2),
+    saidas: (saidasCentavos / 100).toFixed(2),
+    total_liquido: ((entradasCentavos - saidasCentavos) / 100).toFixed(2),
+    por_forma_pagamento: mapaMoeda(formas),
+    por_origem: mapaMoeda(origens),
+    saidas_por_categoria: mapaMoeda(categoriasSaida),
+  }
+}
+
 export default function Financeiro() {
   const navigate = useNavigate()
   const hoje = dataHoje()
@@ -103,6 +169,21 @@ export default function Financeiro() {
     MovimentoFinanceiro | ContaFinanceira | null
   >(null)
   const [ordenacao, setOrdenacao] = useState<Ordenacao | null>(null)
+  const [mostrarFechamento, setMostrarFechamento] = useState(false)
+  const [dataFechamento, setDataFechamento] = useState(hoje)
+  const [fechamento, setFechamento] = useState<FechamentoCaixa | null>(null)
+  const [pagamentosDisponiveis, setPagamentosDisponiveis] = useState<PagamentoFechamento[]>([])
+  const [modoFechamento, setModoFechamento] = useState<'automatico' | 'manual'>('automatico')
+  const [pagamentosSelecionados, setPagamentosSelecionados] = useState<number[]>([])
+  const [itensManuais, setItensManuais] = useState<ItemManualFechamento[]>([])
+  const [descricaoManual, setDescricaoManual] = useState('')
+  const [tipoManual, setTipoManual] = useState<'entrada' | 'saida'>('entrada')
+  const [valorManual, setValorManual] = useState('')
+  const [formaManual, setFormaManual] = useState<'pix' | 'credito' | 'debito' | 'dinheiro'>('dinheiro')
+  const [origemManual, setOrigemManual] = useState<'ordem_servico' | 'venda' | 'outro'>('outro')
+  const [historicoFechamentos, setHistoricoFechamentos] = useState<FechamentoCaixa[]>([])
+  const [erroFechamento, setErroFechamento] = useState('')
+  const [carregandoFechamento, setCarregandoFechamento] = useState(false)
 
   useEffect(() => {
     let ativo = true
@@ -200,6 +281,102 @@ export default function Financeiro() {
     setPeriodo(rascunho)
   }
 
+  function aplicarDadosFechamento(resultado: Awaited<ReturnType<typeof consultarFechamento>>) {
+    setFechamento(resultado.fechamento)
+    setPagamentosDisponiveis(resultado.pagamentos_disponiveis)
+    const atual = resultado.fechamento
+    if (atual.fechado) {
+      setModoFechamento(atual.modo)
+      setPagamentosSelecionados(atual.pagamentos_selecionados.map((item) => item.id))
+      setItensManuais(atual.itens_manuais)
+    } else {
+      setModoFechamento('automatico')
+      setPagamentosSelecionados([])
+      setItensManuais([])
+    }
+  }
+
+  async function abrirFechamento() {
+    setMostrarFechamento((atual) => !atual)
+    if (mostrarFechamento) return
+    setCarregandoFechamento(true)
+    setErroFechamento('')
+    try {
+      const [atual, historico] = await Promise.all([
+        consultarFechamento(dataFechamento),
+        listarFechamentos(),
+      ])
+      aplicarDadosFechamento(atual)
+      setHistoricoFechamentos(historico)
+    } catch (error) {
+      setErroFechamento(error instanceof Error ? error.message : 'Não foi possível consultar o fechamento.')
+    } finally {
+      setCarregandoFechamento(false)
+    }
+  }
+
+  async function consultarDiaFechamento(data: string) {
+    setDataFechamento(data)
+    setCarregandoFechamento(true)
+    setErroFechamento('')
+    try {
+      aplicarDadosFechamento(await consultarFechamento(data))
+    } catch (error) {
+      setErroFechamento(error instanceof Error ? error.message : 'Não foi possível consultar o dia.')
+    } finally {
+      setCarregandoFechamento(false)
+    }
+  }
+
+  async function confirmarFechamento() {
+    setCarregandoFechamento(true)
+    setErroFechamento('')
+    try {
+      const salvo = await fecharCaixa(
+        dataFechamento,
+        modoFechamento,
+        modoFechamento === 'manual' ? pagamentosSelecionados : [],
+        modoFechamento === 'manual' ? itensManuais : [],
+      )
+      setFechamento(salvo)
+      setHistoricoFechamentos(await listarFechamentos())
+    } catch (error) {
+      setErroFechamento(error instanceof Error ? error.message : 'Não foi possível fechar o caixa.')
+    } finally {
+      setCarregandoFechamento(false)
+    }
+  }
+
+  function adicionarItemManual(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setItensManuais((atuais) => [
+      ...atuais,
+      {
+        descricao: descricaoManual.trim(),
+        tipo: tipoManual,
+        valor: Number(valorManual).toFixed(2),
+        forma_pagamento: tipoManual === 'entrada' ? formaManual : null,
+        origem: tipoManual === 'entrada' ? origemManual : 'outro',
+      },
+    ])
+    setDescricaoManual('')
+    setValorManual('')
+  }
+
+  const resumoFechamento = useMemo(() => {
+    if (!fechamento) return null
+    if (fechamento.fechado || modoFechamento === 'automatico')
+      return fechamento
+    return {
+      ...fechamento,
+      ...apurarFechamentoManual(
+        pagamentosDisponiveis,
+        pagamentosSelecionados,
+        itensManuais,
+      ),
+    }
+  }, [fechamento, modoFechamento, pagamentosDisponiveis, pagamentosSelecionados, itensManuais])
+
   return (
     <div className="mx-auto max-w-container-max space-y-8">
       <header className="flex flex-wrap items-start justify-between gap-4">
@@ -238,10 +415,363 @@ export default function Financeiro() {
         aria-label="Escopo do painel"
         className="rounded-default border border-outline-variant bg-secondary-container p-4 text-body-md"
       >
-        <strong>Integração financeira em leitura.</strong> Os valores são
-        consultados do banco e representam registros operacionais. Impostos,
-        notas fiscais e lucro líquido aguardam suas regras específicas.
+        <strong>Apuração baseada nos registros do sistema.</strong> Os indicadores
+        consultam pagamentos e despesas existentes; o fechamento diário salva
+        uma fotografia para conferência. Impostos, notas fiscais e lucro líquido
+        aguardam suas regras específicas.
       </aside>
+      <section className="rounded-default border border-outline-variant bg-surface-container-lowest p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-headline-md">Fechamento diário de caixa</h2>
+            <p className="mt-1 text-label-sm text-on-surface-variant">
+              Escolha apuração automática ou monte o fechamento manualmente.
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            size="compact"
+            onClick={() => void abrirFechamento()}
+          >
+            {mostrarFechamento ? 'Ocultar fechamento' : 'Abrir fechamento'}
+          </Button>
+        </div>
+        {mostrarFechamento && (
+          <div className="mt-5 space-y-5">
+            <div className="flex flex-wrap items-end gap-3">
+              <InputField
+                id="data-fechamento-caixa"
+                label="Dia do caixa"
+                type="date"
+                required
+                value={dataFechamento}
+                onChange={(event) => void consultarDiaFechamento(event.target.value)}
+              />
+              <SelectField
+                id="modo-fechamento-caixa"
+                label="Modo de fechamento"
+                value={fechamento?.fechado ? fechamento.modo : modoFechamento}
+                disabled={Boolean(fechamento?.fechado)}
+                onChange={(event) =>
+                  setModoFechamento(event.target.value as typeof modoFechamento)
+                }
+              >
+                <option value="automatico">Automático</option>
+                <option value="manual">Manual</option>
+              </SelectField>
+              {fechamento && !fechamento.fechado && (
+                <Button
+                  size="compact"
+                  disabled={carregandoFechamento}
+                  onClick={() => void confirmarFechamento()}
+                >
+                  {modoFechamento === 'manual'
+                    ? 'Confirmar fechamento manual'
+                    : 'Confirmar fechamento automático'}
+                </Button>
+              )}
+            </div>
+            {carregandoFechamento && <p role="status">Apurando o caixa…</p>}
+            {erroFechamento && (
+              <p role="alert" className="text-error">
+                {erroFechamento}
+              </p>
+            )}
+            {fechamento && modoFechamento === 'manual' && !fechamento.fechado && (
+              <div className="space-y-5 rounded-default border border-outline-variant p-4">
+                <div>
+                  <h3 className="text-headline-sm">Escolha os pagamentos do dia</h3>
+                  <p className="mt-1 text-label-sm text-on-surface-variant">
+                    Marque cada recebimento ou saída registrada que deve entrar neste fechamento.
+                  </p>
+                </div>
+                {pagamentosDisponiveis.length ? (
+                  <ul className="max-h-72 divide-y divide-outline-variant overflow-y-auto">
+                    {pagamentosDisponiveis.map((item) => (
+                      <li key={item.id} className="py-2">
+                        <label className="flex cursor-pointer items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={pagamentosSelecionados.includes(item.id)}
+                            onChange={(event) =>
+                              setPagamentosSelecionados((ids) =>
+                                event.target.checked
+                                  ? [...ids, item.id]
+                                  : ids.filter((id) => id !== item.id),
+                              )
+                            }
+                          />
+                          <span className="flex flex-1 flex-wrap justify-between gap-2">
+                            <span>
+                              {item.descricao} · {item.tipo === 'entrada' ? 'Entrada' : 'Saída'}
+                              {' · '}
+                              {item.tipo === 'entrada'
+                                ? ({
+                                    ordem_servico: 'Serviço',
+                                    venda: 'Venda',
+                                  } as Record<string, string>)[item.categoria] ?? item.categoria
+                                : nomeCategoria(item.categoria)}
+                              {item.tipo === 'entrada' && ` · ${item.forma_pagamento}`}
+                            </span>
+                            <strong className="tabular-nums">
+                              {formatarDinheiro(item.valor)}
+                            </strong>
+                          </span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-on-surface-variant">
+                    Nenhum pagamento registrado nesta data. Você ainda pode incluir valores manuais.
+                  </p>
+                )}
+                <form
+                  onSubmit={adicionarItemManual}
+                  className="space-y-4 border-t border-outline-variant pt-4"
+                >
+                  <h3 className="text-headline-sm">Adicionar valor manual</h3>
+                  <p className="text-label-sm text-on-surface-variant">
+                    Inclua aqui somente valores que ainda não estejam entre os pagamentos selecionados.
+                  </p>
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                    <InputField
+                      id="descricao-item-manual"
+                      label="Descrição"
+                      required
+                      maxLength={200}
+                      value={descricaoManual}
+                      onChange={(event) => setDescricaoManual(event.target.value)}
+                    />
+                    <SelectField
+                      id="tipo-item-manual"
+                      label="Tipo"
+                      value={tipoManual}
+                      onChange={(event) =>
+                        setTipoManual(event.target.value as typeof tipoManual)
+                      }
+                    >
+                      <option value="entrada">Entrada</option>
+                      <option value="saida">Saída</option>
+                    </SelectField>
+                    <InputField
+                      id="valor-item-manual"
+                      label="Valor (R$)"
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      required
+                      value={valorManual}
+                      onChange={(event) => setValorManual(event.target.value)}
+                    />
+                    {tipoManual === 'entrada' && (
+                      <SelectField
+                        id="forma-item-manual"
+                        label="Forma de pagamento"
+                        value={formaManual}
+                        onChange={(event) =>
+                          setFormaManual(event.target.value as typeof formaManual)
+                        }
+                      >
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="pix">Pix</option>
+                        <option value="credito">Cartão de crédito</option>
+                        <option value="debito">Cartão de débito</option>
+                      </SelectField>
+                    )}
+                    {tipoManual === 'entrada' && (
+                      <SelectField
+                        id="origem-item-manual"
+                        label="Origem"
+                        value={origemManual}
+                        onChange={(event) =>
+                          setOrigemManual(event.target.value as typeof origemManual)
+                        }
+                      >
+                        <option value="outro">Outra entrada</option>
+                        <option value="ordem_servico">Serviço</option>
+                        <option value="venda">Venda</option>
+                      </SelectField>
+                    )}
+                  </div>
+                  <Button type="submit" variant="secondary" size="compact">
+                    Adicionar ao fechamento
+                  </Button>
+                </form>
+                {itensManuais.length > 0 && (
+                  <ul className="divide-y divide-outline-variant">
+                    {itensManuais.map((item, indice) => (
+                      <li
+                        key={`${item.descricao}-${indice}`}
+                        className="flex flex-wrap items-center justify-between gap-2 py-2"
+                      >
+                        <span>
+                          {item.descricao} · {item.tipo === 'entrada' ? 'Entrada' : 'Saída'}
+                          {item.forma_pagamento && ` · ${item.forma_pagamento}`}
+                        </span>
+                        <span className="flex items-center gap-3">
+                          <strong>{formatarDinheiro(item.valor)}</strong>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="compact"
+                            onClick={() =>
+                              setItensManuais((itens) =>
+                                itens.filter((_, posicao) => posicao !== indice),
+                              )
+                            }
+                          >
+                            Remover
+                          </Button>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+            {fechamento && resumoFechamento && (
+              <>
+                <p className="text-label-sm text-on-surface-variant">
+                  {fechamento.fechado
+                    ? `Fechamento ${fechamento.modo}. Os valores salvos são uma fotografia do dia.`
+                    : modoFechamento === 'manual'
+                      ? 'Prévia manual: considera somente os pagamentos selecionados e os valores avulsos adicionados.'
+                      : 'Prévia automática calculada com todos os pagamentos e saídas registrados para este dia.'}
+                </p>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <CartaoInformacoes titulo="Recebimentos brutos" icone="financeiro">
+                    <p className="text-headline-md tabular-nums">
+                      {formatarDinheiro(resumoFechamento.recebimentos_brutos)}
+                    </p>
+                  </CartaoInformacoes>
+                  <CartaoInformacoes titulo="Saídas" icone="observacoes">
+                    <p className="text-headline-md tabular-nums">
+                      {formatarDinheiro(resumoFechamento.saidas)}
+                    </p>
+                  </CartaoInformacoes>
+                  <CartaoInformacoes titulo="Total líquido" icone="dashboard" destaque>
+                    <p className="text-headline-md tabular-nums">
+                      {formatarDinheiro(resumoFechamento.total_liquido)}
+                    </p>
+                  </CartaoInformacoes>
+                </div>
+                <div className="grid gap-5 md:grid-cols-3">
+                  <div>
+                    <h3 className="text-label-md">Recebimentos por meio</h3>
+                    <dl className="mt-2 space-y-1">
+                      {Object.entries(resumoFechamento.por_forma_pagamento).map(
+                        ([forma, valor]) => (
+                          <div key={forma} className="flex justify-between gap-3">
+                            <dt>
+                              {({
+                                pix: 'Pix',
+                                credito: 'Cartão de crédito',
+                                debito: 'Cartão de débito',
+                                dinheiro: 'Dinheiro',
+                              } as Record<string, string>)[forma] ?? forma}
+                            </dt>
+                            <dd className="tabular-nums">{formatarDinheiro(valor)}</dd>
+                          </div>
+                        ),
+                      )}
+                    </dl>
+                  </div>
+                  <div>
+                    <h3 className="text-label-md">Recebimentos por origem</h3>
+                    <dl className="mt-2 space-y-1">
+                      {Object.entries(resumoFechamento.por_origem).map(
+                        ([origem, valor]) => (
+                          <div key={origem} className="flex justify-between gap-3">
+                            <dt>
+                              {{ ordem_servico: 'Serviços', venda: 'Vendas', outro: 'Outras entradas' }[origem] ?? origem}
+                            </dt>
+                            <dd className="tabular-nums">{formatarDinheiro(valor)}</dd>
+                          </div>
+                        ),
+                      )}
+                    </dl>
+                  </div>
+                  <div>
+                    <h3 className="text-label-md">Saídas por categoria</h3>
+                    <dl className="mt-2 space-y-1">
+                      {Object.entries(resumoFechamento.saidas_por_categoria).length ? (
+                        Object.entries(resumoFechamento.saidas_por_categoria).map(
+                          ([categoria, valor]) => (
+                            <div key={categoria} className="flex justify-between gap-3">
+                              <dt>{categoria === 'manual' ? 'Saída manual' : nomeCategoria(categoria)}</dt>
+                              <dd className="tabular-nums">{formatarDinheiro(valor)}</dd>
+                            </div>
+                          ),
+                        )
+                      ) : (
+                        <p className="text-on-surface-variant">Nenhuma saída registrada.</p>
+                      )}
+                    </dl>
+                  </div>
+                </div>
+                {fechamento.fechado && fechamento.modo === 'manual' && (
+                  <div className="grid gap-5 border-t border-outline-variant pt-4 md:grid-cols-2">
+                    <div>
+                      <h3 className="text-label-md">Pagamentos selecionados</h3>
+                      {fechamento.pagamentos_selecionados.length ? (
+                        <ul className="mt-2 space-y-1">
+                          {fechamento.pagamentos_selecionados.map((item) => (
+                            <li key={item.id} className="flex justify-between gap-3">
+                              <span>{item.descricao} · {item.tipo === 'entrada' ? 'Entrada' : 'Saída'}</span>
+                              <span className="tabular-nums">{formatarDinheiro(item.valor)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="mt-2 text-on-surface-variant">Nenhum pagamento selecionado.</p>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="text-label-md">Valores avulsos</h3>
+                      {fechamento.itens_manuais.length ? (
+                        <ul className="mt-2 space-y-1">
+                          {fechamento.itens_manuais.map((item, indice) => (
+                            <li key={`${item.descricao}-${indice}`} className="flex justify-between gap-3">
+                              <span>{item.descricao} · {item.tipo === 'entrada' ? 'Entrada' : 'Saída'}</span>
+                              <span className="tabular-nums">{formatarDinheiro(item.valor)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="mt-2 text-on-surface-variant">Nenhum valor avulso incluído.</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+            <div>
+              <h3 className="text-headline-sm">Histórico de fechamentos</h3>
+              {historicoFechamentos.length ? (
+                <ul className="mt-2 divide-y divide-outline-variant">
+                  {historicoFechamentos.map((item) => (
+                    <li key={item.data} className="flex flex-wrap justify-between gap-2 py-2">
+                      <button
+                        type="button"
+                        className="text-primary underline"
+                        onClick={() => void consultarDiaFechamento(item.data)}
+                      >
+                        {formatarData(item.data)} · {item.modo}
+                      </button>
+                      <span>
+                        Bruto: {formatarDinheiro(item.recebimentos_brutos)} · Saídas: {formatarDinheiro(item.saidas)} · Líquido: {formatarDinheiro(item.total_liquido)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-2 text-on-surface-variant">Ainda não há fechamentos salvos.</p>
+              )}
+            </div>
+          </div>
+        )}
+      </section>
       <section
         aria-label="Filtros financeiros"
         className="rounded-default border border-outline-variant bg-surface-container-lowest p-5"

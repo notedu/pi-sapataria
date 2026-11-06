@@ -24,6 +24,10 @@ Este catálogo organiza as funcionalidades e restrições extraídas das fontes.
 
 **Atualização de 15/10/2026:** por solicitação de João Contin, registro de atividades e notificações individuais implementados e documentados em `api.md` e `telas-e-fluxos.md`. As atividades cobrem operações atuais de API; os alertas automáticos de estoque e prazo permanecem pendentes em RN-013/PD-N08.
 
+**Decisão do usuário em 05/11/2026 — RF-028:** implementar fechamento diário de caixa com conferência dos recebimentos por forma e origem (OS/serviços e vendas), saídas pagas registradas, total líquido e histórico. O fechamento salva uma fotografia dos valores apurados; a regra não bloqueia lançamentos posteriores. Perdas não viram categoria automática: devem estar registradas como saída para compor o caixa.
+
+**Complemento do usuário em 06/11/2026 — RF-028:** o fechamento pode ser automático ou manual. No modo manual, a pessoa seleciona pagamentos já registrados no dia e/ou adiciona entradas/saídas avulsas com descrição, valor e classificação aplicável. Esses itens afetam somente a fotografia do fechamento e não alteram os registros operacionais ou o financeiro geral.
+
 ## Atualização — operações de negócio
 
 RF-017/RF-018/RF-020/RF-021/RF-022: cadastros e operações aprovadas disponíveis na API, incluindo exclusões sem histórico, sequência de OS, consumo, estoque, compras e venda/cancelamento. RN-018/RN-019: transações e bloqueios impedem registros parciais e saldo negativo. Estoque oferece filtros locais, alertas por limites cadastrados e telas conectadas; cálculo da OS e financeiro, alertas de prazo e telas de outros módulos continuam pendentes.
@@ -87,6 +91,7 @@ Classificação de todos os registros: **Sugestão**. Situação da definição:
 | <a id="rf-025"></a>RF-025 | Financeiro com totais do mês ou ano, gráficos de evolução e indicadores detalhados com filtro por período. Critério proposto: disponibilizar essas visualizações. | Guia §5.11 | RF-011; definições dos indicadores em RN-014 a RN-017; PD-N06. |
 | <a id="rf-026"></a>RF-026 | Obter endereço por API pública de CEP, validar CEP e tratar indisponibilidade da API. ViaCEP aprovado pelo Integrante 1 em 29/09/2026. Complemento solicitado em 03/11/2026: buscar sugestões por rua, cidade e estado; CEP é opcional, e resultado ausente não impede salvar endereço manual. Rua e bairro são digitados; cidade e estado podem ser selecionados em listas opcionais, com cidades filtradas pelo estado. Implementado nos formulários de Clientes, Fornecedores e Configurações; migrações de banco preparadas, ainda não aplicadas. | Guia §8.1 | RF-014; adoção e contrato em PD-R10. |
 | <a id="rf-027"></a>RF-027 | Importar clientes e estoques de CSV, verificando colunas, duplicados e conversão de tipos. Estoques: modelo CSV, prévia e gravação atômica implementados. Importação de clientes permanece pendente. | Guia §8.1 | RF-014; PD-R10. |
+| <a id="rf-028"></a>RF-028 | Fechamento diário de caixa automático ou manual. O manual permite selecionar pagamentos do dia e acrescentar entradas/saídas descritas; ambos salvam totais e histórico. Implementado. | Solicitação do usuário em 05/11/2026 e complemento em 06/11/2026 | RN-003; valores avulsos são exclusivos da fotografia do fechamento e não alteram lançamentos operacionais. |
 
 ## Requisitos não funcionais e restrições técnicas
 
