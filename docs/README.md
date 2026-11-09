@@ -12,8 +12,10 @@ Esta pasta organiza a documentação do sistema de gestão interna da sapataria 
 | [Arquitetura](arquitetura.md) | Partes do sistema, responsabilidades e comunicação previstas, com distinção entre planejamento, implementação e decisões pendentes. |
 | [Modelo de dados](modelo-de-dados.md) | Modelo inicial do sistema completo: entidades, cardinalidades, campos propostos, pendências e etapas de implementação. |
 | [Contrato da API](api.md) | Contrato inicial do sistema completo: operações propostas, dados, respostas, permissões e efeitos pendentes; Login, cadastros, consultas e operações de OS/vendas/estoque implementados. |
+| [Fluxo de exportação do Financeiro](integracao/exportacao-financeiro.md) | Origem, transformação, validação, destino e limites da exportação Excel/CSV (RA-004). |
 | [Telas e fluxos](telas-e-fluxos.md) | Mapa das telas e fluxos principais do sistema, padrões comuns e sequência de implementação por funcionalidade. |
 | [Planejamento](planejamento.md) · [PDF](planejamento.pdf) | Responsabilidades confirmadas, marcos sugeridos até 20/10/2026, integração e cobertura ainda em aberto. |
+| [Relatório técnico de nuvem](nuvem/relatorio-tecnico-otimizacao-monitoramento-aws.docx) | Implantação AWS, ajustes, evidências de monitoramento e pendências de custos/comparação. |
 | [README do projeto](../README.md) | Apresentação, tecnologias e execução disponíveis no estágio atual. |
 | [Como contribuir](../CONTRIBUTING.md) | Orientações de convivência, Issues, branches, commits e revisão. |
 | [Histórico de mudanças](../CHANGELOG.md) | Mudanças registradas e situação dos lançamentos. |
@@ -55,15 +57,15 @@ Nos catálogos:
 
 A versão **2.0 do guia** é documental. Ela não corresponde a um lançamento do sistema; o CONTRIBUTING, em “Como atualizar o CHANGELOG”, também esclarece que `0.0.0` no pacote não comprova publicação.
 
-## Documentação planejada
+## Documentação acadêmica pendente
 
-Os assuntos abaixo são previstos no guia, mas seus documentos ainda não estão presentes nesta pasta. Por isso, não há links para arquivos inexistentes.
+Os assuntos abaixo são previstos no guia e ainda precisam ser concluídos integralmente. O relatório de nuvem documenta parcialmente a implantação e a gestão inicial, e o fluxo do Financeiro está documentado; isso não substitui as entregas restantes.
 
 | Assunto | Origem e classificação |
 |---|---|
 | Sprint Reports e registros de reuniões | Guia §§2.5 e 13.4: **exigência acadêmica**. Modelos do §13.4 e organização em pastas do §7.3: **sugestão**. |
-| Fluxos de integração | Guia §8.3: **exigência acadêmica**. Campos do registro e pasta sugerida: **sugestão**. |
-| Comparação de custos e plano de implantação em nuvem | Guia §§12.3–12.4: **exigência acadêmica**. Serviços exemplificados e estrutura detalhada do plano: **sugestão**. |
+| Fluxos de integração | Guia §8.3: **exigência acadêmica**. Fluxo Financeiro→Excel/CSV documentado em [integração](integracao/exportacao-financeiro.md); demais fluxos permanecem a documentar. Campos do registro e pasta sugerida: **sugestão**. |
+| Comparação de custos e plano de implantação em nuvem | Guia §§12.3–12.4: **exigência acadêmica**. A implantação AWS e a gestão inicial estão documentadas no [relatório técnico](nuvem/relatorio-tecnico-otimizacao-monitoramento-aws.docx); a comparação AWS/Azure/Google Cloud e o plano completo de backup/recuperação permanecem pendentes. Serviços exemplificados e estrutura detalhada: **sugestão**. |
 
 ## Revisões e decisões futuras
 

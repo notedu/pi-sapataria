@@ -22,7 +22,7 @@ O escopo completo, as sugestões e as decisões pendentes estão no [Guia do Pro
 |---|---|
 | Configuradas | React e TypeScript para a interface; Vite para desenvolvimento e build; ESLint para análise do código; Node.js e Express para a base da API |
 | Previstas no guia | Tailwind CSS para estilos; PostgreSQL para persistência |
-| Hospedagem planejada | AWS Academy como plano A para aplicação e banco |
+| Hospedagem implantada em 06/11/2026 | AWS Academy: EC2 para Nginx/API e RDS PostgreSQL; ver relatório técnico em docs/nuvem/ |
 
 ## Como rodar
 
@@ -90,6 +90,8 @@ Verificação desta etapa: lint e build aprovados; testes no navegador com API s
 Entre como Administrador e abra **Financeiro** no menu ou em `/financeiro`. O acesso é exclusivo do Administrador tanto na interface quanto na API; a sessão interna é reutilizada e a rota sem sessão volta ao login. O botão **Voltar** retorna ao Dashboard.
 
 A tela consulta lançamentos, pagamentos e contas/parcelas no banco. Permite selecionar hoje, semana, mês ou intervalo personalizado, filtrar movimentos por tipo e origem, consultar os resumos financeiros e abrir detalhes de pagamentos e parcelas. A API também oferece operações administrativas para registrar despesas, pagamentos parciais ou totais e estornos com motivo.
+
+Os botões **Exportar Excel** e **Exportar CSV** usam os dados do período consultado. O Excel contém as abas Resumo, Movimentações e Contas e já vem com valores em reais e páginas A4 configuradas; o resumo é retrato e os detalhes são paisagem com cabeçalhos repetidos. O CSV baixa um arquivo para cada conjunto. Os filtros de tipo e origem se aplicam às movimentações. A exportação ocorre no navegador, mantém o acesso exclusivo do Administrador e não altera o banco. Detalhes do fluxo: [documentação de integração](docs/integracao/exportacao-financeiro.md) (RA-004).
 
 Os valores apresentados seguem o regime de caixa definido para os registros disponíveis. Impostos, lucro líquido e emissão de notas fiscais permanecem indisponíveis enquanto suas regras não forem definidas (RN-014 a RN-017). O esquema para uma instalação nova está em `backend/src/database/schema.sql`; ele não deve ser executado no banco já utilizado pelo projeto.
 
@@ -212,7 +214,7 @@ Senhas recebem hash scrypt com salt individual e nunca são devolvidas. Cadastro
 
 ### Configuração de produção na AWS/RDS
 
-O código de login e as tabelas acompanham a aplicação. No ambiente da AWS, configure as variáveis `DATABASE_*` para o endpoint, porta, usuário, senha e nome do banco RDS; use `DATABASE_SSL=true` e, se necessário, informe a CA do RDS em `DATABASE_CA_CERT`. Configure `NODE_ENV=production` e `APP_ORIGIN` com a origem HTTPS exata do front-end. O cookie passa a exigir HTTPS. Ajuste `HOST` conforme a implantação. Se houver proxy/load balancer, configure `TRUST_PROXY` somente com seus endereços ou redes confiáveis; isso determina a identificação de HTTPS e do IP do cliente. Com SameSite=Lax, mantenha front-end e API no mesmo site (por exemplo, subdomínios do mesmo domínio ou proxy para `/api`). A implantação e a conexão com RDS ainda não foram realizadas.
+O código de login e as tabelas acompanham a aplicação. No ambiente da AWS, configure as variáveis `DATABASE_*` para o endpoint, porta, usuário, senha e nome do banco RDS; use `DATABASE_SSL=true` e, se necessário, informe a CA do RDS em `DATABASE_CA_CERT`. Configure `NODE_ENV=production` e `APP_ORIGIN` com a origem HTTPS exata do front-end. O cookie passa a exigir HTTPS. Ajuste `HOST` conforme a implantação. Se houver proxy/load balancer, configure `TRUST_PROXY` somente com seus endereços ou redes confiáveis; isso determina a identificação de HTTPS e do IP do cliente. Com SameSite=Lax, mantenha front-end e API no mesmo site (por exemplo, subdomínios do mesmo domínio ou proxy para `/api`). A implantação e a conexão com o RDS estão registradas em docs/nuvem/relatorio-tecnico-otimizacao-monitoramento-aws.docx; a comparação de custos entre provedores permanece pendente.
 
 ## Clientes — interface
 
