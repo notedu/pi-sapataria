@@ -633,7 +633,7 @@ A paleta será extraída da identidade visual da Seda e Couro. Sugere-se cadastr
 | Fase | Ambiente | O que acontece |
 |---|---|---|
 | 1. Desenvolvimento e testes | Local | O desenvolvimento e os testes ocorrem em ambiente local de teste e produção |
-| 2. Etapa final | AWS Academy (Plano A) | Migração de front-end, API Node.js e banco de dados para a nuvem |
+| 2. Etapa final | AWS Academy (Plano A) | Front-end e API Node.js na EC2 e PostgreSQL no RDS, implantados em 06/11/2026; detalhes e evidências no [relatório técnico de nuvem](nuvem/relatorio-tecnico-otimizacao-monitoramento-aws.docx) |
 | 3. Uso real (depois do projeto) | Domínio próprio e hospedagem paga | Só se a equipe da sapataria realmente utilizar o sistema |
 
 **[Orientação PI]** Se a equipe preferir usar um ambiente de testes já em nuvem durante o desenvolvimento, ela deve ser capaz de preparar esse ambiente sozinha, incluindo a configuração do banco de dados e dos demais serviços.
@@ -649,7 +649,7 @@ A paleta será extraída da identidade visual da Seda e Couro. Sugere-se cadastr
 - Plano A: usar a nuvem da parceria acadêmica com a AWS (AWS Academy).
 - Definir uma estratégia para manter a API em execução de forma automática, evitando que a aplicação fique indisponível.
 
-**[Sugestão]** Para manter a API no ar, pode-se usar um gerenciador de processos do Node.js (como o PM2) ou um serviço do sistema operacional com reinício automático. Ambientes acadêmicos costumam ter sessões e créditos limitados, então vale conferir as regras do AWS Academy usado pela turma e testar o que acontece quando a sessão é encerrada e reiniciada.
+**[Sugestão]** Para manter a API no ar, pode-se usar um gerenciador de processos do Node.js (como o PM2) ou um serviço do sistema operacional com reinício automático. Ambientes acadêmicos costumam ter sessões e créditos limitados, então vale conferir as regras do AWS Academy usado pela turma e testar o que acontece quando a sessão é encerrada e reiniciada. **Implementação em 06/11/2026:** a equipe configurou PM2 com inicialização pelo systemd na EC2. Isso recupera o processo quando a instância inicia, mas não garante disponibilidade após o encerramento do Learner Lab; ver o relatório técnico de nuvem.
 
 ### 12.3 Levantamento de custos
 
@@ -668,7 +668,9 @@ A paleta será extraída da identidade visual da Seda e Couro. Sugere-se cadastr
 
 **[Orientação PI]** A equipe deve apresentar um plano de implantação que detalhe a configuração dos serviços escolhidos, a gestão dos recursos em nuvem e a estratégia para manter a aplicação em execução contínua.
 
-**[Sugestão]** Conteúdo do plano (em `docs/nuvem/`):
+**[Sugestão]** Conteúdo possível do plano (em `docs/nuvem/`):
+
+O [relatório técnico de otimização e monitoramento na AWS](nuvem/relatorio-tecnico-otimizacao-monitoramento-aws.docx) registra a topologia implantada, configurações observadas, evidências e ações de gestão recomendadas. Ele cobre parcialmente este plano; a comparação de custos entre provedores e as decisões de backup/recuperação continuam pendentes.
 
 - Serviços escolhidos e a função de cada um.
 - Configuração de rede e segurança (acessos liberados, variáveis de ambiente).

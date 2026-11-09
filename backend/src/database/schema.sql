@@ -6,7 +6,7 @@
 -- Estrutura base de Clientes.
 -- O schema separado organiza as tabelas da aplicação.
 BEGIN;
-
+ 
 CREATE SCHEMA IF NOT EXISTS sapataria;
 
 CREATE TABLE IF NOT EXISTS sapataria.clientes (

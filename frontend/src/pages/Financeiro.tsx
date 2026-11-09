@@ -8,6 +8,10 @@ import InputField from '../components/InputField'
 import SelectField from '../components/SelectField'
 import { ErroApi } from '../services/api'
 import {
+  exportarFinanceiroCsv,
+  exportarFinanceiroExcel,
+} from '../utils/exportacaoFinanceiro'
+import {
   consultarFechamento,
   consultarFinanceiro,
   fecharCaixa,
@@ -159,6 +163,8 @@ export default function Financeiro() {
   const [dados, setDados] = useState<DadosFinanceiros | null>(null)
   const [erro, setErro] = useState('')
   const [carregando, setCarregando] = useState(true)
+  const [exportandoExcel, setExportandoExcel] = useState(false)
+  const [erroExportacao, setErroExportacao] = useState('')
   const [tipoFiltro, setTipoFiltro] = useState<
     'todos' | MovimentoFinanceiro['tipo']
   >('todos')
@@ -279,6 +285,23 @@ export default function Financeiro() {
     setErro('')
     setCarregando(true)
     setPeriodo(rascunho)
+  }
+
+  async function baixarExcel() {
+    if (!dados) return
+    setExportandoExcel(true)
+    setErroExportacao('')
+    try {
+      await exportarFinanceiroExcel(dados, movimentos, contasOrdenadas, periodo)
+    } catch (error) {
+      setErroExportacao(
+        error instanceof Error
+          ? `Não foi possível gerar o Excel: ${error.message}`
+          : 'Não foi possível gerar o arquivo Excel. Tente novamente.',
+      )
+    } finally {
+      setExportandoExcel(false)
+    }
   }
 
   function aplicarDadosFechamento(resultado: Awaited<ReturnType<typeof consultarFechamento>>) {
@@ -856,6 +879,40 @@ export default function Financeiro() {
         {erro && (
           <p role="alert" className="mt-3 text-error">
             {erro}
+          </p>
+        )}
+        {erroExportacao && (
+          <p role="alert" className="mt-3 text-error">
+            {erroExportacao}
+          </p>
+        )}
+        <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-outline-variant pt-4">
+          <Button
+            variant="secondary"
+            size="compact"
+            disabled={carregando || !dados || Boolean(erro) || exportandoExcel}
+            onClick={() => void baixarExcel()}
+          >
+            {exportandoExcel ? 'Carregando Excel…' : 'Exportar Excel'}
+          </Button>
+          <Button
+            variant="secondary"
+            size="compact"
+            disabled={carregando || !dados || Boolean(erro)}
+            onClick={() => {
+              if (dados)
+                exportarFinanceiroCsv(dados, movimentos, contasOrdenadas, periodo)
+            }}
+          >
+            Exportar CSV
+          </Button>
+          <p className="text-label-sm text-on-surface-variant">
+            Excel está pronto para leitura e impressão: resumo em A4 retrato e detalhes em paisagem. CSV gera um arquivo por conjunto; movimentações seguem os filtros selecionados.
+          </p>
+        </div>
+        {exportandoExcel && (
+          <p className="mt-3 text-label-sm text-on-surface-variant" role="status" aria-live="polite">
+            Preparando o arquivo e iniciando o download…
           </p>
         )}
       </section>

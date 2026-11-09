@@ -392,6 +392,7 @@ Exemplo de sequência no Insomnia: login → cadastrar produto → registrar ent
 - **Entrada:** `inicio` e `fim` opcionais em `YYYY-MM-DD`; o período considera a data efetiva do pagamento e o padrão é o período completo quando omitido. Sem corpo.
 - **Sucesso:** `200`, com `periodo`, `resumo`, `movimentacoes` pagas e `contas`/parcelas. O resumo informa faturamento bruto, saídas, compras, estornos, custo de produtos/materiais usados, despesas, lucro bruto e lucro operacional. Impostos e lucro líquido retornam `null` até definição.
 - **Erros, efeitos e origem:** `400` para datas inválidas ou invertidas, `401` sem sessão e `403` para Funcionário. Consulta não altera dados; exige Administrador conforme RN-003.
+- A tela exporta essa resposta para `.xlsx` e CSV no navegador. Não há endpoint adicional: ver [fluxo de exportação do Financeiro](integracao/exportacao-financeiro.md). As movimentações exportadas respeitam os filtros locais da tela.
 
 <a id="a31"></a>
 ### A31 — GET /financeiro/{indicador}
