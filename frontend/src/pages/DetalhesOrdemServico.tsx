@@ -48,6 +48,7 @@ function Conteudo({ id }: { id: string }) {
   const [tentativa, setTentativa] = useState(0)
   const [ocupado, setOcupado] = useState(false)
   const [imprimindo, setImprimindo] = useState(false)
+  const [imprimindoProducao, setImprimindoProducao] = useState(false)
   const [incerto, setIncerto] = useState(false)
   const [materialId, setMaterialId] = useState('')
   const [quantidade, setQuantidade] = useState('')
@@ -204,11 +205,27 @@ function Conteudo({ id }: { id: string }) {
     setErroPdf('')
     try {
       const { gerarPdfOrdemServico } = await import('../utils/pdfOrdemServico')
-      gerarPdfOrdemServico(ordem, cliente, usos, materiais)
+      gerarPdfOrdemServico(ordem, cliente)
     } catch {
       setErroPdf('Não foi possível gerar o PDF da OS. Tente novamente.')
     } finally {
       setImprimindo(false)
+    }
+  }
+
+  async function imprimirProducao() {
+    if (!ordem || !cliente || imprimindo || imprimindoProducao) return
+    setImprimindoProducao(true)
+    setErroPdf('')
+    try {
+      const { gerarPdfProducaoOrdemServico } = await import(
+        '../utils/pdfOrdemServico'
+      )
+      gerarPdfProducaoOrdemServico(ordem, cliente)
+    } catch {
+      setErroPdf('Não foi possível gerar o PDF de produção. Tente novamente.')
+    } finally {
+      setImprimindoProducao(false)
     }
   }
 
@@ -333,10 +350,18 @@ function Conteudo({ id }: { id: string }) {
               <Button
                 variant="secondary"
                 size="compact"
-                disabled={imprimindo}
+                disabled={imprimindo || imprimindoProducao}
                 onClick={imprimir}
               >
                 {imprimindo ? 'Gerando PDF…' : 'Imprimir'}
+              </Button>
+              <Button
+                variant="secondary"
+                size="compact"
+                disabled={imprimindo || imprimindoProducao}
+                onClick={imprimirProducao}
+              >
+                {imprimindoProducao ? 'Gerando via…' : 'Via de produção'}
               </Button>
               {['Aberta', 'Em andamento'].includes(ordem.status) && (
                 <Link
