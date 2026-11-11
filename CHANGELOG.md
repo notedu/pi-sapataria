@@ -8,6 +8,8 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Corrigido
 
+- Financeiro: resposta da consulta diária agora corresponde ao contrato do front-end, eliminando a falha ao abrir fechamento; limpeza dos dados anteriores ao carregar outra data evita confirmar valores antigos no dia errado.
+
 - Identidade visual: sistema interno mantém o tema azul anterior; login e Landing Page continuam com a paleta marrom/caramelo.
 - Estoque: corrigida a validação HTML de quantidade em compras, removida a opção de importação CSV da tela, centralizadas as colunas e destacado em negrito o alerta de mínimo.
 - Endereços: ao informar um CEP válido, os campos do endereço são abertos e preenchidos automaticamente. Na busca por rua, uma sugestão aparece no formulário; várias sugestões ficam em uma caixa rolável com busca por rua, bairro ou CEP.
@@ -20,6 +22,8 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 - Configuração TypeScript compartilhada entre editor e `typecheck` no back-end, incluindo os tipos de sessão sem gerar arquivos compilados.
 
 ### Adicionado
+
+- Financeiro: resumo manual e lista detalhada como formatos exclusivos, escolha entre transações registradas ou valores preenchidos, conferência de dinheiro contado, correções auditadas, histórico paginado por período, cadastro de despesas/categorias e registro de pagamentos parciais. OS registram pagamento integral no cadastro por padrão; exceção não paga exige forma ao entregar e OS pagas canceladas em estado permitido recebem estorno integral pelo meio original. Migração `20261109_financeiro_operacional.sql` preparada, não aplicada ao banco existente.
 
 - Endereços: busca opcional de CEP por rua, cidade e estado nos formulários de Clientes, Fornecedores e Configurações. Sugestões podem ser confirmadas; resultados ausentes permitem preenchimento manual. Clientes agora persistem rua e bairro, com cidade, UF e CEP opcionais. Migrações preparadas; confira com a equipe quais já foram aplicadas ao banco.
 

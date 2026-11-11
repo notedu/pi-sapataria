@@ -16,6 +16,12 @@ import {
   consultarFinanceiro,
   fecharCaixa,
   listarFechamentos,
+  consultarCategoriasDespesas,
+  criarCategoriaDespesa,
+  criarDespesa,
+  registrarPagamento,
+  corrigirFechamento as salvarCorrecaoFechamento,
+  consultarCorrecoesFechamento,
 } from '../services/financeiro'
 import type {
   ContaFinanceira,
@@ -67,15 +73,11 @@ const nomeCategoria = (categoria: string) =>
 const origemMovimento = (movimento: MovimentoFinanceiro) =>
   movimento.categoria.startsWith('compra_')
     ? 'compras'
-    : ['aluguel', 'energia', 'agua', 'funcionarios'].includes(
-          movimento.categoria,
-        )
-      ? 'despesas'
-      : movimento.categoria === 'estorno'
+    : movimento.categoria === 'estorno'
         ? 'estornos'
         : movimento.categoria === 'ordem_servico'
           ? 'os'
-          : 'vendas'
+          : movimento.tipo==='saida'?'despesas':'vendas'
 const statusLabel = (status: ContaFinanceira['status']) =>
   ({
     pendente: 'Pendente',
@@ -188,6 +190,22 @@ export default function Financeiro() {
   const [formaManual, setFormaManual] = useState<'pix' | 'credito' | 'debito' | 'dinheiro'>('dinheiro')
   const [origemManual, setOrigemManual] = useState<'ordem_servico' | 'venda' | 'outro'>('outro')
   const [historicoFechamentos, setHistoricoFechamentos] = useState<FechamentoCaixa[]>([])
+  const [paginaHistorico, setPaginaHistorico] = useState(1)
+  const [filtroHistorico, setFiltroHistorico] = useState({inicio:'',fim:''})
+  const [totalPaginasHistorico, setTotalPaginasHistorico] = useState(0)
+  const [corrigindoFechamento, setCorrigindoFechamento] = useState(false)
+  const [motivoCorrecao, setMotivoCorrecao] = useState('')
+  const [fonteManual, setFonteManual] = useState<'pagamentos'|'valores'>('valores')
+  const [formatoManual, setFormatoManual] = useState<'resumo'|'detalhado'>('resumo')
+  const [valoresResumo, setValoresResumo] = useState({dinheiro:'0.00',pix:'0.00',credito:'0.00',debito:'0.00',servicos:'0.00',vendas:'0.00',saidas:'0.00'})
+  const [dinheiroContado, setDinheiroContado] = useState('')
+  const [categoriasDespesas, setCategoriasDespesas] = useState<Array<{id:number;nome:string}>>([])
+  const [categoriaNova, setCategoriaNova] = useState('')
+  const [despesaForm, setDespesaForm] = useState({categoria:'aluguel',descricao:'',valor:'',vencimento:hoje,total_parcelas:'1'})
+  const [erroDespesa, setErroDespesa] = useState('')
+  const [carregandoDespesa, setCarregandoDespesa] = useState(false)
+  const [pagamentoConta, setPagamentoConta] = useState({valor:'',forma:'dinheiro'})
+  const [correcoesFechamento,setCorrecoesFechamento]=useState<Array<{id:number;corrigido_em:string;motivo:string;corrigido_por:string|null;fechamento_anterior:Pick<FechamentoCaixa,'recebimentos_brutos'|'saidas'|'total_liquido'>}>>([])
   const [erroFechamento, setErroFechamento] = useState('')
   const [carregandoFechamento, setCarregandoFechamento] = useState(false)
 
@@ -217,6 +235,7 @@ export default function Financeiro() {
       ativo = false
     }
   }, [periodo])
+  useEffect(() => { void consultarCategoriasDespesas().then(setCategoriasDespesas).catch(()=>setErroDespesa('Não foi possível consultar categorias de despesas.')) }, [])
   const movimentos = useMemo(
     () =>
       (dados?.movimentacoes ?? []).filter(
@@ -312,10 +331,17 @@ export default function Financeiro() {
       setModoFechamento(atual.modo)
       setPagamentosSelecionados(atual.pagamentos_selecionados.map((item) => item.id))
       setItensManuais(atual.itens_manuais)
+      setFonteManual(atual.fonte_manual)
+      setFormatoManual(atual.formato_manual)
+      if(atual.resumo_manual) setValoresResumo(atual.resumo_manual as typeof valoresResumo)
+      setDinheiroContado(atual.dinheiro_contado ?? '')
     } else {
       setModoFechamento('automatico')
       setPagamentosSelecionados([])
       setItensManuais([])
+      setFonteManual('valores'); setFormatoManual('resumo')
+      setValoresResumo({dinheiro:'0.00',pix:'0.00',credito:'0.00',debito:'0.00',servicos:'0.00',vendas:'0.00',saidas:'0.00'})
+      setDinheiroContado('')
     }
   }
 
@@ -325,12 +351,14 @@ export default function Financeiro() {
     setCarregandoFechamento(true)
     setErroFechamento('')
     try {
-      const [atual, historico] = await Promise.all([
+      const [atual, historico,correcoes] = await Promise.all([
         consultarFechamento(dataFechamento),
-        listarFechamentos(),
+        listarFechamentos(filtroHistorico.inicio||undefined,filtroHistorico.fim||undefined,paginaHistorico),
+        consultarCorrecoesFechamento(dataFechamento),
       ])
       aplicarDadosFechamento(atual)
-      setHistoricoFechamentos(historico)
+      setHistoricoFechamentos(historico.itens); setTotalPaginasHistorico(historico.paginas)
+      setCorrecoesFechamento(correcoes)
     } catch (error) {
       setErroFechamento(error instanceof Error ? error.message : 'Não foi possível consultar o fechamento.')
     } finally {
@@ -340,10 +368,12 @@ export default function Financeiro() {
 
   async function consultarDiaFechamento(data: string) {
     setDataFechamento(data)
+    setFechamento(null); setPagamentosDisponiveis([]); setItensManuais([]); setPagamentosSelecionados([]); setCorrigindoFechamento(false)
     setCarregandoFechamento(true)
     setErroFechamento('')
     try {
-      aplicarDadosFechamento(await consultarFechamento(data))
+      const [atual,correcoes]=await Promise.all([consultarFechamento(data),consultarCorrecoesFechamento(data)])
+      aplicarDadosFechamento(atual);setCorrecoesFechamento(correcoes)
     } catch (error) {
       setErroFechamento(error instanceof Error ? error.message : 'Não foi possível consultar o dia.')
     } finally {
@@ -355,19 +385,52 @@ export default function Financeiro() {
     setCarregandoFechamento(true)
     setErroFechamento('')
     try {
-      const salvo = await fecharCaixa(
+      const dadosManual={modo:modoFechamento,pagamentos_ids:modoFechamento==='manual'&&fonteManual==='pagamentos'?pagamentosSelecionados:[],itens_manuais:modoFechamento==='manual'&&fonteManual==='valores'&&formatoManual==='detalhado'?itensManuais:[],formato_manual:formatoManual,resumo_manual:modoFechamento==='manual'&&fonteManual==='valores'&&formatoManual==='resumo'?Object.fromEntries(Object.entries(valoresResumo).map(([k,v])=>[k,Number(v||0).toFixed(2)])):null,dinheiro_contado:dinheiroContado||null,fonte_manual:fonteManual}
+      const salvo = corrigindoFechamento ? await salvarCorrecaoFechamento(dataFechamento,{...dadosManual,motivo:motivoCorrecao}) : await fecharCaixa(
         dataFechamento,
         modoFechamento,
-        modoFechamento === 'manual' ? pagamentosSelecionados : [],
-        modoFechamento === 'manual' ? itensManuais : [],
+        dadosManual.pagamentos_ids as number[],
+        dadosManual.itens_manuais as ItemManualFechamento[],
+        formatoManual,dadosManual.resumo_manual as Record<string,string>|null,dinheiroContado||null,fonteManual,
       )
       setFechamento(salvo)
-      setHistoricoFechamentos(await listarFechamentos())
+      setCorrigindoFechamento(false); setMotivoCorrecao('')
+      setCorrecoesFechamento(await consultarCorrecoesFechamento(dataFechamento))
+      const historico=await listarFechamentos(filtroHistorico.inicio||undefined,filtroHistorico.fim||undefined,paginaHistorico)
+      setHistoricoFechamentos(historico.itens); setTotalPaginasHistorico(historico.paginas)
     } catch (error) {
       setErroFechamento(error instanceof Error ? error.message : 'Não foi possível fechar o caixa.')
     } finally {
       setCarregandoFechamento(false)
     }
+  }
+
+  async function atualizarHistorico(pagina=1) {
+    try { const resultado=await listarFechamentos(filtroHistorico.inicio||undefined,filtroHistorico.fim||undefined,pagina); setHistoricoFechamentos(resultado.itens); setTotalPaginasHistorico(resultado.paginas); setPaginaHistorico(pagina) }
+    catch(error){setErroFechamento(error instanceof Error?error.message:'Não foi possível consultar o histórico.')}
+  }
+
+  async function salvarDespesa(event:FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setCarregandoDespesa(true); setErroDespesa('')
+    try { await criarDespesa({...despesaForm,valor:despesaForm.valor.replace(',','.'),total_parcelas:Number(despesaForm.total_parcelas)}); setDespesaForm(v=>({...v,descricao:'',valor:''})); setPeriodo({...periodo}) }
+    catch(error){setErroDespesa(error instanceof Error?error.message:'Não foi possível cadastrar despesa.')}
+    finally{setCarregandoDespesa(false)}
+  }
+
+  async function salvarCategoria() {
+    if(!categoriaNova.trim()) return
+    setCarregandoDespesa(true); setErroDespesa('')
+    try { await criarCategoriaDespesa(categoriaNova.trim()); const lista=await consultarCategoriasDespesas(); setCategoriasDespesas(lista); setDespesaForm(v=>({...v,categoria:lista.find(c=>c.nome.toLowerCase()===categoriaNova.trim().toLowerCase())?.nome??v.categoria})); setCategoriaNova('') }
+    catch(error){setErroDespesa(error instanceof Error?error.message:'Não foi possível criar categoria.')}
+    finally{setCarregandoDespesa(false)}
+  }
+
+  async function pagarConta(event:FormEvent<HTMLFormElement>) {
+    event.preventDefault(); if(!detalhe||!('parcela_id' in detalhe)) return
+    setCarregandoDespesa(true); setErroDespesa('')
+    try { await registrarPagamento({parcela_id:detalhe.parcela_id,valor:pagamentoConta.valor.replace(',','.'),forma_pagamento:pagamentoConta.forma}); const atual=await consultarFinanceiro(periodo.inicio,periodo.fim); setDados(atual); setDetalhe(null); setPagamentoConta({valor:'',forma:'dinheiro'}) }
+    catch(error){setErroDespesa(error instanceof Error?error.message:'Não foi possível registrar pagamento.')}
+    finally{setCarregandoDespesa(false)}
   }
 
   function adicionarItemManual(event: FormEvent<HTMLFormElement>) {
@@ -388,17 +451,22 @@ export default function Financeiro() {
 
   const resumoFechamento = useMemo(() => {
     if (!fechamento) return null
-    if (fechamento.fechado || modoFechamento === 'automatico')
+    if ((fechamento.fechado && !corrigindoFechamento) || modoFechamento === 'automatico')
       return fechamento
+    if(fonteManual==='valores'&&formatoManual==='resumo') {
+      const bruto=Number(valoresResumo.servicos||0)+Number(valoresResumo.vendas||0)
+      const saida=Number(valoresResumo.saidas||0)
+      return {...fechamento,recebimentos_brutos:bruto.toFixed(2),saidas:saida.toFixed(2),total_liquido:(bruto-saida).toFixed(2),por_forma_pagamento:Object.fromEntries(['dinheiro','pix','credito','debito'].map(k=>[k,Number(valoresResumo[k as keyof typeof valoresResumo]||0).toFixed(2)])),por_origem:{ordem_servico:Number(valoresResumo.servicos||0).toFixed(2),venda:Number(valoresResumo.vendas||0).toFixed(2),outro:'0.00'},saidas_por_categoria:saida?{manual:saida.toFixed(2)}:{}}
+    }
     return {
       ...fechamento,
       ...apurarFechamentoManual(
         pagamentosDisponiveis,
         pagamentosSelecionados,
-        itensManuais,
+        fonteManual==='valores'?itensManuais:[],
       ),
     }
-  }, [fechamento, modoFechamento, pagamentosDisponiveis, pagamentosSelecionados, itensManuais])
+  }, [fechamento, modoFechamento, pagamentosDisponiveis, pagamentosSelecionados, itensManuais, fonteManual, formatoManual,valoresResumo,corrigindoFechamento])
 
   return (
     <div className="mx-auto max-w-container-max space-y-8">
@@ -473,8 +541,8 @@ export default function Financeiro() {
               <SelectField
                 id="modo-fechamento-caixa"
                 label="Modo de fechamento"
-                value={fechamento?.fechado ? fechamento.modo : modoFechamento}
-                disabled={Boolean(fechamento?.fechado)}
+                value={fechamento?.fechado&&!corrigindoFechamento ? fechamento.modo : modoFechamento}
+                disabled={Boolean(fechamento?.fechado&&!corrigindoFechamento)}
                 onChange={(event) =>
                   setModoFechamento(event.target.value as typeof modoFechamento)
                 }
@@ -482,25 +550,28 @@ export default function Financeiro() {
                 <option value="automatico">Automático</option>
                 <option value="manual">Manual</option>
               </SelectField>
-              {fechamento && !fechamento.fechado && (
+              {fechamento?.fechado&&!corrigindoFechamento&&<Button variant="secondary" size="compact" onClick={()=>{setCorrigindoFechamento(true);setModoFechamento(fechamento.modo);setMotivoCorrecao('')}}>Corrigir fechamento</Button>}
+              {corrigindoFechamento&&fechamento&&<Button variant="secondary" size="compact" onClick={()=>{setCorrigindoFechamento(false);setMotivoCorrecao('');aplicarDadosFechamento({fechamento,pagamentos_disponiveis:pagamentosDisponiveis})}}>Cancelar correção</Button>}
+              {fechamento && (!fechamento.fechado||corrigindoFechamento) && (
                 <Button
                   size="compact"
-                  disabled={carregandoFechamento}
+                  disabled={carregandoFechamento||(corrigindoFechamento&&!motivoCorrecao.trim())}
                   onClick={() => void confirmarFechamento()}
                 >
                   {modoFechamento === 'manual'
-                    ? 'Confirmar fechamento manual'
-                    : 'Confirmar fechamento automático'}
+                    ? corrigindoFechamento?'Salvar correção manual':'Confirmar fechamento manual'
+                    : corrigindoFechamento?'Salvar correção automática':'Confirmar fechamento automático'}
                 </Button>
               )}
             </div>
+            {corrigindoFechamento&&<InputField id="motivo-correcao-fechamento" label="Motivo da correção" required value={motivoCorrecao} onChange={(e)=>setMotivoCorrecao(e.target.value)} maxLength={500}/>}
             {carregandoFechamento && <p role="status">Apurando o caixa…</p>}
             {erroFechamento && (
               <p role="alert" className="text-error">
                 {erroFechamento}
               </p>
             )}
-            {fechamento && modoFechamento === 'manual' && !fechamento.fechado && (
+            {fechamento && modoFechamento === 'manual' && (!fechamento.fechado||corrigindoFechamento) && (
               <div className="space-y-5 rounded-default border border-outline-variant p-4">
                 <div>
                   <h3 className="text-headline-sm">Escolha os pagamentos do dia</h3>
@@ -508,7 +579,10 @@ export default function Financeiro() {
                     Marque cada recebimento ou saída registrada que deve entrar neste fechamento.
                   </p>
                 </div>
-                {pagamentosDisponiveis.length ? (
+                <SelectField id="fonte-fechamento-manual" label="Como preencher" value={fonteManual} onChange={(e)=>{setFonteManual(e.target.value as typeof fonteManual);setPagamentosSelecionados([]);setItensManuais([])}}>
+                  <option value="pagamentos">Selecionar pagamentos registrados</option><option value="valores">Preencher valores</option>
+                </SelectField>
+                {fonteManual==='pagamentos' && (pagamentosDisponiveis.length ? (
                   <ul className="max-h-72 divide-y divide-outline-variant overflow-y-auto">
                     {pagamentosDisponiveis.map((item) => (
                       <li key={item.id} className="py-2">
@@ -548,14 +622,16 @@ export default function Financeiro() {
                   <p className="text-on-surface-variant">
                     Nenhum pagamento registrado nesta data. Você ainda pode incluir valores manuais.
                   </p>
-                )}
-                <form
+                ))}
+                {fonteManual==='valores'&&<SelectField id="formato-manual" label="Formato dos valores" value={formatoManual} onChange={(e)=>{setFormatoManual(e.target.value as typeof formatoManual);setItensManuais([])}}><option value="resumo">Resumo do caixa</option><option value="detalhado">Lista detalhada</option></SelectField>}
+                {fonteManual==='valores'&&formatoManual==='resumo'&&<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{([['dinheiro','Dinheiro'],['pix','Pix'],['credito','Cartão de crédito'],['debito','Cartão de débito'],['servicos','Serviços'],['vendas','Vendas'],['saidas','Saídas']] as const).map(([campo,label])=><InputField key={campo} id={`resumo-${campo}`} label={`${label} (R$)`} type="number" min="0" step="0.01" value={valoresResumo[campo]} onChange={(e)=>setValoresResumo(v=>({...v,[campo]:e.target.value}))}/>)}</div>}
+                {fonteManual==='valores'&&formatoManual==='detalhado'&&<form
                   onSubmit={adicionarItemManual}
                   className="space-y-4 border-t border-outline-variant pt-4"
                 >
                   <h3 className="text-headline-sm">Adicionar valor manual</h3>
                   <p className="text-label-sm text-on-surface-variant">
-                    Inclua aqui somente valores que ainda não estejam entre os pagamentos selecionados.
+                    Informe os movimentos do dia que ainda não foram registrados no sistema.
                   </p>
                   <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                     <InputField
@@ -620,8 +696,8 @@ export default function Financeiro() {
                   <Button type="submit" variant="secondary" size="compact">
                     Adicionar ao fechamento
                   </Button>
-                </form>
-                {itensManuais.length > 0 && (
+                </form>}
+                {fonteManual==='valores'&&formatoManual==='detalhado'&&itensManuais.length > 0 && (
                   <ul className="divide-y divide-outline-variant">
                     {itensManuais.map((item, indice) => (
                       <li
@@ -655,6 +731,7 @@ export default function Financeiro() {
             )}
             {fechamento && resumoFechamento && (
               <>
+                {(!fechamento.fechado||corrigindoFechamento)&&<InputField id="dinheiro-contado" label="Dinheiro contado no caixa (R$)" type="number" min="0" step="0.01" value={dinheiroContado} onChange={(e)=>setDinheiroContado(e.target.value)}/>}
                 <p className="text-label-sm text-on-surface-variant">
                   {fechamento.fechado
                     ? `Fechamento ${fechamento.modo}. Os valores salvos são uma fotografia do dia.`
@@ -679,12 +756,15 @@ export default function Financeiro() {
                     </p>
                   </CartaoInformacoes>
                 </div>
+                {(dinheiroContado!==''||fechamento.dinheiro_contado!==null)&&<p className="rounded-default bg-secondary-container p-3 text-body-md">Diferença do dinheiro: <strong>{formatarDinheiro((Number(dinheiroContado||fechamento.dinheiro_contado)-Number(resumoFechamento.por_forma_pagamento.dinheiro||0)).toFixed(2))}</strong> (contado menos registrado)</p>}
+                {modoFechamento==='manual'&&fonteManual==='valores'&&formatoManual==='resumo'&&<p className="rounded-default bg-secondary-container p-3 text-body-md">Conferência das classificações: meios de pagamento {formatarDinheiro(Object.values(valoresResumo).slice(0,4).reduce((s,v)=>s+Number(v||0),0).toFixed(2))}; serviços + vendas {formatarDinheiro((Number(valoresResumo.servicos||0)+Number(valoresResumo.vendas||0)).toFixed(2))}. As duas somas devem corresponder.</p>}
+                {correcoesFechamento.length>0&&<div className="rounded-default border border-outline-variant p-4"><h3 className="text-label-md">Correções anteriores</h3><ul className="mt-2 space-y-2">{correcoesFechamento.map(c=><li key={c.id}>{c.corrigido_em} · {c.corrigido_por??'Administrador'} · {c.motivo}<div className="text-label-sm text-on-surface-variant">Versão anterior — bruto {formatarDinheiro(c.fechamento_anterior.recebimentos_brutos)}, saídas {formatarDinheiro(c.fechamento_anterior.saidas)}, líquido {formatarDinheiro(c.fechamento_anterior.total_liquido)}</div></li>)}</ul></div>}
                 <div className="grid gap-5 md:grid-cols-3">
                   <div>
                     <h3 className="text-label-md">Recebimentos por meio</h3>
                     <dl className="mt-2 space-y-1">
-                      {Object.entries(resumoFechamento.por_forma_pagamento).map(
-                        ([forma, valor]) => (
+                      {(['dinheiro','pix','credito','debito'] as const).map(
+                        (forma) => (
                           <div key={forma} className="flex justify-between gap-3">
                             <dt>
                               {({
@@ -694,7 +774,7 @@ export default function Financeiro() {
                                 dinheiro: 'Dinheiro',
                               } as Record<string, string>)[forma] ?? forma}
                             </dt>
-                            <dd className="tabular-nums">{formatarDinheiro(valor)}</dd>
+                            <dd className="tabular-nums">{formatarDinheiro(resumoFechamento.por_forma_pagamento[forma]??'0.00')}</dd>
                           </div>
                         ),
                       )}
@@ -771,6 +851,11 @@ export default function Financeiro() {
             )}
             <div>
               <h3 className="text-headline-sm">Histórico de fechamentos</h3>
+              <div className="mt-3 flex flex-wrap items-end gap-3">
+                <InputField id="historico-inicio" label="De" type="date" value={filtroHistorico.inicio} onChange={(e)=>setFiltroHistorico(v=>({...v,inicio:e.target.value}))}/>
+                <InputField id="historico-fim" label="Até" type="date" value={filtroHistorico.fim} onChange={(e)=>setFiltroHistorico(v=>({...v,fim:e.target.value}))}/>
+                <Button size="compact" variant="secondary" onClick={()=>void atualizarHistorico(1)}>Filtrar histórico</Button>
+              </div>
               {historicoFechamentos.length ? (
                 <ul className="mt-2 divide-y divide-outline-variant">
                   {historicoFechamentos.map((item) => (
@@ -791,9 +876,23 @@ export default function Financeiro() {
               ) : (
                 <p className="mt-2 text-on-surface-variant">Ainda não há fechamentos salvos.</p>
               )}
+              <div className="mt-3 flex items-center gap-3"><Button variant="secondary" size="compact" disabled={paginaHistorico<=1} onClick={()=>void atualizarHistorico(paginaHistorico-1)}>Anterior</Button><span>Página {paginaHistorico} de {Math.max(totalPaginasHistorico,1)}</span><Button variant="secondary" size="compact" disabled={paginaHistorico>=totalPaginasHistorico} onClick={()=>void atualizarHistorico(paginaHistorico+1)}>Próxima</Button></div>
             </div>
           </div>
         )}
+      </section>
+      <section className="rounded-default border border-outline-variant bg-surface-container-lowest p-5 space-y-4">
+        <div><h2 className="text-headline-md">Cadastrar despesa</h2><p className="text-label-sm text-on-surface-variant">Registre despesas e parcelas; os pagamentos serão contabilizados no caixa somente quando registrados.</p></div>
+        <form onSubmit={(e)=>void salvarDespesa(e)} className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          <SelectField id="categoria-despesa" label="Categoria" value={despesaForm.categoria} onChange={(e)=>setDespesaForm(v=>({...v,categoria:e.target.value}))}>{categoriasDespesas.map(c=><option key={c.id} value={c.nome}>{nomeCategoria(c.nome)}</option>)}</SelectField>
+          <InputField id="descricao-despesa" label="Descrição" required value={despesaForm.descricao} onChange={(e)=>setDespesaForm(v=>({...v,descricao:e.target.value}))}/>
+          <InputField id="valor-despesa" label="Valor total (R$)" type="number" min="0.01" step="0.01" required value={despesaForm.valor} onChange={(e)=>setDespesaForm(v=>({...v,valor:e.target.value}))}/>
+          <InputField id="vencimento-despesa" label="Vencimento inicial" type="date" required value={despesaForm.vencimento} onChange={(e)=>setDespesaForm(v=>({...v,vencimento:e.target.value}))}/>
+          <InputField id="parcelas-despesa" label="Parcelas" type="number" min="1" max="120" required value={despesaForm.total_parcelas} onChange={(e)=>setDespesaForm(v=>({...v,total_parcelas:e.target.value}))}/>
+          <Button type="submit" disabled={carregandoDespesa}>Cadastrar despesa</Button>
+        </form>
+        <div className="flex flex-wrap items-end gap-3"><InputField id="categoria-personalizada" label="Nova categoria" maxLength={80} value={categoriaNova} onChange={(e)=>setCategoriaNova(e.target.value)}/><Button type="button" variant="secondary" size="compact" disabled={!categoriaNova.trim()||carregandoDespesa} onClick={()=>void salvarCategoria()}>Criar categoria</Button></div>
+        {erroDespesa&&<p role="alert" className="text-error">{erroDespesa}</p>}
       </section>
       <section
         aria-label="Filtros financeiros"
@@ -1180,6 +1279,15 @@ export default function Financeiro() {
           titulo="Detalhes financeiros"
           onCancelar={() => setDetalhe(null)}
         >
+          {'parcela_id' in detalhe && detalhe.origem_tipo==='ordem_servico'&&Number(detalhe.valor_pago)<Number(detalhe.valor)&&<p className="mb-5 rounded-default bg-secondary-container p-4">O recebimento desta OS será registrado ao mudar o status para Entregue.</p>}
+          {'parcela_id' in detalhe && detalhe.origem_tipo!=='ordem_servico' && Number(detalhe.valor_pago)<Number(detalhe.valor) && <form onSubmit={(e)=>void pagarConta(e)} className="mb-5 space-y-3 rounded-default border border-outline-variant p-4">
+            <h3 className="text-headline-sm">Registrar pagamento</h3>
+            <p className="text-label-sm">Pendente: {formatarDinheiro((Number(detalhe.valor)-Number(detalhe.valor_pago)).toFixed(2))}</p>
+            <InputField id="valor-pagamento-conta" label="Valor pago (R$)" type="number" min="0.01" max={(Number(detalhe.valor)-Number(detalhe.valor_pago)).toFixed(2)} step="0.01" required value={pagamentoConta.valor} onChange={(e)=>setPagamentoConta(v=>({...v,valor:e.target.value}))}/>
+            <SelectField id="forma-pagamento-conta" label="Forma de pagamento" value={pagamentoConta.forma} onChange={(e)=>setPagamentoConta(v=>({...v,forma:e.target.value}))}><option value="dinheiro">Dinheiro</option><option value="pix">PIX</option><option value="credito">Cartão de crédito</option><option value="debito">Cartão de débito</option></SelectField>
+            <Button type="submit" disabled={carregandoDespesa}>Registrar pagamento</Button>
+            {erroDespesa&&<p role="alert" className="text-error">{erroDespesa}</p>}
+          </form>}
           <dl className="space-y-4">
             {('forma_pagamento' in detalhe
               ? [

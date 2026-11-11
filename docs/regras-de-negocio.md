@@ -28,8 +28,8 @@ Essas decisões atualizam as pendências correspondentes de RN-001/RN-002/RN-004
 ### Decisões operacionais confirmadas pelo Integrante 1 e implementadas
 
 - RN-002: ambos os perfis operam os módulos de negócio; administração de funcionários continua exclusiva do administrador.
-- RN-009: PIX, crédito, débito e dinheiro, representados por `pix`, `credito`, `debito`, `dinheiro`. Pagamento opcional na OS e obrigatório na venda. Parcelas, descontos e reembolsos não foram definidos.
-- RN-010: OS nasce Aberta; sequência normal Aberta → Em andamento → Pronta → Entregue, com retorno de uma etapa permitido inclusive Entregue → Pronta. Responsável ativo escolhido no cadastro. Edição e novos usos somente Aberta/Em andamento. Cancelamento permitido até Pronta, exige motivo e é estado final. Valor total manual; materiais não são somados ao valor.
+- RN-009: PIX, crédito, débito e dinheiro, representados por `pix`, `credito`, `debito`, `dinheiro`. OS é paga integralmente no cadastro por padrão; opção de não paga leva a exigir o recebimento ao passar para Entregue. Parcelas de cartão não alteram o total recebido pela sapataria nem geram taxas/prazos nesta etapa. Despesas admitem parcelas e pagamentos parciais. Sem descontos.
+- RN-010: OS nasce Aberta; sequência normal Aberta → Em andamento → Pronta → Entregue, com retorno de uma etapa permitido inclusive Entregue → Pronta. Responsável ativo escolhido no cadastro. Edição e novos usos somente Aberta/Em andamento. Cancelamento permitido em Aberta, Em andamento ou Pronta, exige motivo e é estado final; se paga, gera reembolso integral pelos mesmos meios. Entregue não é cancelável. Valor total manual; materiais não são somados ao valor.
 - RN-011: venda com pelo menos um produto, vendedor da sessão, preço do cadastro preservado em cada item e total calculado pela soma de quantidade × preço. Cadastro da venda e baixa são uma transação. Preço não pode ser sobrescrito na venda.
 - RN-012: materiais previstos podem ser associados à OS sem reserva nem baixa de estoque. A baixa ocorre ao registrar o uso efetivo, uma linha por uso. Cancelamento não repõe automaticamente materiais. Remoção de quantidade já baixada só ocorre como devolução registrada, limitada ao saldo ainda não revertido; o histórico de uso/movimentação é preservado. Indicadores de custo/financeiro permanecem pendentes.
 - RN-018/RN-019: materiais fracionáveis; produtos inteiros; valores monetários com até duas casas, zero permitido, negativos recusados. Saldos começam em zero quando o cadastro não informa saldo inicial, nunca ficam negativos; quantidade mínima não negativa. Entrada, uso, saída e venda exigem quantidade positiva. Custo do material corresponde à unidade informada. Saldo inicial positivo no cadastro cria uma entrada histórica na mesma transação.
@@ -94,7 +94,13 @@ Estas confirmações substituem as pendências correspondentes das sugestões or
 
 **Decisão do usuário em 05/11/2026 — fechamento diário:** Administrador confere uma prévia dos pagamentos recebidos naquele dia, agrupados por forma e origem (OS/serviços e vendas), das saídas efetivamente pagas e do total líquido (recebimentos menos saídas). Ao confirmar, o sistema grava os totais e agrupamentos como fotografia diária e permite consultar o histórico. Cada data pode ser fechada uma vez; novos pagamentos posteriores não alteram o registro salvo nem são bloqueados. Não há categoria automática de perdas; uma perda só compõe o total se registrada como saída no financeiro.
 
+**Complemento em 09/11/2026:** o registro inicial permanece único por data, mas Administrador pode corrigir/reabrir a edição do fechamento; cada correção guarda a fotografia anterior, motivo e autoria. O histórico completo é paginado e filtrável por datas. O dinheiro contado é comparado aos recebimentos registrados como dinheiro.
+
 **Complemento do usuário em 06/11/2026 — fechamento manual:** além do cálculo automático, o Administrador pode montar o fechamento manual selecionando pagamentos daquele dia e/ou adicionando entradas e saídas avulsas com descrição, valor e classificação (para entradas, forma de pagamento e origem). A API valida e calcula os totais. Os valores avulsos e pagamentos selecionados são preservados na fotografia, sem criar ou alterar lançamentos financeiros, OS, vendas ou estoque. O modo escolhido faz parte do histórico; a data permanece única.
+
+**Esclarecimento do usuário em 09/11/2026:** selecionados pagamentos ou preenchidos valores são fontes exclusivas. Para valores preenchidos, resumo por meio/serviço/venda/saída e lista detalhada também são formatos alternativos. Esse esclarecimento substitui o “e/ou” do complemento de 06/11.
+
+**Decisões do usuário em 09/11/2026 — integração financeira:** o fechamento manual exige escolher uma fonte: pagamentos existentes ou valores preenchidos. Valores oferecem resumo por forma, serviços, vendas e saídas, ou lista detalhada, como formatos alternativos. O Administrador informa o dinheiro contado para comparar com o registrado. O histórico tem paginação e filtro por datas. Correções guardam os valores anteriores, motivo, data e responsável. Despesas podem ser parceladas/pagas parcialmente e recebem categorias personalizadas criadas pelo Administrador, além das quatro existentes. OS não pagas são quitadas ao passar para Entregue; OS pagas podem ser canceladas nos estados canceláveis com reembolso integral pelo mesmo meio. Vendas mantêm estorno total automático.
 
 **Decisão do Integrante 1 em 15/10/2026 — Configurações:** ambos os perfis acessam `/configuracoes` para consultar os próprios dados de acesso, trocar a própria senha, manter preferências pessoais de notificações e tema e consultar o endereço comercial da loja. Essas preferências ficam salvas no navegador por usuário; notificações não geram alertas nesta etapa. Somente Administrador pode alterar o endereço; a API exige autenticação para consulta e verifica perfil administrativo na gravação. Esta decisão cobre somente as opções implementadas; catálogos e parâmetros financeiros sugeridos continuam pendentes.
 
@@ -162,19 +168,19 @@ Estas confirmações substituem as pendências correspondentes das sugestões or
 
 ### RN-009
 
-**Atualização aprovada:** Formas aceitas confirmadas e implementadas: pix, credito, debito e dinheiro; opcional em OS. Demais condições de pagamento continuam pendentes.
+**Atualização aprovada pelo usuário em 09/11/2026:** formas aceitas: pix, credito, debito e dinheiro. OS é paga integralmente no cadastro por padrão; a exceção não paga será quitada ao passar para Entregue, com forma informada. Parcelamento da maquininha não muda o total recebido pela sapataria, e taxas/prazos ficam fora desta etapa. Despesas permitem parcelas e pagamentos parciais.
 
 **Formas e condições de pagamento.**
 
 - **Origem:** Guia §17; §§5.4, 5.6 e 5.10 sugerem campos e cadastro auxiliar de formas de pagamento.
 - **Classificação:** Pendência. **Situação da definição:** Pendente de definição.
-- **Decisão necessária:** definir as formas aceitas pela loja e os comportamentos de pagamento necessários ao registro; [PD-N05](#pd-n05).
-- **Critério de aceitação:** não fechado. A fonte não autoriza presumir pagamento parcial, parcelamento, desconto, troco ou integração com meios de pagamento. A exclusão dessa integração também é apenas sugerida no Guia §1.4.
+- **Decisão necessária:** resolvida para os fluxos descritos acima; taxas, prazos, desconto e troco continuam fora de escopo.
+- **Critério de aceitação:** OS recebida integralmente ao cadastro, salvo opção não paga; nesse caso o recebimento é exigido na entrega. Despesas suportam parcelas e pagamentos parciais sem exceder o saldo.
 - **Requisitos relacionados:** [RF-018](requisitos.md#rf-018), [RF-020](requisitos.md#rf-020) e [RF-024](requisitos.md#rf-024).
 
 ### RN-010
 
-**Atualização aprovada:** estados, avanço/retorno de uma etapa e cancelamento com motivo confirmados e implementados conforme decisões operacionais acima. `Cancelada` encerra a OS, inclusive após início, preservando consumo e autoria já registrados.
+**Atualização aprovada:** estados, avanço/retorno de uma etapa e cancelamento com motivo confirmados e implementados conforme decisões operacionais acima. `Cancelada` encerra a OS, inclusive após início, preservando consumo e autoria já registrados. Em 09/11/2026, o usuário confirmou pagamento integral padrão ao cadastro, quitação ao entregar para a exceção não paga, e reembolso integral pelo mesmo meio ao cancelar OS paga em estado cancelável. OS Entregue permanece não cancelável.
 
 **Estados e significados da OS.**
 
@@ -186,25 +192,24 @@ Estas confirmações substituem as pendências correspondentes das sugestões or
 | Aberta | OS registrada e calçado recebido. |
 | Em andamento | Serviço em execução. |
 | Pronta | Serviço concluído, aguardando retirada. |
-| Entregue | Cliente retirou e pagou; efeito financeiro tratado em RN-014. |
+| Entregue | Cliente retirou e a OS está quitada; se foi marcada não paga na entrada, o recebimento e a forma são registrados nesta transição (decisão do usuário em 09/11/2026; efeito em RN-014). |
 | Cancelada | OS encerrada sem execução do serviço. |
 
 - **Regra adotada e implementada em 28/10/2026:** avanço e retorno de uma etapa, incluindo `Entregue → Pronta`; não são permitidos saltos. Cancelamento permitido em Aberta, Em andamento ou Pronta e exige motivo não vazio; `Cancelada` é terminal. Não há confirmação adicional para avançar.
 - **Composição da OS adotada na mesma decisão:** várias linhas item/serviço; valor total manual, sem soma de custos de materiais. Materiais previstos não baixam nem reservam estoque; usos efetivos e devoluções seguem RN-012.
-- **Pendências mantidas:** prazo e demais detalhes não definidos continuam em [PD-N03](#pd-n03)/[PD-N04](#pd-n04); pagamento e faturamento em PD-N05/PD-N06.
+- **Pendências mantidas:** prazo e demais detalhes não definidos continuam em [PD-N03](#pd-n03)/[PD-N04](#pd-n04); indicadores adicionais, lucro líquido e imposto seguem em [PD-N06](#pd-n06).
 - **Requisitos relacionados:** [RF-004](requisitos.md#rf-004) e [RF-018](requisitos.md#rf-018).
 
 ### RN-011
 
-**Atualização aprovada:** Registro, preço histórico, total e baixa confirmados e implementados. Apuração do painel financeiro continua pendente.
+**Atualização aprovada:** Registro, preço histórico, total e baixa confirmados e implementados. Em 09/11/2026 o usuário confirmou o estorno financeiro total automático no cancelamento de venda.
 
 **Efeitos da venda independente.**
 
 - **Origem:** Guia §§5.6, 5.8, 6.2 e 6.3; detalhes e fluxo sugeridos.
-- **Classificação:** Sugestão. **Situação da definição:** proposta não aprovada.
-- **Regra proposta:** selecionar produtos e quantidades, informar a forma de pagamento e registrar a venda; o registro dá baixa no estoque de produtos e soma o valor ao faturamento.
-- **Critério proposto:** observar os efeitos de estoque e faturamento no registro da venda, se esse fluxo for aprovado. A consistência geral possui exigência própria em RN-018 e RN-019.
-- **Pendente de definição:** momento e condições definitivas da operação, correções e cancelamentos, pagamentos e apuração financeira; [PD-N05](#pd-n05), [PD-N06](#pd-n06) e [PD-N07](#pd-n07).
+- **Classificação da origem:** Sugestão do Guia; comportamento adotado pela equipe/usuário e implementado conforme atualizações desta seção.
+- **Regra adotada:** selecionar produtos e quantidades, registrar a forma de pagamento e total; a operação baixa o estoque em transação e cria recebimento. O cancelamento repõe as quantidades informadas e cria estorno financeiro integral automático.
+- **Pendências restantes:** indicadores adicionais e regras do painel seguem em [PD-N06](#pd-n06). A operação de vendas independente e o cancelamento estão implementados.
 - **Requisitos relacionados:** [RF-020](requisitos.md#rf-020) e [RF-022](requisitos.md#rf-022).
 
 ## Estoques e indicadores financeiros
@@ -247,7 +252,7 @@ Cadastro/edição de item aceita fornecedores opcionais na mesma transação. Ca
 
 - **Origem:** Guia §§5.11, 6.1 e 6.3.
 - **Classificação:** Definição da equipe. **Situação da definição:** definida e implementada em 20/10/2026.
-- **Regra:** faturamento é o total bruto efetivamente recebido no período, em regime de caixa. O cancelamento de venda gera estorno na data do cancelamento; OS cancelada sem pagamento não gera recebimento.
+- **Regra:** faturamento é o total bruto efetivamente recebido no período, em regime de caixa. Cancelamento de venda gera estorno total na data do cancelamento. Cancelamento de OS paga nos estados permitidos gera reembolso integral pelos meios registrados; OS sem pagamento não gera reembolso.
 - **Implementado:** pagamentos são filtrados pela data de pagamento, e o painel exige perfil Administrador.
 - **Requisito relacionado:** [RF-025](requisitos.md#rf-025).
 
@@ -327,7 +332,7 @@ A situação de cada registro abaixo indica o que foi resolvido e o que permanec
 | <a id="pd-n02"></a>PD-N02 | Resolvido para troca da própria senha em 15/10/2026: exige senha atual, nova senha e confirmação; política atualizada em 23/10/2026 para no mínimo 8 caracteres, sem limite máximo, com maiúscula, minúscula e caractere especial. Em 03/11/2026, a equipe confirmou aplicar a mesma política ao cadastro de Funcionários e à criação do primeiro Administrador. A troca invalida as sessões ativas após o sucesso. Recuperação de senha permanece pendente. | Guia §§5.1, 5.5 e 5.9; RN-004. Mecanismo técnico de armazenamento de senha em [PD-R04](requisitos.md#pd-r04). |
 | <a id="pd-n03"></a>PD-N03 | Resolvidos campos/obrigatoriedade e operações dos nove cadastros conforme modelo/API. Pendentes: vínculos Cliente–Venda e OS–Venda, autoedição por Funcionário comum não autorizada nesta etapa; demais cadastros auxiliares pendentes. | Guia §5 (validação exigida, detalhes sugeridos), §§5.3–5.4, 5.9, 10 e 17; RN-006 e RN-010. Listar um campo não o torna obrigatório. |
 | <a id="pd-n04"></a>PD-N04 | Resolvidos estados, transições, edição e cancelamento da OS. Prazo permanece opcional, sem cálculo automático; catálogo de serviços não definido. | Guia §§6.1 e 17; RN-010. O guia define apenas significados sugeridos, não transições ou duração. |
-| <a id="pd-n05"></a>PD-N05 | Formas aceitas resolvidas: PIX, crédito, débito, dinheiro. Pagamento opcional em OS, obrigatório em venda. Situações financeiras adicionais permanecem pendentes. | Guia §§5.4, 5.6, 6.1–6.2 e 17; RN-009 a RN-011. Não há política documentada de parcelamento ou pagamento parcial. |
+| <a id="pd-n05"></a>PD-N05 | Resolvido pelo usuário em 09/11/2026 para esta etapa: OS paga integralmente no cadastro por padrão; a exceção não paga é quitada ao entregar. Despesas aceitam parcelas e pagamentos parciais. OS paga é reembolsada integralmente pelo mesmo meio quando cancelada nos estados permitidos; venda mantém estorno total automático. Taxas e prazos de cartão ficam fora do escopo. | Guia §§5.4, 5.6, 6.1–6.2 e 17; RN-009 a RN-011. |
 | <a id="pd-n06"></a>PD-N06 | Aprovar critérios de faturamento e períodos, apuração de materiais, fórmula de lucro, custos incluídos e regra/parâmetro do imposto. | Guia §§5.11, 6.1, 6.3 e 17; RN-012 e RN-014 a RN-017. Definições atuais são sugestões; lucro e imposto são pendências explícitas. |
 | <a id="pd-n07"></a>PD-N07 | Resolvido para esta etapa: baixas no uso/venda; operações atômicas; estoque não negativo; estorno de movimento manual; devolução de material não utilizado; cancelamento de venda com itens efetivamente devolvidos. | Guia §§5.6–5.8 e 6: **Sugestões**; §8.2: **Exigência acadêmica** de consistência; RN-011, RN-012, RN-018 e RN-019. Preservar ambas as classificações. |
 | <a id="pd-n08"></a>PD-N08 | Parcialmente resolvido em 15/10/2026: materiais e produtos são alertados quando o saldo cai abaixo do mínimo cadastrado; Produtos possuem mínimo inteiro individual. Pendente: antecedência do alerta de prazo de OS. | Guia §§1.2, 5.2, 5.7 e 5.8; RN-013. |

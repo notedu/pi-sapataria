@@ -1,4 +1,4 @@
-import { dadosOs, idCorpo, decimal } from '../utils/operacoes';
+import { dadosOs, idCorpo, decimal, pagamento } from '../utils/operacoes';
 import type { Request, Response } from 'express';
 import * as materialOsModel from '../models/materialOsModel';
 import * as ordemServicoModel from '../models/ordemServicoModel';
@@ -89,7 +89,7 @@ export async function mudarStatus(
   request: Request,
   response: Response,
 ): Promise<void> {
-  const d = objeto(request.body, ['status', 'motivo_cancelamento']);
+  const d = objeto(request.body, ['status', 'motivo_cancelamento','forma_pagamento']);
   if (
     typeof d.status !== 'string' ||
     !['Aberta', 'Em andamento', 'Pronta', 'Entregue', 'Cancelada'].includes(
@@ -112,6 +112,7 @@ export async function mudarStatus(
       d.status,
       motivo,
       { id: request.funcionario!.id, nome: request.funcionario!.nome },
+      d.status === 'Entregue' ? pagamento(d.forma_pagamento,true) as 'pix'|'credito'|'debito'|'dinheiro'|null : null,
     ),
   });
 }

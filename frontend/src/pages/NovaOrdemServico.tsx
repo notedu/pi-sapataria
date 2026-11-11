@@ -101,6 +101,7 @@ export default function NovaOrdemServico({
     inicial?.forma_pagamento ??
       (typeof rascunho?.pagamento === 'string' ? rascunho.pagamento : ''),
   )
+  const [pagoNaEntrada, setPagoNaEntrada] = useState(true)
   const [observacoes, setObservacoes] = useState(
     inicial?.observacoes ??
       (typeof rascunho?.observacoes === 'string' ? rascunho.observacoes : ''),
@@ -221,7 +222,8 @@ export default function NovaOrdemServico({
         })),
         valor: valorOsParaApi(valor),
         prazo_entrega: prazo || null,
-        forma_pagamento: pagamento || null,
+        forma_pagamento: (inicial ? pagamento : pagoNaEntrada ? pagamento : null) || null,
+        ...(!inicial ? { pago_na_entrada: pagoNaEntrada } : {}),
         observacoes: observacoes.trim() || null,
       }
       const ordem = inicial
@@ -590,9 +592,16 @@ export default function NovaOrdemServico({
                   }
                   placeholder="R$ 0,00"
                 />
-                <SelectField
+                {!inicial && (
+                  <label className="flex items-center gap-3 text-body-md">
+                    <input type="checkbox" checked={pagoNaEntrada} onChange={(event) => setPagoNaEntrada(event.target.checked)} />
+                    Cliente pagou ao deixar o item (padrão)
+                  </label>
+                )}
+                {(!inicial ? pagoNaEntrada : true) && <SelectField
                   id="pagamento-os"
-                  label="Forma de pagamento (opcional)"
+                  label="Forma de pagamento"
+                  required={!inicial && pagoNaEntrada}
                   value={pagamento}
                   onChange={(event) => setPagamento(event.target.value)}
                 >
@@ -601,7 +610,8 @@ export default function NovaOrdemServico({
                   <option value="credito">Crédito</option>
                   <option value="debito">Débito</option>
                   <option value="dinheiro">Dinheiro</option>
-                </SelectField>
+                </SelectField>}
+                {!inicial && !pagoNaEntrada && <p className="text-label-sm text-on-surface-variant">O recebimento será solicitado quando a OS passar para Entregue.</p>}
                 <p className="text-label-sm text-on-surface-variant">
                   Digite os números do valor, incluindo os centavos. Ex.: 123456
                   → R$ 1.234,56. O valor é manual, sem imposto automático.

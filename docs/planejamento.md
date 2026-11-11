@@ -22,6 +22,8 @@ A arquitetura ainda registra o framework HTTP como pendente e as fontes anterior
 
 **Atualização de 01/10/2026:** João Franco informou que assumiu o Financeiro e autorizou a primeira tela como protótipo visual responsivo com dados fictícios. Na atualização da mesma data, autorizou a tela `/financeiro` na navegação normal, exclusiva do Administrador, mantendo dados fictícios temporários. API/banco financeiro e fórmulas continuam pendentes; a permissão do Financeiro foi resolvida. Essa atribuição substitui a ausência de responsável indicada na tabela histórica de cobertura abaixo, sem ampliar as responsabilidades dos demais integrantes.
 
+**Atualização de 09/11/2026:** por solicitação explícita do usuário, o fluxo financeiro aprovado foi integrado à tela, API e banco: recebimentos de OS, despesas/pagamentos, fechamento automático/manual, conferência, correções auditadas e histórico paginado. Migração incremental para bancos existentes está preparada e ainda precisa ser aplicada. O trabalho mantém Financeiro exclusivo do Administrador; páginas adicionais e regras de lucro líquido/impostos seguem pendentes.
+
 Materiais são itens utilizados nos serviços. Produtos para venda são itens vendidos avulsos, como palmilhas e cadarços. Padronizar os nomes não altera as regras de estoque. A landing page apenas apresenta o projeto: não é loja virtual, agendamento ou portal do cliente.
 
 
@@ -78,7 +80,7 @@ Responsabilidades ainda não atribuídas ou cobertas apenas em parte: os pontos 
 | Assunto previsto | Cobertura existente e lacuna |
 | --- | --- |
 | Dashboard (RF-002/RF-016) | Módulos fornecem dados de origem; responsável por painel, agregações e atalhos ainda não atribuído. Alertas continuam sujeitos às regras. |
-| Financeiro (RF-011/RF-025) | OS/vendas/estoques fornecem parte dos dados; cálculo, consultas e telas sem responsável. Fórmulas, períodos e custos ainda precisam de decisão. |
+| Financeiro (RF-011/RF-025/RF-028) | Painel, fluxos de recebimento/saída e fechamento diário foram implementados a pedido do usuário em 09/11/2026; migração preparada. Páginas adicionais de indicadores e regras de lucro líquido/impostos continuam pendentes. |
 | Configurações (RF-010/RF-024) | Serviços, pagamentos e categorias cruzam os módulos; falta confirmar responsável pela tela, API e parâmetros compartilhados. Não atribuir tudo a OS ou estoque por associação. |
 | Perfil próprio (RF-009/RF-023) | Autenticação e conta administrativa são do Integrante 1; isso não confirma responsabilidade pela tela de autoedição e alteração de senha do próprio usuário. |
 | Implantação e custos (RNF-008/RA-005) | Base do back-end não equivale a assumir nuvem. Falta responsável pelo ambiente, implantação, execução automática, comparação de custos e plano; backup conforme definição adotada. |

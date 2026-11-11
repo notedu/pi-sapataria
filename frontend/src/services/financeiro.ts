@@ -1,4 +1,4 @@
-import { objeto, requisitar } from './api'
+import { enviarComCsrf, objeto, requisitar } from './api'
 
 export type MovimentoFinanceiro = {
   id: number
@@ -64,6 +64,11 @@ export type FechamentoCaixa = {
   fechado: boolean
   fechado_em: string | null
   fechado_por: number | null
+  formato_manual: 'resumo' | 'detalhado'
+  fonte_manual:'pagamentos'|'valores'
+  resumo_manual: Record<string,string> | null
+  dinheiro_contado: string | null
+  diferenca_dinheiro: string | null
 }
 
 export type PagamentoFechamento = {
@@ -90,6 +95,7 @@ export type DadosFechamentoDia = {
   fechamento: FechamentoCaixa
   pagamentos_disponiveis: PagamentoFechamento[]
 }
+export type HistoricoFechamentos = { itens: FechamentoCaixa[]; pagina:number; limite:number; total:number; paginas:number }
 
 function decimal(valor: unknown) {
   return typeof valor === 'string' && /^-?\d+(\.\d+)?$/.test(valor)
@@ -174,6 +180,11 @@ function fechamento(valor: unknown): valor is FechamentoCaixa {
     typeof valor.fechado === 'boolean' &&
     (valor.fechado_em === null || typeof valor.fechado_em === 'string') &&
     (valor.fechado_por === null || Number.isInteger(valor.fechado_por))
+    && ['resumo','detalhado'].includes(String(valor.formato_manual))
+    && ['pagamentos','valores'].includes(String(valor.fonte_manual))
+    && (valor.resumo_manual===null || objeto(valor.resumo_manual))
+    && (valor.dinheiro_contado===null || decimal(valor.dinheiro_contado))
+    && (valor.diferenca_dinheiro===null || decimal(valor.diferenca_dinheiro))
   )
 }
 
@@ -217,15 +228,15 @@ export async function consultarFechamento(data: string): Promise<DadosFechamento
   return resposta.dados as DadosFechamentoDia
 }
 
-export async function listarFechamentos() {
-  const resposta = await requisitar('/financeiro/fechamentos')
+export async function listarFechamentos(inicio?:string,fim?:string,pagina=1) {
+  const parametros=new URLSearchParams({pagina:String(pagina),limite:'20'}); if(inicio)parametros.set('inicio',inicio); if(fim)parametros.set('fim',fim)
+  const resposta = await requisitar(`/financeiro/fechamentos?${parametros}`)
   if (
     !objeto(resposta) ||
-    !Array.isArray(resposta.dados) ||
-    !resposta.dados.every(fechamento)
+    !objeto(resposta.dados) || !Array.isArray(resposta.dados.itens) || !resposta.dados.itens.every(fechamento)
   )
     throw new Error('Não foi possível interpretar o histórico do caixa.')
-  return resposta.dados as FechamentoCaixa[]
+  return resposta.dados as unknown as HistoricoFechamentos
 }
 
 export async function fecharCaixa(
@@ -233,17 +244,26 @@ export async function fecharCaixa(
   modo: 'automatico' | 'manual',
   pagamentosIds: number[] = [],
   itensManuais: ItemManualFechamento[] = [],
+  formatoManual:'resumo'|'detalhado'='detalhado',
+  resumoManual:Record<string,string>|null=null,
+  dinheiroContado:string|null=null,
+  fonteManual:'pagamentos'|'valores'='valores',
 ) {
-  const resposta = await requisitar('/financeiro/fechamentos', {
-    method: 'POST',
-    body: JSON.stringify({
+  const resposta = await enviarComCsrf('/financeiro/fechamentos', {
       data,
       modo,
       pagamentos_ids: pagamentosIds,
       itens_manuais: itensManuais,
-    }),
-  })
+      formato_manual:formatoManual,resumo_manual:resumoManual,dinheiro_contado:dinheiroContado,fonte_manual:fonteManual,
+    })
   if (!objeto(resposta) || !fechamento(resposta.dados))
     throw new Error('Não foi possível interpretar o fechamento de caixa.')
   return resposta.dados
 }
+
+export async function consultarCategoriasDespesas():Promise<Array<{id:number;nome:string}>> { const r=await requisitar('/financeiro/categorias-despesas'); if(!objeto(r)||!Array.isArray(r.dados)) throw new Error('Não foi possível consultar as categorias.'); return r.dados as Array<{id:number;nome:string}> }
+export async function criarCategoriaDespesa(nome:string) { return enviarComCsrf('/financeiro/categorias-despesas',{nome}) }
+export async function criarDespesa(dados:{categoria:string;descricao:string;valor:string;vencimento:string;total_parcelas:number}) { return enviarComCsrf('/financeiro/despesas',dados) }
+export async function registrarPagamento(dados:{parcela_id:number;valor:string;forma_pagamento:string}) { return enviarComCsrf('/financeiro/pagamentos',dados) }
+export async function corrigirFechamento(data:string,dados:Record<string,unknown>):Promise<FechamentoCaixa> { const r=await enviarComCsrf(`/financeiro/fechamentos/${data}`,dados,'PUT'); if(!objeto(r)||!fechamento(r.dados)) throw new Error('Não foi possível interpretar a correção do fechamento.'); return r.dados }
+export async function consultarCorrecoesFechamento(data:string):Promise<Array<{id:number;corrigido_em:string;motivo:string;corrigido_por:string|null;fechamento_anterior:Pick<FechamentoCaixa,'recebimentos_brutos'|'saidas'|'total_liquido'>}>> { const r=await requisitar(`/financeiro/fechamentos/${data}/correcoes`); if(!objeto(r)||!Array.isArray(r.dados)) throw new Error('Não foi possível consultar as correções.'); return r.dados as Array<{id:number;corrigido_em:string;motivo:string;corrigido_por:string|null;fechamento_anterior:Pick<FechamentoCaixa,'recebimentos_brutos'|'saidas'|'total_liquido'>}> }

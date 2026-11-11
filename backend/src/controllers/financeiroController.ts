@@ -50,12 +50,18 @@ export async function consultar(request: Request, response: Response) {
 }
 
 export async function consultarFechamentos(_request: Request, response: Response) {
-  response.json({ dados: await model.listarFechamentos() });
+  const { inicio, fim } = periodo(_request);
+  const pagina = Number(_request.query.pagina ?? 1);
+  const limite = Number(_request.query.limite ?? 20);
+  if (!Number.isInteger(pagina) || pagina < 1 || !Number.isInteger(limite) || limite < 1 || limite > 100)
+    throw new ErroHttp(400, 'DADOS_INVALIDOS', 'Pagina deve ser positiva e limite entre 1 e 100.');
+  response.json({ dados: await model.listarFechamentos(inicio, fim, pagina, limite) });
 }
 
 export async function fechamentoPorData(request: Request, response: Response) {
   const dataFechamento = data(request.params.data, 'data');
-  response.json({ dados: await model.consultarFechamento(dataFechamento) });
+  const resultado = await model.consultarFechamento(dataFechamento);
+  response.json({ dados: { fechamento: resultado.fechamento, pagamentos_disponiveis: resultado.pagamentos_disponiveis } });
 }
 
 export async function fecharCaixa(request: Request, response: Response) {
@@ -63,7 +69,7 @@ export async function fecharCaixa(request: Request, response: Response) {
     'data',
     'modo',
     'pagamentos_ids',
-    'itens_manuais',
+    'itens_manuais', 'formato_manual', 'resumo_manual', 'dinheiro_contado','fonte_manual',
   ]);
   const dataFechamento = data(d.data, 'data');
   const modo = d.modo ?? 'automatico';
@@ -107,7 +113,17 @@ export async function fecharCaixa(request: Request, response: Response) {
             origem: origem as ItemManualFechamento['origem'],
           };
         });
-  if (modo === 'automatico' && (idsPagamentos.length || itensManuais.length))
+  const formatoManual = d.formato_manual ?? 'detalhado';
+  const fonteManual=d.fonte_manual??'valores';
+  if(!['pagamentos','valores'].includes(String(fonteManual))) throw new ErroHttp(400,'DADOS_INVALIDOS','fonte_manual inválida.');
+  if (!['resumo', 'detalhado'].includes(String(formatoManual))) throw new ErroHttp(400, 'DADOS_INVALIDOS', 'Formato manual inválido.');
+  if (modo === 'manual' && ((formatoManual === 'resumo' && itensManuais.length) || (formatoManual === 'detalhado' && d.resumo_manual !== undefined && d.resumo_manual !== null))) throw new ErroHttp(400, 'DADOS_INVALIDOS', 'Use somente um formato de preenchimento manual.');
+  const resumoCru = d.resumo_manual === undefined || d.resumo_manual === null ? null : objeto(d.resumo_manual, ['dinheiro','pix','credito','debito','servicos','vendas','saidas']);
+  const resumoManual = resumoCru ? Object.fromEntries(['dinheiro','pix','credito','debito','servicos','vendas','saidas'].map((campo)=>[campo,decimal(resumoCru[campo],`resumo_manual.${campo}`,{dinheiro:true})])) as Record<string,string> : null;
+  if(modo==='manual'&&fonteManual==='valores'&&formatoManual==='resumo'&&resumoManual===null) throw new ErroHttp(400,'DADOS_INVALIDOS','Informe os valores do resumo manual.');
+  if(modo==='manual'&&((fonteManual==='pagamentos'&&(itensManuais.length||resumoManual!==null))||(fonteManual==='valores'&&idsPagamentos.length))) throw new ErroHttp(400,'FONTES_MANUAIS_EXCLUSIVAS','Escolha pagamentos ou valores manuais.');
+  const dinheiroContado = d.dinheiro_contado === undefined || d.dinheiro_contado === null ? null : decimal(d.dinheiro_contado, 'dinheiro_contado', { dinheiro: true });
+  if (modo === 'automatico' && (idsPagamentos.length || itensManuais.length || resumoManual!==null))
     throw new ErroHttp(400, 'DADOS_INVALIDOS', 'O fechamento automático não recebe itens manuais.');
   try {
     const fechamento = await model.criarFechamento(
@@ -116,6 +132,10 @@ export async function fecharCaixa(request: Request, response: Response) {
       modo,
       idsPagamentos,
       itensManuais,
+      formatoManual as 'resumo' | 'detalhado',
+      resumoManual,
+      dinheiroContado,
+      fonteManual as 'pagamentos'|'valores',
     );
     response.status(201).json({ dados: fechamento });
   } catch (error) {
@@ -131,6 +151,37 @@ export async function fecharCaixa(request: Request, response: Response) {
     throw error;
   }
 }
+
+export async function corrigirFechamento(request: Request, response: Response) {
+  const dataFechamento = data(request.params.data, 'data');
+  const d = objeto(request.body, ['modo','pagamentos_ids','itens_manuais','formato_manual','resumo_manual','dinheiro_contado','fonte_manual','motivo']);
+  const modo = d.modo;
+  if (modo !== 'automatico' && modo !== 'manual') throw new ErroHttp(400,'DADOS_INVALIDOS','modo deve ser automatico ou manual.');
+  const formato=d.formato_manual??'detalhado';
+  const fonte=d.fonte_manual??'valores';
+  if(!['resumo','detalhado'].includes(String(formato))||!['pagamentos','valores'].includes(String(fonte))) throw new ErroHttp(400,'DADOS_INVALIDOS','Formato ou fonte manual inválidos.');
+  const itens:ItemManualFechamento[] = d.itens_manuais === undefined ? [] : lista(d.itens_manuais,'itens_manuais',true).map((v, i) => {
+    const x=objeto(v,['descricao','tipo','valor','forma_pagamento','origem']);
+    if(x.tipo!=='entrada'&&x.tipo!=='saida') throw new ErroHttp(400,'DADOS_INVALIDOS',`Tipo inválido no item ${i+1}.`);
+    const origem=x.origem??'outro';
+    if(!['ordem_servico','venda','outro'].includes(String(origem))) throw new ErroHttp(400,'DADOS_INVALIDOS',`Origem inválida no item ${i+1}.`);
+    return { descricao:texto(x.descricao,'descricao'), tipo:x.tipo as 'entrada'|'saida', valor:decimal(x.valor,'valor',{positivo:true,dinheiro:true}), forma_pagamento:x.tipo==='entrada'?pagamento(x.forma_pagamento) as ItemManualFechamento['forma_pagamento']:null, origem:origem as ItemManualFechamento['origem'] };
+  });
+  const ids = d.pagamentos_ids === undefined ? [] : lista(d.pagamentos_ids,'pagamentos_ids',true).map(idCorpo);
+  if(new Set(ids).size!==ids.length) throw new ErroHttp(400,'DADOS_INVALIDOS','Não repita pagamentos na correção.');
+  const dinheiroContado = d.dinheiro_contado === undefined || d.dinheiro_contado === null ? null : decimal(d.dinheiro_contado,'dinheiro_contado',{dinheiro:true});
+  const rawResumo=d.resumo_manual===undefined||d.resumo_manual===null?null:objeto(d.resumo_manual,['dinheiro','pix','credito','debito','servicos','vendas','saidas']);
+  const resumo=rawResumo?Object.fromEntries(['dinheiro','pix','credito','debito','servicos','vendas','saidas'].map(c=>[c,decimal(rawResumo[c],`resumo_manual.${c}`,{dinheiro:true})])):null;
+  if(modo==='manual'&&fonte==='valores'&&formato==='resumo'&&resumo===null) throw new ErroHttp(400,'DADOS_INVALIDOS','Informe os valores do resumo manual.');
+  if(modo==='automatico'&&(ids.length||itens.length||resumo)) throw new ErroHttp(400,'DADOS_INVALIDOS','O fechamento automático não recebe itens manuais.');
+  if(modo==='manual'&&((fonte==='pagamentos'&&(itens.length||resumo))||(fonte==='valores'&&ids.length)||(formato==='resumo'&&itens.length)||(formato==='detalhado'&&resumo))) throw new ErroHttp(400,'FONTES_MANUAIS_EXCLUSIVAS','Escolha uma única fonte e formato manual.');
+  response.json({dados: await model.corrigirFechamento(dataFechamento,request.funcionario!.id,modo,ids,itens,formato as 'resumo'|'detalhado',resumo,dinheiroContado,texto(d.motivo,'motivo'),fonte as 'pagamentos'|'valores')});
+}
+
+export async function consultarCorrecoesFechamento(request:Request,response:Response) { response.json({dados:await model.listarCorrecoes(data(request.params.data,'data'))}); }
+
+export async function categoriasDespesa(_request:Request,response:Response) { response.json({dados:await model.listarCategoriasDespesas()}); }
+export async function criarCategoriaDespesa(request:Request,response:Response) { const d=objeto(request.body,['nome']); const nome=texto(d.nome,'nome'); if(nome.length>80) throw new ErroHttp(400,'DADOS_INVALIDOS','A categoria aceita até 80 caracteres.'); response.status(201).json({dados:await model.criarCategoriaDespesa(nome)}); }
 
 export async function indicador(request: Request, response: Response) {
   const permitidos = ['faturamento', 'materiais', 'lucro', 'impostos'];
@@ -169,15 +220,15 @@ export async function despesa(request: Request, response: Response) {
     'vencimento',
     'total_parcelas',
   ]);
-  const categorias = ['aluguel', 'energia', 'agua', 'funcionarios'];
-  if (typeof d.categoria !== 'string' || !categorias.includes(d.categoria))
+  const categorias = await model.listarCategoriasDespesas();
+  if (typeof d.categoria !== 'string' || !categorias.some((c:any)=>c.nome===d.categoria))
     throw new ErroHttp(
       400,
       'DADOS_INVALIDOS',
       'Categoria de despesa inválida.',
     );
   const vencimento = data(d.vencimento, 'vencimento');
-  const valor = decimal(d.valor, 'valor', { dinheiro: true });
+  const valor = decimal(d.valor, 'valor', { positivo: true, dinheiro: true });
   const total = d.total_parcelas === undefined ? 1 : Number(d.total_parcelas);
   if (!Number.isInteger(total) || total < 1 || total > 120)
     throw new ErroHttp(
@@ -220,14 +271,17 @@ export async function pagamentoFinanceiro(
       'pago_em deve ser uma data válida.',
     );
   const resultado = await emTransacao((conexao) =>
-    model.registrarPagamento(
+    model.parcelaPertenceOs(conexao,idCorpo(d.parcela_id)).then((ehOs)=>{
+      if(ehOs) throw new ErroHttp(409,'PAGAMENTO_OS_NO_FLUXO_DE_ENTREGA','O pagamento da OS deve ser registrado ao mudar o status para Entregue.');
+      return model.registrarPagamento(
       conexao,
       idCorpo(d.parcela_id),
       valor,
       pagamentoForma as 'pix' | 'credito' | 'debito' | 'dinheiro',
       request.funcionario!.id,
       pagoEm?.toISOString(),
-    ),
+      );
+    }),
   );
   response.status(201).json({ dados: resultado });
 }

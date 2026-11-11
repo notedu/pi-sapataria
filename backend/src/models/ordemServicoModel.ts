@@ -20,6 +20,7 @@ export interface OrdemServico {
   prazo_entrega: string | null;
   status: string;
   forma_pagamento: string | null;
+  pago: boolean;
   observacoes: string | null;
   motivo_cancelamento: string | null;
   itens: ItemOrdemServico[];
@@ -42,6 +43,7 @@ const colunas = `os.id, os.cliente_id, os.responsavel_id, os.descricao_calcado, 
   to_char(os.data_entrada, 'YYYY-MM-DD') AS data_entrada,
   to_char(os.prazo_entrega, 'YYYY-MM-DD') AS prazo_entrega,
   os.status, os.forma_pagamento, os.observacoes, os.motivo_cancelamento,
+  (COALESCE((SELECT SUM(p.valor) FROM sapataria.pagamentos_financeiros p JOIN sapataria.parcelas_financeiras pa ON pa.id=p.parcela_id JOIN sapataria.lancamentos_financeiros l ON l.id=pa.lancamento_id WHERE l.origem_tipo='ordem_servico' AND l.origem_id=os.id AND l.estorno_de_id IS NULL),0) >= os.valor) AS pago,
   COALESCE((SELECT json_agg(json_build_object('id', i.id, 'descricao_item', i.descricao_item, 'servico', i.servico) ORDER BY i.id)
     FROM sapataria.itens_ordem_servico i WHERE i.ordem_servico_id=os.id), '[]'::json) AS itens,
   COALESCE((SELECT json_agg(json_build_object('id', mp.id, 'material_id', mp.material_id, 'quantidade', mp.quantidade::text) ORDER BY mp.id)
@@ -264,6 +266,8 @@ export async function criar(
       ordem.id,
       ordem.valor,
       ator.id,
+      ordem.forma_pagamento as financeiroModel.FormaPagamento | null,
+      dados.pago_na_entrada,
     );
     await registrarNaConexao(conexao, {
       atorId: ator.id,
@@ -288,6 +292,7 @@ export async function atualizar(
   return emTransacao(async (conexao) => {
     const anterior = await bloquear(conexao, id);
     exigirEditavel(anterior);
+    if((await financeiroModel.totalPagoOrigem(conexao,'ordem_servico',id))>0 && anterior.forma_pagamento!==dados.forma_pagamento) throw new ErroHttp(409,'FORMA_PAGAMENTO_OS_PAGA','A forma de pagamento de uma OS já recebida não pode ser alterada.');
     await validarReferencias(conexao, dados);
     const resultado = await conexao.query<{ id: number }>(
       `UPDATE sapataria.ordens_servico AS os SET cliente_id=$1,responsavel_id=$2,descricao_calcado=$3,
@@ -348,6 +353,7 @@ export async function mudarStatus(
   status: string,
   motivoCancelamento: string | null,
   ator?: { id: number; nome: string },
+  formaPagamento?: financeiroModel.FormaPagamento | null,
 ) {
   return emTransacao(async (conexao) => {
     const os = await bloquear(conexao, id);
@@ -368,27 +374,27 @@ export async function mudarStatus(
           'MOTIVO_CANCELAMENTO_OBRIGATORIO',
           'Informe o motivo do cancelamento da OS.',
         );
-      const pago = await conexao.query<{ total: string }>(
-        `SELECT COALESCE(SUM(p.valor),0)::text AS total FROM sapataria.pagamentos_financeiros p
-          JOIN sapataria.parcelas_financeiras pa ON pa.id=p.parcela_id
-          JOIN sapataria.lancamentos_financeiros l ON l.id=pa.lancamento_id
-         WHERE l.origem_tipo='ordem_servico' AND l.origem_id=$1`,
-        [id],
-      );
-      if (Number(pago.rows[0]?.total ?? 0) > 0)
-        throw new ErroHttp(
-          409,
-          'OS_PAGA_NAO_CANCELAVEL',
-          'Não é possível cancelar uma OS que já possui pagamento.',
-        );
+      const totalPago=await financeiroModel.totalPagoOrigem(conexao,'ordem_servico',id);
+      if(totalPago>0) await financeiroModel.estornarOrigem(conexao,'ordem_servico',id,ator?.id??null,motivoCancelamento!.trim());
+    }
+    if(status==='Entregue') {
+      const totalPago=await financeiroModel.totalPagoOrigem(conexao,'ordem_servico',id);
+      const falta=Number(os.valor)-totalPago;
+      if(falta>0.000001) {
+        if(!formaPagamento) throw new ErroHttp(400,'FORMA_PAGAMENTO_OBRIGATORIA','Informe a forma de pagamento para entregar uma OS ainda não paga.');
+        const parcela=await conexao.query<{id:number}>(`SELECT pa.id FROM sapataria.parcelas_financeiras pa JOIN sapataria.lancamentos_financeiros l ON l.id=pa.lancamento_id WHERE l.origem_tipo='ordem_servico' AND l.origem_id=$1 AND l.estorno_de_id IS NULL ORDER BY pa.numero LIMIT 1`,[id]);
+        if(!parcela.rows[0]) throw new ErroHttp(409,'LANCAMENTO_OS_AUSENTE','Lançamento financeiro da OS não encontrado.');
+        await financeiroModel.registrarPagamento(conexao,parcela.rows[0].id,falta.toFixed(2),formaPagamento,ator?.id??null);
+      }
     }
     // Cancelar a OS não devolve materiais já consumidos.
     const resultado = await conexao.query<OrdemServico>(
       `UPDATE sapataria.ordens_servico AS os
           SET status=$2,
+              forma_pagamento=CASE WHEN $2='Entregue' AND $4 IS NOT NULL THEN $4 ELSE os.forma_pagamento END,
               motivo_cancelamento=CASE WHEN $2='Cancelada' THEN $3 ELSE os.motivo_cancelamento END
         WHERE os.id=$1 RETURNING ${colunas}`,
-      [id, status, cancelamento ? motivoCancelamento!.trim() : null],
+      [id, status, cancelamento ? motivoCancelamento!.trim() : null, formaPagamento ?? null],
     );
     const atualizada = resultado.rows[0]!;
     if (ator)
