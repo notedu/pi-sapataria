@@ -17,6 +17,9 @@ dist-ssr
 .env.*
 !.env.example
 
+# Dados fictícios para teste local do financeiro (não versionar).
+backend/scripts/dados_teste_financeiro.sql
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

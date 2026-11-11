@@ -53,6 +53,8 @@ function Conteudo({ id }: { id: string }) {
   const [materialId, setMaterialId] = useState('')
   const [quantidade, setQuantidade] = useState('')
   const [cancelamentoAberto, setCancelamentoAberto] = useState(false)
+  const [entregaAberta, setEntregaAberta] = useState(false)
+  const [formaPagamentoEntrega, setFormaPagamentoEntrega] = useState('')
   const [motivoCancelamento, setMotivoCancelamento] = useState('')
   const [usoParaDevolver, setUsoParaDevolver] = useState<number | null>(null)
   const [quantidadeDevolucao, setQuantidadeDevolucao] = useState('')
@@ -92,13 +94,13 @@ function Conteudo({ id }: { id: string }) {
     }
   }, [id, navigate, tentativa])
 
-  async function mudarStatus(status: string, motivo?: string) {
+  async function mudarStatus(status: string, motivo?: string, formaPagamento?: string) {
     if (!ordem || emCurso.current || incerto) return
     emCurso.current = true
     setOcupado(true)
     setErroAcao('')
     try {
-      const atualizada = await mudarStatusOrdem(ordem.id, status, motivo)
+      const atualizada = await mudarStatusOrdem(ordem.id, status, motivo, formaPagamento)
       setOrdem({ ...ordem, ...atualizada })
       setCancelamentoAberto(false)
       setMotivoCancelamento('')
@@ -631,6 +633,7 @@ function Conteudo({ id }: { id: string }) {
                     } as Record<string, string>
                   )[ordem.forma_pagamento ?? ''] ?? 'Não informada'}
                 </p>
+                <p className="mt-2 text-label-md" aria-live="polite">Pagamento: {ordem.pago ? 'Pago' : 'Pendente para a entrega'}</p>
               </section>
               <section className="rounded-xl bg-surface-container-low p-6">
                 <h2 className="mb-5 text-label-md uppercase text-on-surface-variant">
@@ -640,7 +643,7 @@ function Conteudo({ id }: { id: string }) {
                   <Button
                     className="w-full"
                     disabled={ocupado || incerto}
-                    onClick={() => void mudarStatus(proximo)}
+                    onClick={() => proximo === 'Entregue' && !ordem.pago ? setEntregaAberta(true) : void mudarStatus(proximo)}
                   >
                     Avançar para {proximo}
                   </Button>
@@ -650,6 +653,14 @@ function Conteudo({ id }: { id: string }) {
                       ? 'Cancelada — estado final da OS.'
                       : 'Etapa final do fluxo; é possível voltar uma etapa.'}
                   </p>
+                )}
+                {entregaAberta && proximo === 'Entregue' && (
+                  <form className="mt-4 space-y-3 border-t border-outline-variant pt-4" onSubmit={(event) => { event.preventDefault(); if (formaPagamentoEntrega) void mudarStatus('Entregue', undefined, formaPagamentoEntrega) }}>
+                    <SelectField id="forma-pagamento-entrega" label="Forma de pagamento do saldo" required value={formaPagamentoEntrega} onChange={(event)=>setFormaPagamentoEntrega(event.target.value)}>
+                      <option value="">Selecione</option><option value="pix">PIX</option><option value="credito">Cartão de crédito</option><option value="debito">Cartão de débito</option><option value="dinheiro">Dinheiro</option>
+                    </SelectField>
+                    <div className="flex gap-2"><Button type="submit" disabled={ocupado||incerto||!formaPagamentoEntrega}>Confirmar entrega e pagamento</Button><Button type="button" variant="secondary" onClick={()=>setEntregaAberta(false)}>Voltar</Button></div>
+                  </form>
                 )}
                 {statusAnterior(ordem.status) && (
                   <Button

@@ -71,9 +71,13 @@ O contrato combina como front-end e back-end trocam pedidos e respostas. **Clien
 | A26 | Dashboard | `GET /dashboard` | Consultar resumo operacional | Pendente; acesso amplo é sugestão | Proposto |
 | A30 | Financeiro | `GET /financeiro` | Consultar painel financeiro | Administrador — RN-003 | Implementado |
 | A31 | Financeiro | `GET /financeiro/{indicador}` | Consultar indicador detalhado | Administrador — RN-003 | Implementado |
-| — | Financeiro | `GET /financeiro/fechamentos` | Consultar histórico dos últimos 90 fechamentos | Administrador — RN-003 | Implementado |
+| — | Financeiro | `GET /financeiro/fechamentos` | Histórico paginado com filtros `inicio`/`fim`, `pagina` e `limite` | Administrador — RN-003 | Implementado nesta solicitação |
 | — | Financeiro | `GET /financeiro/fechamentos/{data}` | Consultar fechamento salvo ou prévia diária | Administrador — RN-003 | Implementado |
 | — | Financeiro | `POST /financeiro/fechamentos` | Salvar fechamento diário único | Administrador, com CSRF — RN-003 | Implementado |
+| — | Financeiro | `PUT /financeiro/fechamentos/{data}` | Corrigir fechamento com motivo e trilha anterior | Administrador, com CSRF — RN-003 | Implementado |
+| — | Financeiro | `GET /financeiro/fechamentos/{data}/correcoes` | Consultar correções | Administrador — RN-003 | Implementado |
+| — | Financeiro | `GET/POST /financeiro/categorias-despesas` | Consultar/criar categorias personalizadas | Administrador; POST com CSRF — RN-003 | Implementado |
+| — | Financeiro | `POST /financeiro/despesas` e `POST /financeiro/pagamentos` | Registrar despesa parcelada e pagamentos parciais | Administrador, com CSRF — RN-003 | Implementado |
 
 ## Consultas adicionais implementadas
 
@@ -243,7 +247,7 @@ Implementado: `200`, `{"dados": [...]}`, lista de OS ordenada por id, sem filtro
 <a id="a10"></a>
 ### A10 — POST /ordens-servico
 
-Implementado. Corpo: `cliente_id`, `itens:[{descricao_item,servico}]`, `valor`; `materiais_planejados:[{material_id,quantidade}]` é opcional e pode ser vazio; também opcionais `prazo_entrega`, `forma_pagamento`, `observacoes`. Cada linha item/serviço exige textos não vazios; quantidade planejada positiva e fracionável. O formato antigo `descricao_calcado` + `servico` continua aceito para compatibilidade. `responsavel_id` não é aceito no cadastro: a API atribui o funcionário autenticado, que deve estar ativo; cliente e materiais planejados devem existir. Materiais planejados não reservam saldo nem geram movimentos. Status inicial `Aberta` e data de entrada automáticos; enviar esses campos gera `400`. Pagamento: `pix`, `credito`, `debito` ou `dinheiro`; pode ser omitido. Prazo deve ser data real YYYY-MM-DD. Retorna `201`, `{"dados": OS}`. Valor manual, sem soma de materiais ou fórmula automática.
+Implementado. Corpo: `cliente_id`, `itens:[{descricao_item,servico}]`, `valor`; `materiais_planejados:[{material_id,quantidade}]` é opcional e pode ser vazio; também opcionais `prazo_entrega`, `observacoes`, `forma_pagamento` e `pago_na_entrada`. Pagamento integral na entrada é o padrão (`pago_na_entrada: true`) e exige forma; `false` deixa o recebimento para a transição a Entregue. Cada linha item/serviço exige textos não vazios; quantidade planejada positiva e fracionável. O formato antigo `descricao_calcado` + `servico` continua aceito para compatibilidade. `responsavel_id` não é aceito no cadastro: a API atribui o funcionário autenticado, que deve estar ativo; cliente e materiais planejados devem existir. Materiais planejados não reservam saldo nem geram movimentos. Status inicial `Aberta` e data de entrada automáticos; enviar esses campos gera `400`. Prazo deve ser data real YYYY-MM-DD. Retorna `201`, `{"dados": OS}`. Valor manual, sem soma de materiais ou fórmula automática.
 
 <a id="a11"></a>
 ### A11 — GET /ordens-servico/{id}
@@ -253,7 +257,7 @@ Implementado: `200`, `{"dados": OS}` com `responsavel_nome`, `responsavel_ativo`
 <a id="a12"></a>
 ### A12 — PUT /ordens-servico/{id}/status
 
-Implementado. Corpo de mudança: `{"status":"Em andamento"}`. Só permite avançar ou voltar uma etapa: `Aberta ↔ Em andamento ↔ Pronta ↔ Entregue`. Cancelamento por `{"status":"Cancelada","motivo_cancelamento":"..."}` é permitido em Aberta, Em andamento ou Pronta; motivo não vazio é obrigatório. `Cancelada` é final; saltos, repetição e mudança após cancelamento retornam `409`. Não há confirmação extra para avançar. Retorna `200`, `{"dados": OS}`. Cancelar preserva usos e não devolve materiais automaticamente.
+Implementado. Corpo de mudança: `{"status":"Em andamento"}`. Só permite avançar ou voltar uma etapa: `Aberta ↔ Em andamento ↔ Pronta ↔ Entregue`. Para OS não paga, passar para Entregue exige `forma_pagamento` (`pix`, `credito`, `debito` ou `dinheiro`) e registra o recebimento integral que falta; OS já paga não duplica recebimento. Cancelamento por `{"status":"Cancelada","motivo_cancelamento":"..."}` é permitido em Aberta, Em andamento ou Pronta; motivo não vazio é obrigatório. Se houve pagamento, o cancelamento registra o reembolso integral pelos mesmos meios. `Cancelada` é final; saltos, repetição e mudança após cancelamento retornam `409`. Retorna `200`, `{"dados": OS}`. Cancelar preserva usos e não devolve materiais automaticamente. `Entregue` continua fora dos estados canceláveis.
 
 <a id="a13"></a>
 ### A13 — POST /ordens-servico/{id}/materiais
@@ -329,7 +333,7 @@ Todas as rotas desta seção exigem sessão e CSRF; ambos os perfis podem execut
 
 Estorno genérico não se aplica a movimentos de venda, uso ou reversões: use a operação do módulo de origem. Devoluções não podem ultrapassar a quantidade de origem, mesmo em requisições simultâneas. Movimentações, usos, itens, OS e vendas não têm DELETE genérico; movimentações também não têm PUT. Para corrigir um lançamento manual, faça o estorno e registre o movimento correto.
 
-O cancelamento da venda recebe as devoluções naquele momento. Uma venda cancelada não pode ser cancelada novamente para acrescentar devoluções; não há fluxo separado de devolução posterior de venda nesta etapa. Não existe operação de reembolso financeiro.
+O cancelamento da venda recebe as devoluções naquele momento e gera estorno financeiro integral automático na data do cancelamento, conforme decisão do usuário em 09/11/2026. A venda cancelada não pode ser cancelada novamente para acrescentar devoluções. OS paga pode ser cancelada somente em Aberta, Em andamento ou Pronta; o sistema registra reembolso integral pelos meios usados. A transição para `Entregue` recebe OS previamente marcada como não paga e exige `forma_pagamento` no corpo de `PUT /ordens-servico/{id}/status`; OS já paga não registra recebimento duplicado.
 
 Exemplo de sequência no Insomnia: login → cadastrar produto → registrar entrada → registrar venda → consultar itens. Use o cookie e o novo CSRF retornados pelo login em todas as gravações. Não reenvie POST automaticamente após uma falha de rede; confira os registros, pois o servidor pode já ter confirmado a operação.
 
@@ -403,10 +407,13 @@ Exemplo de sequência no Insomnia: login → cadastrar produto → registrar ent
 
 ### Fechamento diário de caixa — RF-028
 
-- `GET /financeiro/fechamentos`: retorna até 90 registros em ordem decrescente de data.
+- `GET /financeiro/fechamentos`: retorna `{ itens, pagina, limite, total, paginas }`, padrão 20 itens por página, limite máximo 100; aceita filtros opcionais `inicio` e `fim` no formato `YYYY-MM-DD`.
 - `GET /financeiro/fechamentos/{data}`: recebe data `YYYY-MM-DD`; retorna a prévia automática ou a fotografia salva, junto aos pagamentos selecionáveis daquele dia. A apuração usa o calendário de São Paulo.
-- `POST /financeiro/fechamentos`: recebe `data`, `modo` (`automatico` ou `manual`), `pagamentos_ids` e `itens_manuais`. O modo automático soma todos os pagamentos do dia. No modo manual, somente os pagamentos selecionados são somados, junto aos itens avulsos no formato `{ "descricao", "tipo", "valor", "forma_pagamento", "origem" }`; entradas exigem forma válida, e saídas não. Salva os totais, agrupamentos, itens escolhidos e digitados, instante e Administrador responsável. Uma data só pode ser gravada uma vez; repetição retorna `409 CAIXA_JA_FECHADO`.
-- As formas e origens refletem pagamentos registrados (`pix`, `credito`, `debito`, `dinheiro`; `ordem_servico` e `venda`). Saídas registradas agregam pagamentos de lançamentos marcados como `saida`. O total líquido é recebimentos menos saídas. Itens avulsos pertencem somente ao fechamento e não criam lançamentos financeiros. O fechamento não bloqueia novas operações; elas não atualizam a fotografia já salva.
+- `POST /financeiro/fechamentos`: recebe `data`, `modo`, `fonte_manual` (`pagamentos` ou `valores`), `formato_manual` (`resumo` ou `detalhado`), `pagamentos_ids`, `itens_manuais`, `resumo_manual` e `dinheiro_contado`. No automático, soma todos os pagamentos do dia. No manual, seleciona pagamentos **ou** preenche valores; valores usam o resumo (dinheiro, pix, crédito, débito, serviços, vendas e saídas) **ou** itens detalhados `{descricao,tipo,valor,forma_pagamento,origem}`. Salva totais, fotografia e conferência física. Uma data pode ser criada uma vez; repetição retorna `409 CAIXA_JA_FECHADO`.
+- `PUT /financeiro/fechamentos/{data}` atualiza uma fotografia existente e exige `motivo`; cada alteração registra o snapshot anterior e Administrador responsável em `historico_fechamentos_caixa`. `GET /financeiro/fechamentos/{data}/correcoes` consulta os motivos e metadados das revisões.
+- `GET/POST /financeiro/categorias-despesas` lista categorias e cria uma categoria personalizada (nome de até 80 caracteres). As quatro categorias existentes são semeadas pela migração.
+- `POST /financeiro/despesas`: aceita categoria, descrição, valor total, vencimento inicial e quantidade de parcelas (1 a 120). `POST /financeiro/pagamentos`: aceita parcela, valor e forma; pagamentos parciais são aceitos até o saldo pendente, sem excedê-lo. Recebimentos de OS são registrados pelo fluxo de entrega, não por esta operação genérica.
+- As formas e origens refletem pagamentos registrados (`pix`, `credito`, `debito`, `dinheiro`; `ordem_servico` e `venda`). Saídas registradas agregam pagamentos de lançamentos marcados como `saida`. O total líquido é recebimentos menos saídas. Itens preenchidos pertencem somente ao fechamento e não criam lançamentos financeiros. A diferença de caixa é dinheiro contado menos pagamentos registrados como dinheiro. Novas operações não alteram a fotografia salva.
 - Todas as rotas exigem sessão de Administrador; gravação também exige CSRF. Datas inválidas retornam `400`; sessão ausente `401`; Funcionário `403`.
 
 ### Operações financeiras administrativas

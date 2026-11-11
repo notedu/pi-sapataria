@@ -79,6 +79,7 @@ export function dadosOs(corpo: unknown, responsavelAutenticado?: number) {
     'valor',
     'prazo_entrega',
     'forma_pagamento',
+    'pago_na_entrada',
     'observacoes',
   ]);
   const prazo = opcional(d.prazo_entrega, 'prazo_entrega');
@@ -129,6 +130,10 @@ export function dadosOs(corpo: unknown, responsavelAutenticado?: number) {
             };
           },
         );
+  const pagoNaEntrada = d.pago_na_entrada === undefined ? responsavelAutenticado !== undefined : d.pago_na_entrada;
+  if (typeof pagoNaEntrada !== 'boolean') throw new ErroHttp(400,'DADOS_INVALIDOS','pago_na_entrada deve ser booleano.');
+  const formaPagamento = pagamento(d.forma_pagamento, true);
+  if (pagoNaEntrada && !formaPagamento) throw new ErroHttp(400,'FORMA_PAGAMENTO_OBRIGATORIA','Informe a forma de pagamento para registrar o recebimento da OS.');
   return {
     cliente_id: idCorpo(d.cliente_id),
     responsavel_id: responsavelAutenticado ?? idCorpo(d.responsavel_id),
@@ -138,7 +143,8 @@ export function dadosOs(corpo: unknown, responsavelAutenticado?: number) {
     materiais_planejados,
     valor: decimal(d.valor, 'valor', { dinheiro: true }),
     prazo_entrega: prazo,
-    forma_pagamento: pagamento(d.forma_pagamento, true),
+    forma_pagamento: formaPagamento,
+    pago_na_entrada: pagoNaEntrada,
     observacoes: opcional(d.observacoes, 'observacoes'),
   };
 }

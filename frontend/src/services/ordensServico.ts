@@ -17,6 +17,7 @@ export type OrdemResumo = {
   prazo_entrega: string | null
   status: string
   forma_pagamento: string | null
+  pago: boolean
   observacoes: string | null
   cliente_nome?: string
   motivo_cancelamento: string | null
@@ -53,6 +54,7 @@ export type DadosOrdem = Pick<
   | 'forma_pagamento'
   | 'observacoes'
 > & {
+  pago_na_entrada?: boolean
   itens: ItemOrdemServico[]
   materiais_planejados: Array<{
     material_id: number
@@ -85,6 +87,7 @@ export function ordem(valor: unknown): valor is OrdemResumo {
     typeof valor.valor === 'string' &&
     typeof valor.data_entrada === 'string' &&
     typeof valor.status === 'string' &&
+    typeof valor.pago === 'boolean' &&
     (valor.prazo_entrega === null || typeof valor.prazo_entrega === 'string') &&
     (valor.forma_pagamento === null ||
       typeof valor.forma_pagamento === 'string') &&
@@ -190,6 +193,7 @@ export async function mudarStatusOrdem(
   id: number,
   status: string,
   motivoCancelamento?: string,
+  formaPagamento?: string,
 ): Promise<OrdemResumo> {
   let resposta: unknown
   try {
@@ -200,6 +204,7 @@ export async function mudarStatusOrdem(
         ...(motivoCancelamento === undefined
           ? {}
           : { motivo_cancelamento: motivoCancelamento }),
+        ...(formaPagamento ? { forma_pagamento: formaPagamento } : {}),
       },
       'PUT',
     )

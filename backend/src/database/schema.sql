@@ -503,9 +503,30 @@ CREATE TABLE IF NOT EXISTS sapataria.fechamentos_caixa (
   modo text NOT NULL DEFAULT 'automatico' CHECK (modo IN ('automatico', 'manual')),
   pagamentos_selecionados jsonb NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(pagamentos_selecionados) = 'array'),
   itens_manuais jsonb NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(itens_manuais) = 'array'),
+  formato_manual text NOT NULL DEFAULT 'detalhado' CHECK (formato_manual IN ('resumo','detalhado')),
+  fonte_manual text NOT NULL DEFAULT 'valores' CHECK (fonte_manual IN ('pagamentos','valores')),
+  resumo_manual jsonb CHECK (resumo_manual IS NULL OR jsonb_typeof(resumo_manual)='object'),
+  dinheiro_contado numeric CHECK (dinheiro_contado IS NULL OR (dinheiro_contado >= 0 AND dinheiro_contado < 'Infinity'::numeric AND dinheiro_contado=round(dinheiro_contado,2))),
+  diferenca_dinheiro numeric,
   fechado_em timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
   fechado_por integer REFERENCES sapataria.funcionarios(id) ON DELETE SET NULL
 );
+CREATE TABLE IF NOT EXISTS sapataria.historico_fechamentos_caixa (
+  id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  data date NOT NULL,
+  fechamento_anterior jsonb NOT NULL CHECK (jsonb_typeof(fechamento_anterior)='object'),
+  corrigido_em timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  corrigido_por integer REFERENCES sapataria.funcionarios(id) ON DELETE SET NULL,
+  motivo text NOT NULL CHECK (length(trim(motivo))>0)
+);
+CREATE INDEX IF NOT EXISTS historico_fechamentos_caixa_data_idx ON sapataria.historico_fechamentos_caixa(data,corrigido_em DESC);
+CREATE TABLE IF NOT EXISTS sapataria.categorias_despesas (
+  id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  nome text NOT NULL CHECK (length(trim(nome))>0 AND length(nome)<=80),
+  criada_em timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS categorias_despesas_nome_ci ON sapataria.categorias_despesas(lower(nome));
+INSERT INTO sapataria.categorias_despesas(nome) VALUES ('aluguel'),('energia'),('agua'),('funcionarios') ON CONFLICT DO NOTHING;
 REVOKE ALL ON TABLE sapataria.fechamentos_caixa FROM PUBLIC;
 
 ALTER TABLE sapataria.movimentacoes_estoque ADD COLUMN IF NOT EXISTS custo_unitario numeric, ADD COLUMN IF NOT EXISTS custo_total numeric;
@@ -596,5 +617,5 @@ BEGIN
   END LOOP;
 END $$;
 
-REVOKE ALL ON TABLE sapataria.lancamentos_financeiros, sapataria.parcelas_financeiras, sapataria.pagamentos_financeiros, sapataria.fechamentos_caixa FROM PUBLIC;
+REVOKE ALL ON TABLE sapataria.lancamentos_financeiros, sapataria.parcelas_financeiras, sapataria.pagamentos_financeiros, sapataria.fechamentos_caixa, sapataria.historico_fechamentos_caixa, sapataria.categorias_despesas FROM PUBLIC;
 COMMIT;

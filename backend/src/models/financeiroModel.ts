@@ -1,6 +1,7 @@
 import type { PoolClient } from 'pg';
 import { pool } from '../config/db';
 import { ErroHttp } from '../utils/validacao';
+import { emTransacao } from '../config/transacao';
 
 export type TipoFinanceiro = 'entrada' | 'saida';
 export type FormaPagamento = 'pix' | 'credito' | 'debito' | 'dinheiro';
@@ -19,6 +20,11 @@ export type FechamentoCaixa = {
   fechado: boolean;
   fechado_em: string | null;
   fechado_por: number | null;
+  formato_manual: 'resumo' | 'detalhado';
+  fonte_manual: 'pagamentos'|'valores';
+  resumo_manual: Record<string, string> | null;
+  dinheiro_contado: string | null;
+  diferenca_dinheiro: string | null;
 };
 
 export type PagamentoFechamento = {
@@ -40,6 +46,11 @@ export type ItemManualFechamento = {
   forma_pagamento: FormaPagamento | null;
   origem: 'ordem_servico' | 'venda' | 'outro';
 };
+
+async function bloquearDiaCaixa(conexao:Pick<PoolClient,'query'>,data:string) {
+  // Fecha uma janela de corrida entre o último pagamento do dia e a fotografia do caixa.
+  await conexao.query(`SELECT pg_advisory_xact_lock(hashtext('sapataria.financeiro'), ($1::date - DATE '2000-01-01')::integer)`,[data]);
+}
 
 type NovoLancamento = {
   tipo: TipoFinanceiro;
@@ -63,7 +74,7 @@ const resumoPagamentos = `
          COALESCE(SUM(CASE WHEN l.categoria='estorno' AND l.tipo='entrada' THEN p.valor ELSE 0 END), 0)::text AS estornos_entrada,
          COALESCE(SUM(CASE WHEN l.categoria='estorno' AND l.tipo='saida' THEN p.valor ELSE 0 END), 0)::text AS estornos_saida,
          COALESCE(SUM(CASE WHEN l.tipo='saida' AND l.categoria IN ('compra_materiais','compra_produtos','compra_estoque') THEN p.valor ELSE 0 END), 0)::text AS compras,
-         COALESCE(SUM(CASE WHEN l.tipo='saida' AND l.categoria IN ('aluguel','energia','agua','funcionarios') THEN p.valor ELSE 0 END), 0)::text AS despesas
+         COALESCE(SUM(CASE WHEN l.tipo='saida' AND (l.categoria IN ('aluguel','energia','agua','funcionarios') OR EXISTS (SELECT 1 FROM sapataria.categorias_despesas cd WHERE cd.nome=l.categoria)) THEN p.valor ELSE 0 END), 0)::text AS despesas
     FROM sapataria.pagamentos_financeiros p
     JOIN sapataria.parcelas_financeiras pa ON pa.id=p.parcela_id
     JOIN sapataria.lancamentos_financeiros l ON l.id=pa.lancamento_id
@@ -133,6 +144,7 @@ export async function registrarPagamento(
   criadoPor: number | null,
   pagoEm?: string,
 ) {
+  await conexao.query(`SELECT pg_advisory_xact_lock(hashtext('sapataria.financeiro'), (($1::timestamptz AT TIME ZONE 'America/Sao_Paulo')::date - DATE '2000-01-01')::integer)`,[pagoEm??new Date().toISOString()]);
   const parcela = await conexao.query<{ valor: string }>(
     'SELECT valor FROM sapataria.parcelas_financeiras WHERE id=$1 FOR UPDATE',
     [parcelaId],
@@ -161,6 +173,10 @@ export async function registrarPagamento(
     [parcelaId, valor, forma, pagoEm ?? null, criadoPor],
   );
   return resultado.rows[0];
+}
+
+export async function parcelaPertenceOs(conexao:Pick<PoolClient,'query'>,parcelaId:number) {
+  const r=await conexao.query(`SELECT EXISTS(SELECT 1 FROM sapataria.parcelas_financeiras pa JOIN sapataria.lancamentos_financeiros l ON l.id=pa.lancamento_id WHERE pa.id=$1 AND l.origem_tipo='ordem_servico' AND l.estorno_de_id IS NULL) AS os`,[parcelaId]); return Boolean(r.rows[0]?.os);
 }
 
 export async function criarVenda(
@@ -194,8 +210,10 @@ export async function criarOrdemServico(
   ordemId: number,
   valor: string,
   criadoPor: number | null,
+  forma?: FormaPagamento | null,
+  pagarAgora = true,
 ) {
-  await criarLancamento(conexao, {
+  const criado = await criarLancamento(conexao, {
     tipo: 'entrada',
     categoria: 'ordem_servico',
     descricao: `OS #${ordemId}`,
@@ -204,6 +222,11 @@ export async function criarOrdemServico(
     origemId: ordemId,
     criadoPor,
   });
+  if (pagarAgora && criado.parcela && forma) await registrarPagamento(conexao, criado.parcela.id, valor, forma, criadoPor);
+}
+
+export async function totalPagoOrigem(conexao:Pick<PoolClient,'query'>,origemTipo:string,origemId:number) {
+  const r=await conexao.query<{total:string}>('SELECT COALESCE(SUM(p.valor),0)::text AS total FROM sapataria.pagamentos_financeiros p JOIN sapataria.parcelas_financeiras pa ON pa.id=p.parcela_id JOIN sapataria.lancamentos_financeiros l ON l.id=pa.lancamento_id WHERE l.origem_tipo=$1 AND l.origem_id=$2 AND l.estorno_de_id IS NULL',[origemTipo,origemId]); return Number(r.rows[0]?.total??0);
 }
 
 export async function atualizarValorOrigem(
@@ -331,6 +354,7 @@ export async function estornarLancamento(
       'LANCAMENTO_NAO_ENCONTRADO',
       'Lançamento financeiro não encontrado.',
     );
+  if(['venda','ordem_servico'].includes(original.rows[0].origem_tipo??'')) throw new ErroHttp(409,'CANCELAMENTO_PELO_MODULO_ORIGEM','Vendas e OS devem ser reembolsadas pelo fluxo de cancelamento do próprio módulo.');
   const existente = await conexao.query(
     'SELECT id FROM sapataria.lancamentos_financeiros WHERE estorno_de_id=$1',
     [lancamentoId],
@@ -442,8 +466,8 @@ export async function contas(inicio: string, fim: string) {
   });
 }
 
-async function pagamentosDoDia(data: string, ids?: number[]) {
-  const resultado = await pool.query<PagamentoFechamento>(
+async function pagamentosDoDia(data: string, ids?: number[], conexao:Pick<PoolClient,'query'>=pool) {
+  const resultado = await conexao.query<PagamentoFechamento>(
     `SELECT p.id,p.valor::text,p.forma_pagamento,l.tipo,l.categoria,l.descricao,
             l.origem_tipo,l.origem_id,p.pago_em
        FROM sapataria.pagamentos_financeiros p
@@ -524,28 +548,46 @@ function somarPagamentos(
   };
 }
 
+function somarResumo(data:string,pagamentos:PagamentoFechamento[],r:Record<string,string>,modo:'automatico'|'manual') {
+  const formas={dinheiro:r.dinheiro??'0.00',pix:r.pix??'0.00',credito:r.credito??'0.00',debito:r.debito??'0.00'};
+  // Formas de pagamento e origem são duas classificações do mesmo recebido.
+  // O bruto vem de serviços + vendas; as formas ficam como conferência paralela.
+  const servicos=Number(r.servicos??0);
+  const vendas=Number(r.vendas??0);
+  const bruto=servicos+vendas;
+  const saidas=Number(r.saidas??0);
+  const porOrigem={ordem_servico:servicos.toFixed(2),venda:vendas.toFixed(2),outro:'0.00'};
+  return {data,modo,recebimentos_brutos:bruto.toFixed(2),saidas:saidas.toFixed(2),total_liquido:(bruto-saidas).toFixed(2),por_forma_pagamento:formas,por_origem:porOrigem,saidas_por_categoria:saidas?{manual:saidas.toFixed(2)}:{},pagamentos_selecionados:pagamentos,itens_manuais:[] as ItemManualFechamento[]};
+}
+
 export async function consultarFechamento(data: string) {
   const resultado = await pool.query<FechamentoCaixa>(
-    'SELECT data::text,recebimentos_brutos::text,saidas::text,total_liquido::text,por_forma_pagamento,por_origem,saidas_por_categoria,modo,pagamentos_selecionados,itens_manuais,true AS fechado,fechado_em,fechado_por FROM sapataria.fechamentos_caixa WHERE data=$1::date',
+    'SELECT data::text,recebimentos_brutos::text,saidas::text,total_liquido::text,por_forma_pagamento,por_origem,saidas_por_categoria,modo,pagamentos_selecionados,itens_manuais,formato_manual,fonte_manual,resumo_manual,dinheiro_contado,diferenca_dinheiro,true AS fechado,fechado_em,fechado_por FROM sapataria.fechamentos_caixa WHERE data=$1::date',
     [data],
   );
   const pagamentos = await pagamentosDoDia(data);
   return {
-    ...(resultado.rows[0] ?? {
+    fechamento: resultado.rows[0] ?? {
       ...somarPagamentos(data, pagamentos),
+      formato_manual: 'detalhado' as const,
+      fonte_manual:'valores' as const,
+      resumo_manual: null,
+      dinheiro_contado: null,
+      diferenca_dinheiro: null,
       fechado: false,
       fechado_em: null,
       fechado_por: null,
-    }),
+    },
     pagamentos_disponiveis: pagamentos,
   };
 }
 
-export async function listarFechamentos() {
-  const resultado = await pool.query<FechamentoCaixa>(
-    'SELECT data::text,recebimentos_brutos::text,saidas::text,total_liquido::text,por_forma_pagamento,por_origem,saidas_por_categoria,modo,pagamentos_selecionados,itens_manuais,true AS fechado,fechado_em,fechado_por FROM sapataria.fechamentos_caixa ORDER BY data DESC LIMIT 90',
-  );
-  return resultado.rows;
+export async function listarFechamentos(inicio: string, fim: string, pagina: number, limite: number) {
+  const [resultado,total] = await Promise.all([
+    pool.query<FechamentoCaixa>(`SELECT data::text,recebimentos_brutos::text,saidas::text,total_liquido::text,por_forma_pagamento,por_origem,saidas_por_categoria,modo,pagamentos_selecionados,itens_manuais,formato_manual,fonte_manual,resumo_manual,dinheiro_contado,diferenca_dinheiro,true AS fechado,fechado_em,fechado_por FROM sapataria.fechamentos_caixa WHERE ($1::date IS NULL OR data >= $1::date) AND ($2::date IS NULL OR data <= $2::date) ORDER BY data DESC LIMIT $3 OFFSET $4`,[inicio||null,fim||null,limite,(pagina-1)*limite]),
+    pool.query<{total:string}>('SELECT count(*)::text AS total FROM sapataria.fechamentos_caixa WHERE ($1::date IS NULL OR data >= $1::date) AND ($2::date IS NULL OR data <= $2::date)',[inicio||null,fim||null]),
+  ]);
+  return { itens: resultado.rows, pagina, limite, total: Number(total.rows[0]?.total ?? 0), paginas: Math.ceil(Number(total.rows[0]?.total ?? 0)/limite) };
 }
 
 export async function criarFechamento(
@@ -554,28 +596,57 @@ export async function criarFechamento(
   modo: 'automatico' | 'manual',
   idsPagamentos: number[] = [],
   itensManuais: ItemManualFechamento[] = [],
+  formatoManual: 'resumo' | 'detalhado' = 'detalhado',
+  resumoManual: Record<string,string> | null = null,
+  dinheiroContado: string | null = null,
+  fonteManual:'pagamentos'|'valores'='valores',
 ) {
-  const pagamentosDisponiveis = await pagamentosDoDia(data);
-  const pagamentos =
-    modo === 'automatico'
-      ? pagamentosDisponiveis
-      : await pagamentosDoDia(data, idsPagamentos);
+  if (modo === 'manual' && ((formatoManual === 'resumo' && itensManuais.length > 0) || (formatoManual === 'detalhado' && resumoManual !== null))) throw new ErroHttp(400,'FORMATO_MANUAL_INVALIDO','Use um único formato no fechamento manual.');
+  if (modo === 'manual' && formatoManual === 'resumo' && resumoManual) {
+    const campos=['dinheiro','pix','credito','debito','servicos','vendas','saidas'];
+    for (const campo of campos) if (resumoManual[campo] === undefined) throw new ErroHttp(400,'FORMATO_MANUAL_INVALIDO',`Preencha ${campo} no resumo manual.`);
+  }
+  return emTransacao(async(conexao)=>{
+  await bloquearDiaCaixa(conexao,data);
+  const pagamentos = await pagamentosDoDia(data,modo==='automatico'?undefined:idsPagamentos,conexao);
   if (modo === 'manual' && pagamentos.length !== new Set(idsPagamentos).size)
-    throw new ErroHttp(
-      400,
-      'PAGAMENTO_FORA_DO_DIA',
-      'Um ou mais pagamentos selecionados não pertencem à data do fechamento.',
-    );
-  const apurado = somarPagamentos(data, pagamentos, itensManuais, modo);
-  const resultado = await pool.query<FechamentoCaixa>(
+    throw new ErroHttp(400,'PAGAMENTO_FORA_DO_DIA','Um ou mais pagamentos selecionados não pertencem à data do fechamento.');
+  const apurado = resumoManual ? somarResumo(data,pagamentos,resumoManual,modo) : somarPagamentos(data, pagamentos, itensManuais, modo);
+  const dinheiroSistema = Number(apurado.por_forma_pagamento.dinheiro ?? 0);
+  const diferencaDinheiro = dinheiroContado === null ? null : (Number(dinheiroContado)-dinheiroSistema).toFixed(2);
+  const resultado = await conexao.query<FechamentoCaixa>(
     `INSERT INTO sapataria.fechamentos_caixa
-       (data,recebimentos_brutos,saidas,total_liquido,por_forma_pagamento,por_origem,saidas_por_categoria,modo,pagamentos_selecionados,itens_manuais,fechado_por)
-     VALUES ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7::jsonb,$8,$9::jsonb,$10::jsonb,$11)
-     RETURNING data::text,recebimentos_brutos::text,saidas::text,total_liquido::text,por_forma_pagamento,por_origem,saidas_por_categoria,modo,pagamentos_selecionados,itens_manuais,true AS fechado,fechado_em,fechado_por`,
+       (data,recebimentos_brutos,saidas,total_liquido,por_forma_pagamento,por_origem,saidas_por_categoria,modo,pagamentos_selecionados,itens_manuais,formato_manual,fonte_manual,resumo_manual,dinheiro_contado,diferenca_dinheiro,fechado_por)
+     VALUES ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7::jsonb,$8,$9::jsonb,$10::jsonb,$11,$12,$13::jsonb,$14,$15,$16)
+     RETURNING data::text,recebimentos_brutos::text,saidas::text,total_liquido::text,por_forma_pagamento,por_origem,saidas_por_categoria,modo,pagamentos_selecionados,itens_manuais,formato_manual,fonte_manual,resumo_manual,dinheiro_contado,diferenca_dinheiro,true AS fechado,fechado_em,fechado_por`,
     [data, apurado.recebimentos_brutos, apurado.saidas, apurado.total_liquido,
       JSON.stringify(apurado.por_forma_pagamento), JSON.stringify(apurado.por_origem),
       JSON.stringify(apurado.saidas_por_categoria), modo,
-      JSON.stringify(pagamentos), JSON.stringify(itensManuais), funcionarioId],
+      JSON.stringify(pagamentos), JSON.stringify(itensManuais), formatoManual,fonteManual, resumoManual ? JSON.stringify(resumoManual) : null, dinheiroContado,diferencaDinheiro, funcionarioId],
   );
   return resultado.rows[0]!;
+  });
 }
+
+export async function corrigirFechamento(data:string, funcionarioId:number, modo:'automatico'|'manual', ids:number[], itens:ItemManualFechamento[], formato:'resumo'|'detalhado', resumo:Record<string,string>|null, dinheiroContado:string|null, motivo:string, fonte:'pagamentos'|'valores') {
+  return emTransacao(async (conexao) => {
+    await bloquearDiaCaixa(conexao,data);
+    const atual=await conexao.query('SELECT * FROM sapataria.fechamentos_caixa WHERE data=$1::date FOR UPDATE',[data]);
+    if(!atual.rows[0]) throw new ErroHttp(404,'FECHAMENTO_NAO_ENCONTRADO','Não há fechamento salvo para corrigir.');
+    if(!motivo.trim()) throw new ErroHttp(400,'MOTIVO_OBRIGATORIO','Informe o motivo da correção.');
+    await conexao.query('INSERT INTO sapataria.historico_fechamentos_caixa(data,fechamento_anterior,corrigido_por,motivo) VALUES($1,$2::jsonb,$3,$4)',[data,JSON.stringify(atual.rows[0]),funcionarioId,motivo.trim()]);
+    const pagamentos=modo==='automatico' ? (await conexao.query<PagamentoFechamento>(`SELECT p.id,p.valor::text,p.forma_pagamento,l.tipo,l.categoria,l.descricao,l.origem_tipo,l.origem_id,p.pago_em FROM sapataria.pagamentos_financeiros p JOIN sapataria.parcelas_financeiras pa ON pa.id=p.parcela_id JOIN sapataria.lancamentos_financeiros l ON l.id=pa.lancamento_id WHERE (p.pago_em AT TIME ZONE 'America/Sao_Paulo')::date=$1::date ORDER BY p.id`,[data])).rows : (await conexao.query<PagamentoFechamento>(`SELECT p.id,p.valor::text,p.forma_pagamento,l.tipo,l.categoria,l.descricao,l.origem_tipo,l.origem_id,p.pago_em FROM sapataria.pagamentos_financeiros p JOIN sapataria.parcelas_financeiras pa ON pa.id=p.parcela_id JOIN sapataria.lancamentos_financeiros l ON l.id=pa.lancamento_id WHERE (p.pago_em AT TIME ZONE 'America/Sao_Paulo')::date=$1::date AND p.id=ANY($2::integer[]) ORDER BY p.id`,[data,ids])).rows;
+    if(modo==='manual'&&pagamentos.length!==new Set(ids).size) throw new ErroHttp(400,'PAGAMENTO_FORA_DO_DIA','Pagamento selecionado não pertence à data.');
+    if(modo==='manual'&&((formato==='resumo'&&itens.length)||(formato==='detalhado'&&resumo))) throw new ErroHttp(400,'FORMATO_MANUAL_INVALIDO','Use um único formato manual.');
+    const itensUsados=itens;
+    const apurado=resumo?somarResumo(data,pagamentos,resumo,modo):somarPagamentos(data,pagamentos,itensUsados,modo);
+    const dinheiroSistema=Number(apurado.por_forma_pagamento.dinheiro??0);
+    const diferenca=dinheiroContado===null?null:(Number(dinheiroContado)-dinheiroSistema).toFixed(2);
+    const atualizado=await conexao.query(`UPDATE sapataria.fechamentos_caixa SET recebimentos_brutos=$2,saidas=$3,total_liquido=$4,por_forma_pagamento=$5::jsonb,por_origem=$6::jsonb,saidas_por_categoria=$7::jsonb,modo=$8,pagamentos_selecionados=$9::jsonb,itens_manuais=$10::jsonb,formato_manual=$11,fonte_manual=$12,resumo_manual=$13::jsonb,dinheiro_contado=$14,diferenca_dinheiro=$15,fechado_em=CURRENT_TIMESTAMP,fechado_por=$16 WHERE data=$1 RETURNING data::text,recebimentos_brutos::text,saidas::text,total_liquido::text,por_forma_pagamento,por_origem,saidas_por_categoria,modo,pagamentos_selecionados,itens_manuais,formato_manual,fonte_manual,resumo_manual,dinheiro_contado,diferenca_dinheiro,true AS fechado,fechado_em,fechado_por`,[data,apurado.recebimentos_brutos,apurado.saidas,apurado.total_liquido,JSON.stringify(apurado.por_forma_pagamento),JSON.stringify(apurado.por_origem),JSON.stringify(apurado.saidas_por_categoria),modo,JSON.stringify(pagamentos),JSON.stringify(itensUsados),formato,fonte,resumo?JSON.stringify(resumo):null,dinheiroContado,diferenca,funcionarioId]);
+    return atualizado.rows[0];
+  });
+}
+
+export async function listarCategoriasDespesas() { return (await pool.query('SELECT id,nome FROM sapataria.categorias_despesas ORDER BY nome')).rows; }
+export async function listarCorrecoes(data:string) { return (await pool.query(`SELECT h.id,to_char(h.corrigido_em AT TIME ZONE 'America/Sao_Paulo','YYYY-MM-DD HH24:MI:SS') AS corrigido_em,h.motivo,f.nome AS corrigido_por,h.fechamento_anterior FROM sapataria.historico_fechamentos_caixa h LEFT JOIN sapataria.funcionarios f ON f.id=h.corrigido_por WHERE h.data=$1::date ORDER BY h.corrigido_em DESC,h.id DESC`,[data])).rows; }
+export async function criarCategoriaDespesa(nome:string) { const criado=await pool.query('INSERT INTO sapataria.categorias_despesas(nome) VALUES($1) ON CONFLICT DO NOTHING RETURNING id,nome',[nome.trim()]); if(criado.rows[0]) return criado.rows[0]; return (await pool.query('SELECT id,nome FROM sapataria.categorias_despesas WHERE lower(nome)=lower($1)',[nome.trim()])).rows[0]; }
