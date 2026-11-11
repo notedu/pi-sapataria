@@ -234,6 +234,34 @@ const tratarErro: ErrorRequestHandler = (error, _request, response, _next) => {
     return;
   }
   // Não devolve credenciais, SQL ou detalhes internos ao cliente da API.
+  const erroDetalhado = error as {
+    name?: unknown;
+    message?: unknown;
+    stack?: unknown;
+    code?: unknown;
+    schema?: unknown;
+    table?: unknown;
+    column?: unknown;
+    constraint?: unknown;
+    routine?: unknown;
+  };
+  const textoErro = (valor: unknown) =>
+    typeof valor === 'string' ? valor : undefined;
+  console.log('[API] Erro interno', {
+    metodo: _request.method,
+    rota: _request.originalUrl,
+    erro: {
+      nome: textoErro(erroDetalhado.name),
+      mensagem: textoErro(erroDetalhado.message),
+      codigo: textoErro(erroDetalhado.code),
+      schema: textoErro(erroDetalhado.schema),
+      tabela: textoErro(erroDetalhado.table),
+      coluna: textoErro(erroDetalhado.column),
+      restricao: textoErro(erroDetalhado.constraint),
+      rotina: textoErro(erroDetalhado.routine),
+      pilha: textoErro(erroDetalhado.stack),
+    },
+  });
   response
     .status(500)
     .json({

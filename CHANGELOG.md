@@ -8,6 +8,8 @@ Ainda não há uma versão publicada registrada neste histórico. As mudanças a
 
 ### Corrigido
 
+- PDFs de OS: via de produção identifica a opção C/C como “Com Cadarço”; no PDF principal, F/M fica em azul, os demais títulos têm fundo branco e as letras da tabela ficam maiores.
+
 - Financeiro: resposta da consulta diária agora corresponde ao contrato do front-end, eliminando a falha ao abrir fechamento; limpeza dos dados anteriores ao carregar outra data evita confirmar valores antigos no dia errado.
 
 - Identidade visual: sistema interno mantém o tema azul anterior; login e Landing Page continuam com a paleta marrom/caramelo.

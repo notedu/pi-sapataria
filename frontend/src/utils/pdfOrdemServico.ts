@@ -76,13 +76,14 @@ export function gerarPdfOrdemServico(ordem: OrdemDetalhada, cliente: Cliente) {
   const quantidadeLinhas = Math.max(baseLinhas, ordem.itens.length)
   const alturaLinha = Math.min(12, 120 / quantidadeLinhas)
   let x = esquerda
-  pdf.setFillColor(234, 239, 250)
   pdf.setDrawColor(70, 80, 98)
-  colunas.forEach((coluna) => {
+  colunas.forEach((coluna, indice) => {
+    if (indice === 0) pdf.setFillColor(7, 45, 112)
+    else pdf.setFillColor(255, 255, 255)
     pdf.rect(x, topoTabela, coluna.largura, alturaCabecalho, 'FD')
     pdf.setFont('helvetica', 'bold')
-    pdf.setFontSize(7)
-    pdf.setTextColor(20, 35, 60)
+    pdf.setFontSize(9)
+    pdf.setTextColor(indice === 0 ? 255 : 35, indice === 0 ? 255 : 40, indice === 0 ? 255 : 50)
     pdf.text(coluna.titulo, x + coluna.largura / 2, topoTabela + 5.7, {
       align: 'center',
     })
@@ -91,7 +92,7 @@ export function gerarPdfOrdemServico(ordem: OrdemDetalhada, cliente: Cliente) {
 
   const limiteTexto = (texto: string, larguraMaxima: number) => {
     pdf.setFont('helvetica', 'normal')
-    pdf.setFontSize(7)
+    pdf.setFontSize(8)
     let resultado = texto
     while (resultado && pdf.getTextWidth(resultado) > larguraMaxima)
       resultado = `${resultado.slice(0, -2)}…`
@@ -106,7 +107,7 @@ export function gerarPdfOrdemServico(ordem: OrdemDetalhada, cliente: Cliente) {
       pdf.rect(x, topoTabela + alturaCabecalho + linha * alturaLinha, colunas[indice]!.largura, alturaLinha)
       if (valor) {
         pdf.setFont('helvetica', 'normal')
-        pdf.setFontSize(7)
+        pdf.setFontSize(8)
         pdf.setTextColor(30, 35, 45)
         pdf.text(
           limiteTexto(valor, colunas[indice]!.largura - 3),
@@ -213,7 +214,7 @@ export function gerarPdfProducaoOrdemServico(
   pdf.setFontSize(8)
   pdf.setTextColor(35, 40, 50)
   pdf.text('C/C', margem, y)
-  caixa('Com cadastro', margem + 9)
+  caixa('Com cadarço', margem + 9)
   const xCP = margem + 48
   pdf.setFont('helvetica', 'bold')
   pdf.text('C/P', xCP, y)
