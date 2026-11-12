@@ -125,7 +125,7 @@ app.use(
 );
 
 // O Express 5 encaminha falhas dos controllers assíncronos para este tratamento.
-const tratarErro: ErrorRequestHandler = (error, _request, response, _next) => {
+const tratarErro: ErrorRequestHandler = (error, request, response, _next) => {
   if (error instanceof ErroHttp) {
     if (error.status === 429) response.setHeader('Retry-After', '900');
     response
@@ -233,6 +233,25 @@ const tratarErro: ErrorRequestHandler = (error, _request, response, _next) => {
       });
     return;
   }
+  // Registra metadados úteis para diagnóstico sem gravar corpo, query string,
+  // SQL ou valores enviados pelo usuário. O detalhe continua fora da resposta.
+  console.error(
+    '[API] Erro interno',
+    JSON.stringify({
+      metodo: request.method,
+      rota: request.path,
+      tipo: typeof error.name === 'string' ? error.name : 'Erro desconhecido',
+      codigo: typeof error.code === 'string' ? error.code : undefined,
+      tabela: typeof error.table === 'string' ? error.table : undefined,
+      coluna: typeof error.column === 'string' ? error.column : undefined,
+      restricao:
+        typeof error.constraint === 'string' ? error.constraint : undefined,
+      mensagem:
+        typeof error.code !== 'string' && typeof error.message === 'string'
+          ? error.message.slice(0, 300)
+          : undefined,
+    }),
+  );
   // Não devolve credenciais, SQL ou detalhes internos ao cliente da API.
   response
     .status(500)

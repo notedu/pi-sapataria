@@ -320,7 +320,7 @@ export async function estornarOrigem(
     forma_pagamento: FormaPagamento;
     total: string;
   }>(
-    `SELECT forma_pagamento, COALESCE(SUM(valor),0)::text AS total FROM sapataria.pagamentos_financeiros p JOIN sapataria.parcelas_financeiras pa ON pa.id=p.parcela_id WHERE pa.lancamento_id=$1 GROUP BY forma_pagamento ORDER BY forma_pagamento`,
+    `SELECT p.forma_pagamento, COALESCE(SUM(p.valor),0)::text AS total FROM sapataria.pagamentos_financeiros p JOIN sapataria.parcelas_financeiras pa ON pa.id=p.parcela_id WHERE pa.lancamento_id=$1 GROUP BY p.forma_pagamento ORDER BY p.forma_pagamento`,
     [original.rows[0].id],
   );
   for (const pago of pagos.rows)

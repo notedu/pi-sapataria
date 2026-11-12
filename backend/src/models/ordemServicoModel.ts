@@ -391,7 +391,7 @@ export async function mudarStatus(
     const resultado = await conexao.query<OrdemServico>(
       `UPDATE sapataria.ordens_servico AS os
           SET status=$2,
-              forma_pagamento=CASE WHEN $2='Entregue' AND $4 IS NOT NULL THEN $4 ELSE os.forma_pagamento END,
+              forma_pagamento=CASE WHEN $2='Entregue' AND $4::text IS NOT NULL THEN $4::text ELSE os.forma_pagamento END,
               motivo_cancelamento=CASE WHEN $2='Cancelada' THEN $3 ELSE os.motivo_cancelamento END
         WHERE os.id=$1 RETURNING ${colunas}`,
       [id, status, cancelamento ? motivoCancelamento!.trim() : null, formaPagamento ?? null],
