@@ -54,9 +54,9 @@ Na Busca sem texto, **Páginas disponíveis** omite páginas que já têm acesso
 
 Ao buscar um cliente por nome ou telefone, a Busca também exibe as OS vinculadas a ele e identifica o cliente em cada resultado. A associação usa os clientes e as OS já retornados pela API, sem persistência local ou alteração no contrato do servidor.
 
-A impressão da OS gera um formulário A4 com dados do cliente e datas já cadastradas, tabela para F/M, descrição, cor, serviço, observação e valor, campos financeiros e assinatura. Adiantado e restante ficam para preenchimento manual; o total usa o valor manual da OS. A folha inclui o aviso de retirada em até 90 dias solicitado por João Contin.
+A impressão da OS gera um formulário A4 com dados do cliente e datas já cadastradas, tabela com a célula F/M em azul, demais títulos em fundo branco e colunas nesta ordem: F/M, descrição, cor, serviço, observação e valor. Adiantado e restante ficam para preenchimento manual; o total usa o valor manual da OS. A folha inclui o aviso de retirada em até 90 dias solicitado por João Contin.
 
-O detalhe da OS oferece também **Via de produção**, em PDF A6 separado da via do cliente. Mostra número, quantidade de itens, telefone, datas, serviços, opções C/C (com cadastro) e C/P (com palmilha), valor e caixas manuais para marcar pagamento. Não altera dados da OS nem registra pagamento.
+O detalhe da OS oferece também **Via de produção**, em PDF A6 separado da via do cliente. Mostra número, quantidade de itens, telefone, datas, serviços, opções C/C (com Cadarço) e C/P (com palmilha), valor e caixas manuais para marcar pagamento. Não altera dados da OS nem registra pagamento.
 
 O botão **Cadastrar cliente** dentro da nova OS abre `/clientes/novo` com contexto de retorno. Após A04 confirmar o novo cliente, a navegação volta a `/ordens-servico/nova`, restaura os campos já informados e seleciona o novo `cliente_id`. O mesmo cadastro aberto diretamente pela área de Clientes mantém seu destino normal, `/clientes`.
 

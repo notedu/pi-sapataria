@@ -233,26 +233,38 @@ const tratarErro: ErrorRequestHandler = (error, request, response, _next) => {
       });
     return;
   }
-  // Registra metadados úteis para diagnóstico sem gravar corpo, query string,
-  // SQL ou valores enviados pelo usuário. O detalhe continua fora da resposta.
+  // Registra metadados úteis sem gravar corpo, query string, SQL ou valores
+  // enviados pelo usuário. Os detalhes não são devolvidos ao cliente da API.
+  const erroInterno = error as {
+    name?: unknown;
+    message?: unknown;
+    code?: unknown;
+    schema?: unknown;
+    table?: unknown;
+    column?: unknown;
+    constraint?: unknown;
+    routine?: unknown;
+  };
+  const textoErro = (valor: unknown) =>
+    typeof valor === 'string' ? valor.slice(0, 300) : undefined;
   console.error(
     '[API] Erro interno',
     JSON.stringify({
       metodo: request.method,
       rota: request.path,
-      tipo: typeof error.name === 'string' ? error.name : 'Erro desconhecido',
-      codigo: typeof error.code === 'string' ? error.code : undefined,
-      tabela: typeof error.table === 'string' ? error.table : undefined,
-      coluna: typeof error.column === 'string' ? error.column : undefined,
-      restricao:
-        typeof error.constraint === 'string' ? error.constraint : undefined,
+      nome: textoErro(erroInterno.name),
+      codigo: textoErro(erroInterno.code),
+      schema: textoErro(erroInterno.schema),
+      tabela: textoErro(erroInterno.table),
+      coluna: textoErro(erroInterno.column),
+      restricao: textoErro(erroInterno.constraint),
+      rotina: textoErro(erroInterno.routine),
       mensagem:
-        typeof error.code !== 'string' && typeof error.message === 'string'
-          ? error.message.slice(0, 300)
+        typeof erroInterno.code !== 'string'
+          ? textoErro(erroInterno.message)
           : undefined,
     }),
   );
-  // Não devolve credenciais, SQL ou detalhes internos ao cliente da API.
   response
     .status(500)
     .json({
